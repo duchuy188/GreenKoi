@@ -1,0 +1,274 @@
+/* Global Styles */
+body, html {
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+
+.logo-text {
+  color: #2e8b57;
+  font-weight: bold;
+  font-size: 2rem;
+}
+
+/* Navbar */
+.navbar {
+  position: fixed;
+    z-index: 100;
+    width: 100%;
+  padding: 1rem 2rem;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  margin-right: auto;
+}
+
+.navbar-brand h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #2e8b57;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-brand h1 i {
+  margin-right: 0.5rem;
+}
+
+.navbar-nav {
+  display: flex;
+  justify-content: center; 
+  margin: 0 auto; 
+}
+
+.navbar-nav .nav-item .nav-link {
+  color: #2e8b57;
+  font-weight: 500;
+  margin: 0 1rem;
+  padding: 0.5rem 1rem;
+  transition: color 0.3s, background-color 0.3s;
+}
+
+.navbar-nav .nav-item .nav-link:hover {
+  color: #276948;
+}
+
+.navbar-nav .nav-item .nav-link.active {
+  color: #2e8b57;
+  font-weight: bold;
+}
+
+.btn-login {
+  background-color: #2e8b57;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.btn-login:hover {
+  background-color: #276948;
+  color: white;
+}
+
+.navbar-toggler {
+  border: none;
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' fill='%23333' viewBox='0 0 30 30'><path stroke='rgba%280, 0, 0, 0.5%29' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/></svg>");
+}
+
+.collapse {
+  padding: 1rem 0;
+}
+
+
+
+body, #root {
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+main {
+  flex: 1;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 5px;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px; 
+  margin: 0 auto;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap; 
+  justify-content: center;
+  margin-left: -10px;
+  margin-right: -10px;
+}
+
+.col-md-6 {
+  flex: 0 0 50%;
+  max-width: 50%;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+@media (max-width: 767px) {
+  .col-md-6 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .order-md-1 {
+    order: 1;
+  }
+  
+  .order-md-2 {
+    order: 2;
+  }
+}
+
+.position-relative {
+  position: relative;
+  width: 100%;
+  padding-bottom: 75%;
+  overflow: hidden;
+}
+
+.position-relative img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carousel-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+.carousel-item {
+  height: 95vh;
+  overflow: hidden;
+  
+}
+
+.carousel-item img {
+  object-fit: cover;
+  object-position: center;
+  width: 100%;
+  height: 100%;
+}
+
+.carousel-caption {
+  bottom: 20%;
+  padding-bottom: 20px;
+}
+
+.project-card {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  border-radius: 0;
+}
+
+.project-image-container {
+  position: relative;
+  padding-top: 75%; 
+}
+
+.project-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.project-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  width: 100%;
+  height: 0;
+  transition: .5s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 15px;
+}
+
+.project-card:hover .project-overlay {
+  height: 100%;
+}
+
+.project-title {
+  color: white;
+  font-size: 18px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.project-card .btn {
+  opacity: 0;
+  transition: opacity .35s ease;
+}
+
+.project-card:hover .btn {
+  opacity: 1;
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 50%;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+}
+
+.card-img-overlay {
+  z-index: 1;
+}
