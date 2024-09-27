@@ -1,7 +1,7 @@
 import Header from "./components/Header";
-import Carousel from "./components/Home/Carousel";
-import Content from "./components/Home/Content";
-import Footer from "./components/Footer";
+import Carousel from "./components/page/Home/Carousel";
+import Content from "./components/page/Home/Content";
+import Footer from "./components/footer/Footer";
 import Icon from "./components/Icon";
 import "./App.css";
 
