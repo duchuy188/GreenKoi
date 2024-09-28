@@ -1,6 +1,4 @@
-
-import { Component } from "react";
-import { headerLogo } from "./Share/listImage";
+import { headerLogo } from "../Share/listImage";
 
 function Header() {
   return (
@@ -8,11 +6,11 @@ function Header() {
       <div className="container-fluid">
         <a href="/" className="navbar-brand">
           <h1 className="m-0 text-primary">
-          <img
-                    src={headerLogo}
-                    style={{ width: "70px", height: "70px" }}
-                    alt="Green Koi Logo"
-                  />
+            <img
+              src={headerLogo}
+              style={{ width: "70px", height: "70px" }}
+              alt="Green Koi Logo"
+            />
             <span className="logo-text ms-2">Green Koi</span>
           </h1>
         </a>
@@ -44,10 +42,11 @@ function Header() {
             <a href="/contact" className="nav-item nav-link">
               Liên hệ
             </a>
-            
           </div>
           <div className="navbar-login">
-            <a href="/login" className="nav-item nav-link btn-login">Đăng nhập</a>
+            <a href="/login" className="nav-item nav-link btn-login">
+              Đăng nhập
+            </a>
           </div>
         </div>
       </div>

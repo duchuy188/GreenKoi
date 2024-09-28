@@ -259,16 +259,26 @@ main {
   opacity: 1;
 }
 
-.card::after {
+.card-qt {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-qt::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
+  top: 0;
   bottom: 0;
-  height: 50%;
-  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+  background: cornsilk;
+  z-index: 0;
 }
 
+.card-qt .card-body {
+  position: relative;
+  z-index: 1;
+}
 .card-img-overlay {
   z-index: 1;
 }
