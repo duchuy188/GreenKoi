@@ -152,7 +152,7 @@ export default class Content extends Component {
           <div className="row g-4">
             {projects.map((project, index) => (
               <div key={index} className="col-md-4 col-sm-6">
-                <div className="card h-100 position-relative overflow-hidden">
+                <div className="card card-duan h-100 position-relative overflow-hidden">
                   <img
                     src={project.image}
                     className="card-img-top w-100 h-100"
@@ -248,7 +248,7 @@ export default class Content extends Component {
           <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
             {newsItems.map((item, index) => (
               <div key={index} className="col-md-4 mb-4">
-                <div className="card h-100 shadow-sm">
+                <div className="card card-tintuc h-100 shadow-sm">
                   <img
                     src={item.img}
                     className="card-img-top"

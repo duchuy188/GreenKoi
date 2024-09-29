@@ -274,11 +274,40 @@ main {
   background: cornsilk;
   z-index: 0;
 }
-
 .card-qt .card-body {
   position: relative;
   z-index: 1;
 }
 .card-img-overlay {
   z-index: 1;
+}
+.card-duan {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 5px solid black; /* Thêm viền mỏng */
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Thêm bóng nhẹ */
+ 
+}
+
+.card-duan:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.card-img-top {
+  transition: transform 0.3s ease;
+  border-radius: 1px;
+}
+
+.card-duan:hover .card-img-top {
+  transform: scale(1.05);
+}
+.card-tintuc{
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #ddd; /* Thin border */
+  border-radius: 8px; /* Slightly rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Light shadow */
+  overflow: hidden;
 }
