@@ -1,10 +1,11 @@
-import React from 'react'
-import AuthenTemplate from '../../components/authen-template';
+
+import { Link } from 'react-router-dom';
+import AuthenTemplate from '../../authen-templated';
 import { Form, Input } from 'antd';
 
 function RegisterPage() {
   return (
-   <AuthenTemplate>
+    <AuthenTemplate>
     <Form
   labelCol={{
     span: 24,
@@ -20,7 +21,7 @@ function RegisterPage() {
       },
     ]}
   >
-    <Input />
+    <Input/>
   </Form.Item>
 
   <Form.Item
@@ -72,7 +73,7 @@ function RegisterPage() {
       },
     ]}
   >
-    <Input />
+    <Input/>
   </Form.Item>
 
   <Form.Item
@@ -89,7 +90,7 @@ function RegisterPage() {
       },
     ]}
   >
-    <Input />
+    <Input/>
   </Form.Item>
 
   <Form.Item
@@ -106,12 +107,15 @@ function RegisterPage() {
       },
     ]}
   >
-    <Input />
+    <Input/>
   </Form.Item>
+  <Link to="/login">
+  Login
+  </Link>
 </Form>
 
    </AuthenTemplate>
-  )
+  );
 }
 
 export default RegisterPage;
