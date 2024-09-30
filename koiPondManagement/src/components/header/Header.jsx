@@ -27,19 +27,19 @@ function Header() {
             <a href="/" className="nav-item nav-link active">
               Trang chủ
             </a>
-            <a href="/clinic" className="nav-item nav-link">
+            <a href="/gioithieu" className="nav-item nav-link">
               Giới thiệu
             </a>
-            <a href="/services" className="nav-item nav-link">
+            <a href="/duan" className="nav-item nav-link">
               Dự án
             </a>
-            <a href="/team" className="nav-item nav-link">
+            <a href="/baogia" className="nav-item nav-link">
               Báo Giá
             </a>
-            <a href="/contact" className="nav-item nav-link">
+            <a href="/lapthietketheoyeucau" className="nav-item nav-link">
               Lập thiết kế theo yêu cầu
             </a>
-            <a href="/contact" className="nav-item nav-link">
+            <a href="/lienhe" className="nav-item nav-link">
               Liên hệ
             </a>
           </div>

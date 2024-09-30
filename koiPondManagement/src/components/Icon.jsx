@@ -47,11 +47,7 @@ const Icon = () => {
       </a>
 
       {/* Icon phone */}
-      <a
-        href=""
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a href="" target="_blank" rel="noopener noreferrer">
         <img
           className="phone-icon"
           src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsQ1P0KORmNh8JaQYf7QOnzwtgp_QIk5J2mA&s"
@@ -60,11 +56,7 @@ const Icon = () => {
       </a>
 
       {/* Icon email */}
-      <a
-        href=""
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a href="" target="_blank" rel="noopener noreferrer">
         <img
           className="email-icon"
           src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2Dk1skpw0d95QQAHQveUicEZ7RAA6cPmKBQ&s"
