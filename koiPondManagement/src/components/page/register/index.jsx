@@ -1,15 +1,35 @@
-
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthenTemplate from '../../authen-templated';
-import { Form, Input } from 'antd';
+import { Button, Form, Input } from 'antd';
+import { toast } from 'react-toastify';
+import api from '../../config/axios';
 
 function RegisterPage() {
+
+const navigate = useNavigate();
+
+ 
+const handleRegister = async (values) => {
+   //submit xuoong backend // backend cung cap api 
+   try{
+    values.role = "CUSTOMER";
+     const response = await api.post("register", values);
+     
+     toast.success("Successfully register new account!");
+     navigate("/login");
+   } catch (err){
+      //console.log
+      toast.error(err.response.data);
+   }
+  };
+
   return (
     <AuthenTemplate>
     <Form
   labelCol={{
     span: 24,
   }}
+  onFinish={handleRegister}
 >
   <Form.Item
     label="Username"
@@ -110,8 +130,11 @@ function RegisterPage() {
     <Input/>
   </Form.Item>
   <Link to="/login">
-  Login
+  Go to Loginpage
   </Link>
+  <Button type="primary" htmlType="submit" > 
+    Register
+    </Button>
 </Form>
 
    </AuthenTemplate>

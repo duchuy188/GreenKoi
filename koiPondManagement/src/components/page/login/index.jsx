@@ -1,14 +1,29 @@
 import React from 'react' 
 import AuthenTemplate from '../../authen-templated'
 import { Button, Form, Input } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 function LoginPage() {
+  const navigate = useNavigate();
   const handlLoginGoogle = () => {
-    
+  
   };
   
-  const handlLogin = () => {
+  const handlLogin = async (values) => {
+//api login
+    try {
+      const response = await api.post("login", values);
+      console.log(response);
+      const {role} = response.data;
+      
+      if (role === "ADMIN"){
+        navigate("/dashboard");
+      }
+      
+    }catch(err) {
+      toast.error(err.response.data)
+    }
    
   };
 
@@ -19,9 +34,11 @@ function LoginPage() {
      labelCol={{
       span: 24,  
      }}
-      
+      onFinish={handlLogin}
     >
-     <Form.Item label="Username" name="username" rules={[
+      
+     <Form.Item label="Username" name="name" rules={[
+      //phone or email backend lam casi nay api
       {
         required:true,
         message:"Please!",
@@ -45,7 +62,8 @@ function LoginPage() {
      Create new account?
      </Link>
      </div>
-     <Button>Login</Button>
+     <Button type="primary" htmlType="submit">
+      Login</Button>
      <Button onClick={handlLoginGoogle}>
       Login google
      </Button>
