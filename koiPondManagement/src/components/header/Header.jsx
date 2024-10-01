@@ -33,6 +33,9 @@ function Header() {
             <a href="/duan" className="nav-item nav-link">
               Dự án
             </a>
+            <a href="/dichvu" className="nav-item nav-link">
+              Dịch vụ
+            </a>
             <a href="/baogia" className="nav-item nav-link">
               Báo Giá
             </a>
