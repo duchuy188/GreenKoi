@@ -1,77 +1,78 @@
-import React from 'react' 
-import AuthenTemplate from '../../authen-templated'
-import { Button, Form, Input } from 'antd';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Button, Form, Input } from 'antd';
 import { toast } from 'react-toastify';
+import api from '../../config/axios';
+import AuthenTemplate from '../../authen-templated';
 
 function LoginPage() {
   const navigate = useNavigate();
-  const handlLoginGoogle = () => {
-  
-  };
-  
-  const handlLogin = async (values) => {
-//api login
+
+  const handleLogin = async (values) => {
     try {
-      const response = await api.post("login", values);
-      console.log(response);
-      const {role,token} = response.data;
-      localStorage.setItem("token",token);
-
-      if (role === "ADMIN"){
-        navigate("/dashboard");
-      }
+      const response = await api.post("/api/auth/login", values);
       
-    }catch(err) {
-      toast.error(err.response.data)
+      if (response && response.data) {
+        toast.success("Login Successful!");
+        localStorage.setItem("token", response.data.token);
+        navigate("/");
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      if (err.response) {
+        toast.error(err.response.data.message || "Login failed. Please check your credentials.");
+      } else if (err.request) {
+        toast.error("Unable to connect to the server. Please try again later.");
+      } else {
+        toast.error("An unexpected error occurred. Please try again.");
+      }
     }
-   
   };
-
 
   return (
-  <AuthenTemplate>
-    <Form
-     labelCol={{
-      span: 24,  
-     }}
-      onFinish={handlLogin}
-    >
-      
-     <Form.Item label="Username" name="name" rules={[
-      //phone or email backend lam casi nay api
-      {
-        required:true,
-        message:"Please!",
-      },
-     ]}
-     >
-      <Input/>
-     </Form.Item>
-     <Form.Item label="Password" name="password" rules={[
-      {
-        required:true,
-        message:"Please password!",
-      },
-     ]}
-     >
-      <Input.Password/>
-     </Form.Item>
+    <AuthenTemplate>
+      <Form
+        name="login"
+        initialValues={{ remember: true }}
+        onFinish={handleLogin}
+        layout="vertical"
+      >
+        <Form.Item
+          label="Username"
+          name="username"
+          rules={[{ required: true, message: 'Please input your username!' }]}
+        >
+          <Input/>
+        </Form.Item>
 
-     <div>
-     <Link to="/register">
-     Create new account?
-     </Link>
-     </div>
-     <Button type="primary" htmlType="submit">
-      Login</Button>
-     <Button onClick={handlLoginGoogle}>
-      Login google
-     </Button>
-    </Form>
-  </AuthenTemplate>
+        <Form.Item
+          label="Password"
+          name="password"
+          rules={[{ required: true, message: 'Please input your password!' }]}
+        >
+          <Input.Password />
+        </Form.Item>
+
+        <Form.Item>
+          <Button type="primary" htmlType="submit" block>
+            Login
+          </Button>
+        </Form.Item>
+
+        <Form.Item>
+          <Link to="/register">Create new account?</Link>
+        </Form.Item>
+
+        <Form.Item>
+          <Button type="default" block onClick={() => console.log("Google login not implemented")}>
+            Login with Google
+          </Button>
+        </Form.Item>
+      </Form>
+    </AuthenTemplate>
   );
-  
 }
 
-export default LoginPage
+export default LoginPage;

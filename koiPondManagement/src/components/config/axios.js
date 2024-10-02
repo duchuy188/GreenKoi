@@ -1,9 +1,9 @@
 import axios from "axios";
 // api swagger
 const api = axios.create({
-  baseURL: "htt[://14.225.220.131:8080/",
+  baseURL: "https://6384-118-69-182-144.ngrok-free.app",//url 
 });
-// làm 1 hành động gì đó trc khi call api
+// 
 const handleBefore = (config) => {
   const token = localStorage.getItem("token")?.replaceAll('"', "");
   config.headers["Authorization"] = `Bearer ${token}`;
