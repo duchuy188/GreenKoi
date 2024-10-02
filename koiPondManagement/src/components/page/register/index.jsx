@@ -39,7 +39,7 @@ function RegisterPage() {
             },
           ]}
         >
-          <Input />
+          <Input/>
         </Form.Item>
 
         <Form.Item
@@ -91,7 +91,7 @@ function RegisterPage() {
             },
           ]}
         >
-          <Input />
+          <Input/>
         </Form.Item>
 
         <Form.Item
@@ -108,7 +108,7 @@ function RegisterPage() {
             },
           ]}
         >
-<Input />
+        <Input/>
         </Form.Item>
 
         <Form.Item
@@ -125,7 +125,7 @@ function RegisterPage() {
             },
           ]}
         >
-          <Input />
+          <Input/>
         </Form.Item>
 
         <Form.Item
@@ -138,7 +138,7 @@ function RegisterPage() {
             },
           ]}
         >
-          <Input />
+          <Input/>
         </Form.Item>
 
         <Form.Item>

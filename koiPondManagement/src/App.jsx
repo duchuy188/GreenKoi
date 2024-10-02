@@ -5,33 +5,48 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import LoginPage2 from "./components/elements/LoginPage2";
 import RegisterPage from "./components/page/register";
 import Dashboard from "./dashboard";
+import MainLayout from "./layout";
+import LoginPage from "./components/page/login";
   
 function App() {
   const router = createBrowserRouter([
     {
-      path: "/",
-      element: <Elements />,
-    },
-    {
-      path: "/gioithieu",
-      element: <Introduction />,
+      path: '/',
+      element: <MainLayout />,
+      children: [
+        {
+          path: "/",
+          element: <Elements />,
+        },
+        {
+          path: "/gioithieu",
+          element: <Introduction />,
+        },
+        {
+          path: "/login",
+          element: <LoginPage2 />,
+        },
+
+      ]
     },
     {
       path: "/login",
-      element: <LoginPage2 />,
+      element: <LoginPage />,
     },
     {
       path: "/register",
       element: <RegisterPage />,
     },
     {
-      path: "/dashboard",
+      path: '/dashboard',
       element: <Dashboard />,
     },
-    
   ]);
 
-  return <RouterProvider router={router} />;
+  return (
+    <RouterProvider router={router} />
+  );
 }
+
 
 export default App;
