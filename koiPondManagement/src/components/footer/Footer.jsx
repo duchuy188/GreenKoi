@@ -6,7 +6,7 @@ const Footer = () => {
     <footer className="footer">
       <div className="footer-content">
         <div className="footer-section">
-          <h3>Quick Links</h3>
+          <h3>Liên kết nhanh</h3>
           <ul>
             <li>
               <a href="/">Trang Chủ</a>
@@ -27,7 +27,7 @@ const Footer = () => {
         </div>
 
         <div className="footer-section">
-          <h3>Links</h3>
+          <h3>Liên kết</h3>
           <ul>
             <li>
               <a href="/">Trang Chủ</a>
@@ -51,8 +51,8 @@ const Footer = () => {
           <h3>Bản Đồ</h3>
           <iframe
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.6100105370224!2d106.8073080748579!3d10.84112758931161!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752731176b07b1%3A0xb752b24b379bae5e!2sFPT%20University%20HCMC!5e0!3m2!1sen!2s!4v1726802781524!5m2!1sen!2s"
-            width="300"
-            height="300"
+            width="250"
+            height="250"
             style={{ border: 0, display: "block", margin: "auto" }}
             allowFullScreen=""
             loading="lazy"
@@ -61,6 +61,7 @@ const Footer = () => {
         </div>
 
         <div className="footer-section">
+          
           <h3>Liên Hệ</h3>
           <div className="card">
             <a className="socialContainer containerOne" href="#">
