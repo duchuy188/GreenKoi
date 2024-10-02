@@ -1,10 +1,11 @@
 import { headerLogo } from "../Share/listImage";
+import { Link } from "react-router-dom";
 
 function Header() {
   return (
     <nav className="navbar navbar-expand-lg bg-white navbar-light shadow-sm px-5 py-3 py-lg-0">
       <div className="container-fluid">
-        <a href="/" className="navbar-brand">
+        <Link to="/" className="navbar-brand">
           <h1 className="m-0 text-primary">
             <img
               src={headerLogo}
@@ -13,7 +14,7 @@ function Header() {
             />
             <span className="logo-text ms-2">Green Koi</span>
           </h1>
-        </a>
+        </Link>
         <button
           className="navbar-toggler"
           type="button"
@@ -24,32 +25,32 @@ function Header() {
         </button>
         <div className="collapse navbar-collapse" id="navbarCollapse">
           <div className="navbar-nav ms-auto py-0">
-            <a href="/" className="nav-item nav-link active">
+            <Link to="/" className="nav-item nav-link active">
               Trang chủ
-            </a>
-            <a href="/gioithieu" className="nav-item nav-link">
+            </Link>
+            <Link to="/gioithieu" className="nav-item nav-link">
               Giới thiệu
-            </a>
-            <a href="/duan" className="nav-item nav-link">
+            </Link>
+            <Link to="/duan" className="nav-item nav-link">
               Dự án
-            </a>
-            <a href="/dichvu" className="nav-item nav-link">
+            </Link>
+            <Link to="/dichvu" className="nav-item nav-link">
               Dịch vụ
-            </a>
-            <a href="/baogia" className="nav-item nav-link">
+            </Link>
+            <Link to="/baogia" className="nav-item nav-link">
               Báo Giá
-            </a>
-            <a href="/lapthietketheoyeucau" className="nav-item nav-link">
+            </Link>
+            <Link to="/lapthietketheoyeucau" className="nav-item nav-link">
               Lập thiết kế theo yêu cầu
-            </a>
-            <a href="/lienhe" className="nav-item nav-link">
+            </Link>
+            <Link to="/lienhe" className="nav-item nav-link">
               Liên hệ
-            </a>
+            </Link>
           </div>
           <div className="navbar-login">
-            <a href="/login" className="nav-item nav-link btn-login">
+            <Link to="/login" className="nav-item nav-link btn-login">
               Đăng nhập
-            </a>
+            </Link>
           </div>
         </div>
       </div>
