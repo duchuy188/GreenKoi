@@ -8,18 +8,23 @@ body, html {
 
 
 .logo-text {
-  color: #2e8b57;
+  color: #ffffff;
   font-weight: bold;
   font-size: 2rem;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 /* Navbar */
 .navbar {
   position: fixed;
-    z-index: 100;
-    width: 100%;
-  padding: 1rem 2rem;
-  background-color: white;
+  z-index: 100;
+  width: 100%;
+  padding: 0.8rem 2rem;
+  background: linear-gradient(135deg, 
+    #1a9855 0%, 
+    #2ecc71 50%, 
+    #4cd137 100%
+  );
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: center;
@@ -30,6 +35,13 @@ body, html {
   display: flex;
   align-items: center;
   margin-right: auto;
+}
+
+.navbar-brand img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%; 
+  border: 2px solid white;
 }
 
 .navbar-brand h1 {
@@ -48,37 +60,39 @@ body, html {
   display: flex;
   justify-content: center; 
   margin: 0 auto; 
+  gap: 0.5rem; 
 }
 
 .navbar-nav .nav-item .nav-link {
-  color: #2e8b57;
-  font-weight: 500;
-  margin: 0 1rem;
-  padding: 0.5rem 1rem;
+  color: #ffffff;
+  font-weight: 600; 
+  margin: 0 0.8rem;
+  padding: 0.5rem 0.8rem;
   transition: color 0.3s, background-color 0.3s;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2); 
+  font-size: 1.1rem; 
 }
 
-.navbar-nav .nav-item .nav-link:hover {
-  color: #276948;
-}
-
+.navbar-nav .nav-item .nav-link:hover,
 .navbar-nav .nav-item .nav-link.active {
-  color: #2e8b57;
-  font-weight: bold;
+  color: #ffff00;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.4); 
 }
 
 .btn-login {
-  background-color: #2e8b57;
-  color: white;
+  background-color: #ffffff;
+  color: #1a9855; 
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
   font-weight: 600;
   margin-left: auto;
+  transition: background-color 0.3s, color 0.3s;
+  font-size: 1.1rem; 
 }
 
 .btn-login:hover {
-  background-color: #276948;
-  color: white;
+  background-color: #ffff00; 
+  color: #1a9855;
 }
 
 .navbar-toggler {
@@ -118,7 +132,7 @@ main {
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 5px;
+  padding: 0px;
 }
 
 .container {
@@ -283,9 +297,9 @@ main {
 }
 .card-duan {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: 5px solid black; /* Thêm viền mỏng */
+  border: 5px solid black; 
   border-radius: 5px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Thêm bóng nhẹ */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
  
 }
 
@@ -306,9 +320,9 @@ main {
   display: flex;
   flex-direction: column;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: 1px solid #ddd; /* Thin border */
-  border-radius: 8px; /* Slightly rounded corners */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Light shadow */
+  border: 1px solid #ddd; 
+  border-radius: 8px; 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 .section-title h5 {
