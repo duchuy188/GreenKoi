@@ -3,15 +3,21 @@
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    min-height: 100vh;
-    padding: 1% 0;
+    padding-top: 20px; /* Add some top padding */
+    min-height: calc(100vh - 80px); /* Subtract navbar height */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .emp-profile {
-    background: #fff;
-    border-radius: 0.5rem;
+    width: 100%;
+    max-width: 1200px;
     padding: 3%;
-    margin-bottom: 3%;
+    margin-top: 20px;
+    border-radius: 0.5rem;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
 .profile-img{
@@ -98,4 +104,16 @@
 .profile-tab p{
     font-weight: 600;
     color: #0062cc;
+}
+
+/* Add these new styles for responsiveness */
+@media (max-width: 991px) {
+    .profile-background {
+        min-height: calc(100vh - 60px); /* Adjust for smaller navbar */
+    }
+    
+    .emp-profile {
+        margin-top: 10px;
+        padding: 2%;
+    }
 }

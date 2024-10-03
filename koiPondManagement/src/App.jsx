@@ -8,10 +8,13 @@ import Dashboard from "./dashboard";
 import MainLayout from "./layout";
 import LoginPage from "./components/page/login";
 import Register2 from "./components/elements/Register2";
+// Change this line to match the correct path and filename of your Profile component
+import Profile from "./components/profile/Profile";
+
 function App() {
   const router = createBrowserRouter([
     {
-      path: '/',
+      path: "/",
       element: <MainLayout />,
       children: [
         {
@@ -23,6 +26,10 @@ function App() {
           element: <Introduction />,
         },
         {
+          path: "/profile",
+          element: <Profile />,
+        },
+        {
           path: "/login",
           element: <LoginPage2 />,
         },
@@ -30,7 +37,7 @@ function App() {
           path: "/register",
           element: <Register2 />,
         },
-      ]
+      ],
     },
     {
       path: "/login",
@@ -41,15 +48,12 @@ function App() {
       element: <RegisterPage />,
     },
     {
-      path: '/dashboard',
+      path: "/dashboard",
       element: <Dashboard />,
     },
   ]);
 
-  return (
-    <RouterProvider router={router} />
-  );
+  return <RouterProvider router={router} />;
 }
-
 
 export default App;

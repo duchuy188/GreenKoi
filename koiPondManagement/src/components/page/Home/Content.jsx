@@ -1,6 +1,7 @@
 import { Component } from "react";
 import projects from "../../Share/listImage";
 import newsItems from "../../Share/newsItems";
+import "./Content.css";
 export default class Content extends Component {
   render() {
     return (
@@ -244,27 +245,28 @@ export default class Content extends Component {
           </div>
         </div>
         <div className="container py-5">
-          <h2 className="text-center mb-4">Tin tức nổi bật</h2>
-          <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-            {newsItems.map((item, index) => (
-              <div key={index} className="col-md-4 mb-4">
-                <div className="card card-tintuc h-100 shadow-sm">
-                  <img
-                    src={item.img}
-                    className="card-img-top"
-                    alt={item.title}
-                    style={{ height: "200px", objectFit: "cover" }}
-                  />
-                  <div className="card-body">
-                    <h5 className="card-title">{item.title}</h5>
-                    <p className="card-text text-muted">{item.topic}</p>
-                    <p className="card-text">{item.detail}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+  <h2 className="text-center mb-4">Tin tức nổi bật</h2>
+  <div className="row g-4">
+    {newsItems.map((item, index) => (
+      <div key={index} className="col-md-4">
+        <div className="card card-tintuc h-100">
+          <div className="card-image-container">
+            <img src={item.img} className="card-img-top" alt={item.title} />
+            <div className="date-badge">
+              <span className="day">{item.day}</span>
+              <span className="month">Th{item.month}</span>
+            </div>
+          </div>
+          <div className="card-body">
+            <span className="category-label">{item.topic}</span>
+            <h5 className="card-title">{item.title}</h5>
+            <p className="card-text">{item.detail}</p>
           </div>
         </div>
+      </div>
+    ))}
+  </div>
+</div>
       </div>
     );
   }

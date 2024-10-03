@@ -6,12 +6,12 @@ import Footer from '../components/footer/Footer';
 
 function MainLayout() {
   return (
-    <div>
+    <div className="main-layout">
       <Header />
-      <main>
+      <main className="content-wrapper">
         <Outlet />
       </main>
-      <Footer/>
+      <Footer />
     </div>
   );
 }
