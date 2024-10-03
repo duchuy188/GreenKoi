@@ -102,7 +102,7 @@ public class UserService {
         newUser.setFullName(request.getFullName());
         newUser.setPhone(request.getPhoneNumber());
         newUser.setAddress(request.getAddress());
-        newUser.setRoleId("6"); // Giả sử 6 là role cho khách hàng
+        newUser.setRoleId("5"); // Giả sử 5 là role cho khách hàng
 
         log.info("Registering new user: {}", newUser);
         try {
