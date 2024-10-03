@@ -7,7 +7,6 @@ import "../../App.css";
 function Introduction() {
   return (
     <>
-      <Header></Header>
       <Content></Content>
       <Footer></Footer>
       <Icon></Icon>
