@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Form, Input } from 'antd';
@@ -13,9 +14,21 @@ function LoginPage() {
       const response = await api.post("/api/auth/login", values);
       
       if (response && response.data) {
+        const { token, userId, username, roleId } = response.data;
         toast.success("Login Successful!");
-        localStorage.setItem("token", response.data.token);
-        navigate("/");
+        
+        // Lưu toàn bộ thông tin người dùng
+        localStorage.setItem("userInfo", JSON.stringify({ token, userId, username, roleId }));
+        
+        // Phân quyền dựa trên roleId
+        const role = parseInt(roleId);
+        if (role >= 1 && role <= 5) {
+          navigate("/dashboard");
+        } else if (role === 6) {
+          navigate("/");  // Chuyển đến trang chủ
+        } else {
+          toast.error("Invalid role. Please contact administrator.");
+        }
       } else {
         toast.error("Login failed. Please try again.");
       }

@@ -7,7 +7,7 @@ import RegisterPage from "./components/page/register";
 import Dashboard from "./dashboard";
 import MainLayout from "./layout";
 import LoginPage from "./components/page/login";
-  
+import Register2 from "./components/elements/Register2";
 function App() {
   const router = createBrowserRouter([
     {
@@ -26,7 +26,10 @@ function App() {
           path: "/login",
           element: <LoginPage2 />,
         },
-
+        {
+          path: "/register",
+          element: <Register2 />,
+        },
       ]
     },
     {
