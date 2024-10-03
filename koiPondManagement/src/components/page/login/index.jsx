@@ -1,10 +1,9 @@
-
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button, Form, Input } from 'antd';
-import { toast } from 'react-toastify';
-import api from '../../config/axios';
-import AuthenTemplate from '../../authen-templated';
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button, Form, Input } from "antd";
+import { toast } from "react-toastify";
+import api from "../../config/axios";
+import AuthenTemplate from "../../authen-templated";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -12,20 +11,23 @@ function LoginPage() {
   const handleLogin = async (values) => {
     try {
       const response = await api.post("/api/auth/login", values);
-      
+
       if (response && response.data) {
         const { token, userId, username, roleId } = response.data;
         toast.success("Login Successful!");
-        
+
         // Lưu toàn bộ thông tin người dùng
-        localStorage.setItem("userInfo", JSON.stringify({ token, userId, username, roleId }));
-        
+        localStorage.setItem(
+          "userInfo",
+          JSON.stringify({ token, userId, username, roleId })
+        );
+
         // Phân quyền dựa trên roleId
         const role = parseInt(roleId);
-        if (role >= 1 && role <= 5) {
+        if (role >= 1 && role <= 4) {
           navigate("/dashboard");
-        } else if (role === 6) {
-          navigate("/");  // Chuyển đến trang chủ
+        } else if (role === 5) {
+          navigate("/"); // Chuyển đến trang chủ
         } else {
           toast.error("Invalid role. Please contact administrator.");
         }
@@ -35,7 +37,10 @@ function LoginPage() {
     } catch (err) {
       console.error("Login error:", err);
       if (err.response) {
-        toast.error(err.response.data.message || "Login failed. Please check your credentials.");
+        toast.error(
+          err.response.data.message ||
+            "Login failed. Please check your credentials."
+        );
       } else if (err.request) {
         toast.error("Unable to connect to the server. Please try again later.");
       } else {
@@ -55,15 +60,15 @@ function LoginPage() {
         <Form.Item
           label="Username"
           name="username"
-          rules={[{ required: true, message: 'Please input your username!' }]}
+          rules={[{ required: true, message: "Please input your username!" }]}
         >
-          <Input/>
+          <Input />
         </Form.Item>
 
         <Form.Item
           label="Password"
           name="password"
-          rules={[{ required: true, message: 'Please input your password!' }]}
+          rules={[{ required: true, message: "Please input your password!" }]}
         >
           <Input.Password />
         </Form.Item>
@@ -79,7 +84,11 @@ function LoginPage() {
         </Form.Item>
 
         <Form.Item>
-          <Button type="default" block onClick={() => console.log("Google login not implemented")}>
+          <Button
+            type="default"
+            block
+            onClick={() => console.log("Google login not implemented")}
+          >
             Login with Google
           </Button>
         </Form.Item>

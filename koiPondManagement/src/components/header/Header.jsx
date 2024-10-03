@@ -1,7 +1,15 @@
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { headerLogo } from "../Share/listImage";
-import { Link } from "react-router-dom";
 import "../header/Header.css";
+
 function Header() {
+  const location = useLocation();
+
+  const isActive = (path) => {
+    return location.pathname === path ? 'active' : '';
+  };
+
   return (
     <nav className="navbar navbar-expand-lg bg-white navbar-light shadow-sm px-5 py-3 py-lg-0">
       <div className="container-fluid">
@@ -25,30 +33,30 @@ function Header() {
         </button>
         <div className="collapse navbar-collapse" id="navbarCollapse">
           <div className="navbar-nav ms-auto py-0">
-            <Link to="/" className="nav-item nav-link">
+            <Link to="/" className={`nav-item nav-link ${isActive('/')}`}>
               Trang chủ
             </Link>
-            <Link to="/gioithieu" className="nav-item nav-link">
+            <Link to="/gioithieu" className={`nav-item nav-link ${isActive('/gioithieu')}`}>
               Giới thiệu
             </Link>
-            <Link to="/duan" className="nav-item nav-link">
+            <Link to="/duan" className={`nav-item nav-link ${isActive('/duan')}`}>
               Dự án
             </Link>
-            <Link to="/dichvu" className="nav-item nav-link">
+            <Link to="/dichvu" className={`nav-item nav-link ${isActive('/dichvu')}`}>
               Dịch vụ
             </Link>
-            <Link to="/baogia" className="nav-item nav-link">
+            <Link to="/baogia" className={`nav-item nav-link ${isActive('/baogia')}`}>
               Báo Giá
             </Link>
-            <Link to="/lapthietketheoyeucau" className="nav-item nav-link">
+            <Link to="/lapthietketheoyeucau" className={`nav-item nav-link ${isActive('/lapthietketheoyeucau')}`}>
               Lập thiết kế theo yêu cầu
             </Link>
-            <Link to="/lienhe" className="nav-item nav-link">
+            <Link to="/lienhe" className={`nav-item nav-link ${isActive('/lienhe')}`}>
               Liên hệ
             </Link>
           </div>
           <div className="navbar-login">
-            <Link to="/login" className="nav-item nav-link btn-login">
+            <Link to="/login" className={`nav-item nav-link btn-login ${isActive('/login')}`}>
               Đăng nhập
             </Link>
           </div>

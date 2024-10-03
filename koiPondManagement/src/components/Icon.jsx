@@ -56,7 +56,7 @@ const Icon = () => {
       </a>
 
       {/* Icon email */}
-      <a href="" target="_blank" rel="noopener noreferrer">
+      <a href="https://mail.google.com/mail" target="_blank" rel="noopener noreferrer">
         <img
           className="email-icon"
           src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2Dk1skpw0d95QQAHQveUicEZ7RAA6cPmKBQ&s"
