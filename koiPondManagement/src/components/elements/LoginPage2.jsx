@@ -8,9 +8,9 @@ import LoginPage from "../page/login/index";
 function LoginPage2() {
   return (
     <>
-      <Header></Header>
+ 
       <LoginPage></LoginPage>
-      <Footer></Footer>
+
       <Icon></Icon>
     </>
   );

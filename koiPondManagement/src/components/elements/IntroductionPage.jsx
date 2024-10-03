@@ -8,7 +8,6 @@ function Introduction() {
   return (
     <>
       <Content></Content>
-      <Footer></Footer>
       <Icon></Icon>
     </>
   );
