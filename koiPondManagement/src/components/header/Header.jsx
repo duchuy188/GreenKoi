@@ -25,7 +25,7 @@ function Header() {
         </button>
         <div className="collapse navbar-collapse" id="navbarCollapse">
           <div className="navbar-nav ms-auto py-0">
-            <Link to="/" className="nav-item nav-link active">
+            <Link to="/" className="nav-item nav-link">
               Trang chủ
             </Link>
             <Link to="/gioithieu" className="nav-item nav-link">

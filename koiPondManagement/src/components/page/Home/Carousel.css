@@ -1,0 +1,89 @@
+.carousel-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .carousel-slide {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+    background-size: cover;
+    background-position: center;
+  }
+  
+  .carousel-content {
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    border-radius: 10px;
+  }
+  
+  .carousel-title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .carousel-subtitle {
+    font-size: 1.2rem;
+    color: #a0a0a0;
+  }
+  
+  .carousel-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    font-size: 20px;
+    color: white;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  
+  .carousel-button-prev {
+    background-color: black;
+    left: 50px;
+  }
+  
+  .carousel-button-next {
+    background-color: black;
+    right: 50px;
+  }
+  
+  .custom-dots {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .custom-dots li {
+    background: #fff;
+    opacity: 0.3;
+    width: 30px;
+    height: 4px;
+    margin: 0 4px;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+  
+  .custom-dots li.slick-active {
+    opacity: 1;
+    width: 40px;
+  }
+  
+  .custom-dots li button {
+    display: none;
+  }

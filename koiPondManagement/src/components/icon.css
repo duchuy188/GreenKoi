@@ -1,57 +1,81 @@
+/* Hiệu ứng sóng nước màu xanh dương */
+@keyframes ripple {
+  0% {
+      box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4), 0 0 0 5px rgba(0, 123, 255, 0.3);
+  }
+  100% {
+      box-shadow: 0 0 0 20px rgba(0, 123, 255, 0), 0 0 0 25px rgba(0, 123, 255, 0);
+  }
+}
+
+/* Áp dụng hiệu ứng cho các icon */
+.zalo-icon:hover,
+.phone-icon:hover,
+.email-icon:hover,
+.button:hover {
+  animation: ripple 1s infinite;
+}
+
+/* Các định dạng icon sẵn có */
 .zalo-icon {
-    position: fixed;
-    bottom: 190px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    z-index: 1000;
-  }
-  .phone-icon {
-    position: fixed;
-    bottom: 75px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    z-index: 1000;
-    border-radius: 50%;
-  }
-  .email-icon {
-    position: fixed;
-    bottom: 130px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    z-index: 1000;
-    border-radius: 50%;
-  }
-  
-  /* Định dạng nút quay lại đầu trang */
-  #back-to-top {
-      display: block;
-      position: fixed;
-      bottom: 20px;
-      right: 30px;
-      color: #fff;
-      padding: 10px;
-      border-radius: 5px;
-      cursor: pointer;
-      z-index: 1000;
-  }
-  .button{
-    position: fixed;
-    bottom: 20px;
-    background-color: black;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    z-index: 1000;
-    border-radius: 50%;
-  }
-  
-  
-  
-  /* Thêm một số nội dung trang để có thể cuộn */
-  .content {
-      height: 2000px;
-      padding: 20px;
-  }
+  position: fixed;
+  bottom: 190px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  z-index: 1000;
+  border-radius: 50%;
+  background-color: #009688; /* Thêm màu nền cho icon Zalo */
+}
+.phone-icon {
+  position: fixed;
+  bottom: 75px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  z-index: 1000;
+  border-radius: 50%;
+  background-color: #4CAF50; /* Màu nền cho icon Phone */
+}
+.email-icon {
+  position: fixed;
+  bottom: 130px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  z-index: 1000;
+  border-radius: 50%;
+  background-color: #F44336; /* Màu nền cho icon Email */
+}
+
+/* Định dạng nút quay lại đầu trang */
+#back-to-top {
+  display: block;
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 1000;
+  background-color: black;
+}
+
+/* Nút quay lại đầu trang */
+.button {
+  position: fixed;
+  bottom: 20px;
+  background-color: black;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  z-index: 1000;
+  border-radius: 50%;
+}
+
+/* Thêm một số nội dung trang để có thể cuộn */
+.content {
+  height: 2000px;
+  padding: 20px;
+}
