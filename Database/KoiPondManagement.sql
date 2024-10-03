@@ -252,21 +252,36 @@
 		('1', 'Manager', 'Quản lý dự án, nhân viên, tài khoản người dùng và phân quyền', 1, GETDATE(), GETDATE()),
 		('2', 'Consulting Staff', 'Nhân viên tư vấn cho khách hàng', 1, GETDATE(), GETDATE()),
 		('3', 'Design Staff', 'Nhân viên thiết kế hồ cá Koi', 1, GETDATE(), GETDATE()),
-		('4', 'Construction Staff', 'Nhân viên thi công hồ cá Koi', 1, GETDATE(), GETDATE()),
-		('5', 'Maintenance Staff', 'Nhân viên bảo dưỡng và chăm sóc hồ cá', 1, GETDATE(), GETDATE()),
-		('6', 'Customer', 'Khách hàng sử dụng dịch vụ', 1, GETDATE(), GETDATE());
-
+		('4', 'Construction Staff', 'Nhân viên thi công hồ cá Koi va bảo dưỡng và chăm sóc hồ cá', 1, GETDATE(), GETDATE()),
+		('5', 'Customer', 'Khách hàng sử dụng dịch vụ', 1, GETDATE(), GETDATE());
+			
 		-- Thêm dữ liệu vào bảng users
 		INSERT INTO users (id, username, password, email, phone, full_name, role_id, is_active, created_at, updated_at)
 		VALUES 
 		('1', 'manager1', 'password123', 'manager1@koipond.com', '0987654321', 'John Manager', '1', 1, GETDATE(), GETDATE()),
-		('2', 'consultant1', 'hashed_password_here', 'consultant1@koipond.com', '0987654322', 'Alice Consultant', '2', 1, GETDATE(), GETDATE()),
-		('3', 'designer1', 'hashed_password_here', 'designer1@koipond.com', '0987654323', 'Bob Designer', '3', 1, GETDATE(), GETDATE()),
-		('4', 'constructor1', 'hashed_password_here', 'constructor1@koipond.com', '0987654324', 'Charlie Constructor', '4', 1, GETDATE(), GETDATE()),
-		('5', 'maintenance1', 'hashed_password_here', 'maintenance1@koipond.com', '0987654325', 'David Maintenance', '5', 1, GETDATE(), GETDATE()),
-		('6', 'customer1', 'hashed_password_here', 'customer1@example.com', '0123456780', 'Eva Customer', '6', 1, GETDATE(), GETDATE()),
-		('7', 'customer2', 'hashed_password_here', 'customer2@example.com', '0123456781', 'Frank Customer', '6', 1, GETDATE(), GETDATE());
+		('2', 'consultant1', 'password123', 'consultant1@koipond.com', '0987654322', 'Alice Consultant', '2', 1, GETDATE(), GETDATE()),
+		('3', 'designer1', 'password123', 'designer1@koipond.com', '0987654323', 'Bob Designer', '3', 1, GETDATE(), GETDATE()),
+		('4', 'constructor1', 'password123', 'constructor1@koipond.com', '0987654324', 'Charlie Constructor', '4', 1, GETDATE(), GETDATE()),
+		('5', 'customer1', 'password123', 'customer1@example.com', '0123456780', 'Eva Customer', '5', 1, GETDATE(), GETDATE()),
+		('6', 'customer2', 'password123', 'customer2@example.com', '0123456781', 'Frank Customer', '5', 1, GETDATE(), GETDATE());
 
-		UPDATE users
+UPDATE users
 SET password = '$2a$12$gShHO6BeIKRLOnYGGHa4YOZSR1Z2jUJiekkuccwb1wvyUAJGzm9Dm'
 WHERE username = 'manager1';
+
+UPDATE users
+SET password = '$2a$12$rEcTavQ65J0/I0CkEff7TuMHg3rTYckaY9rtdLzoD9BUjBvbmJm9C'
+WHERE username = 'consultant1';
+
+UPDATE users
+SET password = '$2a$12$vZv5ELYDWsYF.Gf3dB3cwuvrbRSZdaml/CEB0kSgPJnbvS9exI8v2'
+WHERE username = 'designer1';
+
+UPDATE users
+SET password = '$2a$12$1RQNWGNLObv2eqdT/gOgUeFxHjdJqFjEIa/rVIGnVNgamWE35Qko2'
+WHERE username = 'constructor1';
+
+UPDATE users
+SET password = '$2a$12$Sr8YsayviFSTLZNbSrhq3uVcXQg5eyq1Ned8V/m1IpHNc7Lz6moiK'
+WHERE username = 'maintenance1';
+
