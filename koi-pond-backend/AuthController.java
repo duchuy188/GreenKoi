@@ -14,6 +14,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.Map;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -48,13 +51,20 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Login user", description = "Authenticate user and return JWT token")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
             AuthResponse authResponse = userService.authenticateUser(loginRequest.getUsername(), loginRequest.getPassword());
             return ResponseEntity.ok(authResponse);
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed: " + e.getMessage());
+            log.warn("Authentication failed: {}", e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            if (e.getMessage().contains("User account is blocked")) {
+                errorResponse.put("message", "Account is blocked. Please contact the administrator.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+            } else {
+                errorResponse.put("message", "Authentication failed: " + e.getMessage());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+            }
         }
     }
 
