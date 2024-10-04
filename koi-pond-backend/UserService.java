@@ -251,4 +251,15 @@ public class UserService {
         dto.setAddress(user.getAddress());
         return dto;
     }
+
+    public void logoutUser(String token) {
+        log.info("Logging out user with token: {}", token.substring(0, Math.min(token.length(), 10)) + "...");
+        try {
+            jwtTokenProvider.invalidateToken(token);
+            log.info("User logged out successfully");
+        } catch (Exception e) {
+            log.error("Error during logout: {}", e.getMessage());
+            throw new RuntimeException("Failed to logout user", e);
+        }
+    }
 }

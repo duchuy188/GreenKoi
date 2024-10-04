@@ -86,8 +86,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/test/**").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/logout", "/api/test/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/manager/**").hasAuthority("ROLE_1")
+                        .requestMatchers("/api/projects/**").hasAuthority("ROLE_1")
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsService)
@@ -101,8 +103,7 @@ public class SecurityConfig {
                             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
                         })
                 )
-                .addFilterBefore(firebaseAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), FirebaseAuthenticationFilter.class)
+                .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(firebaseAuthenticationFilter, JwtTokenFilter.class);
 
         logger.info("SecurityFilterChain configuration completed");

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,10 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class JwtTokenProvider {
@@ -32,6 +37,8 @@ public class JwtTokenProvider {
 
     private final UserDetailsService userDetailsService;
 
+    private final Set<String> blacklistedTokens = Collections.newSetFromMap(new ConcurrentHashMap<>());
+
     public JwtTokenProvider(UserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
     }
@@ -46,7 +53,7 @@ public class JwtTokenProvider {
 
     public String createToken(String username, String roleId) {
         Claims claims = Jwts.claims().setSubject(username);
-        claims.put("roleId", roleId);
+        claims.put("roleId", "ROLE_" + roleId);
 
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
@@ -65,7 +72,10 @@ public class JwtTokenProvider {
 
     public Authentication getAuthentication(String token) {
         UserDetails userDetails = this.userDetailsService.loadUserByUsername(getUsername(token));
-        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+        String roleId = getRoleId(token);
+        List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(roleId));
+        logger.info("Creating Authentication for user: {}. Authorities: {}", userDetails.getUsername(), authorities);
+        return new UsernamePasswordAuthenticationToken(userDetails, "", authorities);
     }
 
     public String getUsername(String token) {
@@ -89,9 +99,14 @@ public class JwtTokenProvider {
     public boolean validateToken(String token) {
         try {
             logger.info("Validating token: {}", token.substring(0, Math.min(20, token.length())) + "...");
+            if (isTokenBlacklisted(token)) {
+                logger.warn("Token is blacklisted");
+                return false;
+            }
             Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             Date expiration = claims.getBody().getExpiration();
             logger.info("Token expiration: {}", expiration);
+            logger.info("Token claims: {}", claims.getBody());
             if (expiration.before(new Date())) {
                 logger.warn("JWT token is expired. Current time: {}", new Date());
                 return false;
@@ -102,6 +117,15 @@ public class JwtTokenProvider {
             logger.error("Error validating token", e);
             return false;
         }
+    }
+
+    public void invalidateToken(String token) {
+        logger.info("Invalidating token: {}", token.substring(0, Math.min(20, token.length())) + "...");
+        blacklistedTokens.add(token);
+    }
+
+    public boolean isTokenBlacklisted(String token) {
+        return blacklistedTokens.contains(token);
     }
 
     public void checkKey() {
