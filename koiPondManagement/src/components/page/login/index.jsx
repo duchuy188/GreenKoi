@@ -62,7 +62,7 @@ function LoginPage() {
           name="username"
           rules={[{ required: true, message: "Please input your username!" }]}
         >
-          <Input />
+          <Input/>
         </Form.Item>
 
         <Form.Item

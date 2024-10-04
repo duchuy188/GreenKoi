@@ -10,6 +10,8 @@ import LoginPage from "./components/page/login";
 import Register2 from "./components/elements/Register2";
 // Change this line to match the correct path and filename of your Profile component
 import Profile from "./components/profile/Profile";
+import Category from "./components/page/admin/category";
+
 
 function App() {
   const router = createBrowserRouter([
@@ -48,8 +50,14 @@ function App() {
       element: <RegisterPage />,
     },
     {
-      path: "/dashboard",
+      path: "dashboard",
       element: <Dashboard />,
+      children: [
+        {
+          path: "category",
+          element: <Category />,
+        },
+      ],
     },
   ]);
 
