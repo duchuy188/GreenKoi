@@ -54,6 +54,9 @@ function Header() {
             <Link to="/lienhe" className={`nav-item nav-link ${isActive('/lienhe')}`}>
               Liên hệ
             </Link>
+            <Link to="/blog" className={`nav-item nav-link ${isActive('/blog')}`}>
+              Blog
+            </Link>
           </div>
           <div className="navbar-login">
             <Link to="/login" className={`nav-item nav-link btn-login ${isActive('/login')}`}>
