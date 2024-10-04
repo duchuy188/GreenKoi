@@ -13,7 +13,16 @@ function LoginPage() {
       const response = await api.post("/api/auth/login", values);
 
       if (response && response.data) {
-        const { token, userId, username, roleId } = response.data;
+        const { token, userId, username, roleId, status } = response.data;
+
+        // Check if the account is blocked
+        if (status === "blocked") {
+          toast.error(
+            "Your account has been blocked. Please contact the administrator."
+          );
+          return;
+        }
+
         toast.success("Login Successful!");
 
         // Lưu toàn bộ thông tin người dùng
@@ -37,10 +46,19 @@ function LoginPage() {
     } catch (err) {
       console.error("Login error:", err);
       if (err.response) {
-        toast.error(
-          err.response.data.message ||
-            "Login failed. Please check your credentials."
-        );
+        if (
+          err.response.status === false &&
+          err.response.data.message === "Account blocked"
+        ) {
+          toast.error(
+            "Your account has been blocked. Please contact the administrator."
+          );
+        } else {
+          toast.error(
+            err.response.data.message ||
+              "Login failed. Please check your credentials."
+          );
+        }
       } else if (err.request) {
         toast.error("Unable to connect to the server. Please try again later.");
       } else {
