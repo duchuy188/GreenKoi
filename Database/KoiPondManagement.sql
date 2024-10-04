@@ -1,7 +1,8 @@
-		USE [KoiPondManagement];
+USE [KoiPondManagement];
 GO
 
 -- Xóa tất cả các bảng hiện có (nếu cần)
+/*
 DROP TABLE IF EXISTS project_cancellations;
 DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS blog_post_categories;
@@ -19,7 +20,7 @@ DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS cancellation_policies;
 DROP TABLE IF EXISTS project_statuses;
 DROP TABLE IF EXISTS project_stage_statuses;
-
+*/
 -- Bảng project_statuses (mới)
 CREATE TABLE project_statuses (
     id NVARCHAR(36) PRIMARY KEY,
@@ -113,6 +114,13 @@ CREATE TABLE projects (
     start_date DATE,
     end_date DATE,
     address NVARCHAR(MAX),
+    progress_percentage INT NOT NULL DEFAULT 0,
+    internal_notes NVARCHAR(MAX),
+    customer_feedback NVARCHAR(MAX),
+    payment_status NVARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    estimated_completion_date DATE,
+    total_stages INT NOT NULL DEFAULT 0,
+    completed_stages INT NOT NULL DEFAULT 0,
     is_active BIT NOT NULL DEFAULT 1,
     created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
@@ -273,7 +281,27 @@ CREATE TABLE project_cancellations (
     FOREIGN KEY (processed_by) REFERENCES users(id)
 );
 
-		-- Thêm dữ liệu vào bảng roles
+-- Thêm dữ liệu vào bảng project_statuses
+INSERT INTO project_statuses (id, name, description, is_active)
+VALUES 
+('PS1', 'PENDING', 'Project is waiting for approval', 1),
+('PS2', 'APPROVED', 'Project has been approved and is ready to start', 1),
+('PS3', 'PLANNING', 'Project is in the planning phase', 1),
+('PS4', 'IN_PROGRESS', 'Project is currently in progress', 1),
+('PS5', 'ON_HOLD', 'Project is temporarily on hold', 1),
+('PS6', 'COMPLETED', 'Project has been completed', 1),
+('PS7', 'CANCELLED', 'Project has been cancelled', 1),
+('PS8', 'MAINTENANCE', 'Project is in the maintenance phase', 1);
+
+-- Thêm dữ liệu vào bảng project_stage_statuses
+INSERT INTO project_stage_statuses (id, name, description, is_active)
+VALUES 
+('PSS1', 'PENDING', 'Stage is waiting to start', 1),
+('PSS2', 'IN_PROGRESS', 'Stage is currently in progress', 1),
+('PSS3', 'COMPLETED', 'Stage has been completed', 1),
+('PSS4', 'ON_HOLD', 'Stage is temporarily on hold', 1);
+
+-- Thêm dữ liệu vào bảng roles
 INSERT INTO roles (id, name, description, is_active, created_at, updated_at)
 VALUES 
 ('1', 'Manager', N'Quản lý dự án, nhân viên, tài khoản người dùng và phân quyền', 1, GETDATE(), GETDATE()),
@@ -281,34 +309,54 @@ VALUES
 ('3', 'Design Staff', N'Nhân viên thiết kế hồ cá Koi', 1, GETDATE(), GETDATE()),
 ('4', 'Construction Staff', N'Nhân viên thi công hồ cá Koi va bảo dưỡng và chăm sóc hồ cá', 1, GETDATE(), GETDATE()),
 ('5', 'Customer', N'Khách hàng sử dụng dịch vụ', 1, GETDATE(), GETDATE());
-			
-		-- Thêm dữ liệu vào bảng users
-		INSERT INTO users (id, username, password, email, phone, full_name, role_id, is_active, created_at, updated_at)
-		VALUES 
-		('1', 'manager1', 'password123', 'manager1@koipond.com', '0987654321', 'John Manager', '1', 1, GETDATE(), GETDATE()),
-		('2', 'consultant1', 'password123', 'consultant1@koipond.com', '0987654322', 'Alice Consultant', '2', 1, GETDATE(), GETDATE()),
-		('3', 'designer1', 'password123', 'designer1@koipond.com', '0987654323', 'Bob Designer', '3', 1, GETDATE(), GETDATE()),
-		('4', 'constructor1', 'password123', 'constructor1@koipond.com', '0987654324', 'Charlie Constructor', '4', 1, GETDATE(), GETDATE()),
-		('5', 'customer1', 'password123', 'customer1@example.com', '0123456780', 'Eva Customer', '5', 1, GETDATE(), GETDATE()),
-		('6', 'customer2', 'password123', 'customer2@example.com', '0123456781', 'Frank Customer', '5', 1, GETDATE(), GETDATE());
 
-UPDATE users
-SET password = '$2a$12$gShHO6BeIKRLOnYGGHa4YOZSR1Z2jUJiekkuccwb1wvyUAJGzm9Dm'
-WHERE username = 'manager1';
+-- Thêm dữ liệu vào bảng users
+INSERT INTO users (id, username, password, email, phone, full_name, role_id, is_active, created_at, updated_at)
+VALUES 
+('1', 'manager1', '$2a$12$gShHO6BeIKRLOnYGGHa4YOZSR1Z2jUJiekkuccwb1wvyUAJGzm9Dm', 'manager1@koipond.com', '0987654321', 'John Manager', '1', 1, GETDATE(), GETDATE()),
+('2', 'consultant1', '$2a$12$rEcTavQ65J0/I0CkEff7TuMHg3rTYckaY9rtdLzoD9BUjBvbmJm9C', 'consultant1@koipond.com', '0987654322', 'Alice Consultant', '2', 1, GETDATE(), GETDATE()),
+('3', 'designer1', '$2a$12$vZv5ELYDWsYF.Gf3dB3cwuvrbRSZdaml/CEB0kSgPJnbvS9exI8v2', 'designer1@koipond.com', '0987654323', 'Bob Designer', '3', 1, GETDATE(), GETDATE()),
+('4', 'constructor1', '$2a$12$1RQNWGNLObv2eqdT/gOgUeFxHjdJqFjEIa/rVIGnVNgamWE35Qko2', 'constructor1@koipond.com', '0987654324', 'Charlie Constructor', '4', 1, GETDATE(), GETDATE()),
+('5', 'customer1', '$2a$12$Sr8YsayviFSTLZNbSrhq3uVcXQg5eyq1Ned8V/m1IpHNc7Lz6moiK', 'customer1@example.com', '0123456780', 'Eva Customer', '5', 1, GETDATE(), GETDATE()),
+('6', 'customer2', '$2a$12$Sr8YsayviFSTLZNbSrhq3uVcXQg5eyq1Ned8V/m1IpHNc7Lz6moiK', 'customer2@example.com', '0123456781', 'Frank Customer', '5', 1, GETDATE(), GETDATE());
 
-UPDATE users
-SET password = '$2a$12$rEcTavQ65J0/I0CkEff7TuMHg3rTYckaY9rtdLzoD9BUjBvbmJm9C'
-WHERE username = 'consultant1';
 
-UPDATE users
-SET password = '$2a$12$vZv5ELYDWsYF.Gf3dB3cwuvrbRSZdaml/CEB0kSgPJnbvS9exI8v2'
-WHERE username = 'designer1';
 
-UPDATE users
-SET password = '$2a$12$1RQNWGNLObv2eqdT/gOgUeFxHjdJqFjEIa/rVIGnVNgamWE35Qko2'
-WHERE username = 'constructor1';
 
-UPDATE users
-SET password = '$2a$12$Sr8YsayviFSTLZNbSrhq3uVcXQg5eyq1Ned8V/m1IpHNc7Lz6moiK'
-WHERE username = 'maintenance1';
+-- Thêm dữ liệu vào bảng designs
+INSERT INTO designs (id, name, description, base_price, created_by)
+VALUES 
+('D1', 'Classic Koi Pond', 'A traditional Japanese-style koi pond', 5000.00, '3'),
+('D2', 'Modern Minimalist Pond', 'A sleek, contemporary koi pond design', 6000.00, '3');
 
+-- Thêm dữ liệu vào bảng promotions
+INSERT INTO promotions (id, name, description, discount_value, start_date, end_date)
+VALUES 
+('P1', 'Summer Sale', '10% off on all pond designs', 10.00, '2024-06-01', '2024-08-31');
+
+-- Thêm dữ liệu vào bảng projects 
+INSERT INTO projects (id, customer_id, consultant_id, design_id, promotion_id, name, description, status_id, total_price, deposit_amount, start_date, end_date, address, progress_percentage, payment_status, estimated_completion_date, total_stages, completed_stages)
+VALUES 
+('PR1', '5', '2', 'D1', 'P1', 'Eva''s Backyard Oasis', 'A beautiful koi pond for Eva''s backyard', 'PS4', 4500.00, 1000.00, '2024-07-01', '2024-08-15', '123 Main St, Cityville', 30, 'PARTIAL', '2024-08-15', 3, 1),
+('PR2', '6', '2', 'D2', NULL, 'Frank''s Modern Pond', 'A minimalist koi pond for Frank''s garden', 'PS3', 6000.00, 1500.00, '2024-08-01', '2024-09-30', '456 Elm St, Townsville', 10, 'PARTIAL', '2024-09-30', 3, 1);
+
+-- Thêm dữ liệu vào bảng project_stages
+INSERT INTO project_stages (id, project_id, name, description, status_id, start_date, end_date)
+VALUES 
+('PS1', 'PR1', 'Design Approval', 'Get customer approval on final design', 'PSS3', '2024-07-01', '2024-07-07'),
+('PS2', 'PR1', 'Excavation', 'Dig the pond area', 'PSS2', '2024-07-08', '2024-07-15'),
+('PS3', 'PR2', 'Initial Consultation', 'Meet with customer to discuss requirements', 'PSS3', '2024-08-01', '2024-08-03');
+
+-- Thêm dữ liệu vào bảng payments
+INSERT INTO payments (id, project_id, amount, payment_date, payment_method, status)
+VALUES 
+('PAY1', 'PR1', 1000.00, '2024-07-01', 'Credit Card', 'COMPLETED'),
+('PAY2', 'PR2', 1500.00, '2024-08-01', 'Bank Transfer', 'COMPLETED');
+
+
+-- Them du lieu vao bang designs
+INSERT INTO designs (id, name, description, image_url, base_price, shape, dimensions, features, created_by, is_active)
+VALUES 
+('D3', N'Hồ Cá Koi Hiện Đại', N'Thiết kế hồ cá Koi phong cách hiện đại', 'https://example.com/modern-koi-pond.jpg', 7500.00, N'Hình chữ nhật', '5m x 3m x 1.5m', N'Hệ thống lọc tự động, đèn LED, thác nước mini', '3', 1),
+('D4', N'Hồ Cá Koi Tự Nhiên', N'Thiết kế hồ cá Koi kiểu tự nhiên', 'https://example.com/natural-koi-pond.jpg', 6500.00, N'Hình tự do', '4m x 3m x 1.2m', N'Thác đá tự nhiên, cây thủy sinh', '3', 1),
+('D5', N'Hồ Cá Koi Mini', N'Thiết kế hồ cá Koi nhỏ gọn', 'https://example.com/mini-koi-pond.jpg', 4500.00, N'Hình tròn', '2m đường kính x 1m sâu', N'Hệ thống lọc compact, đèn LED', '3', 1);
