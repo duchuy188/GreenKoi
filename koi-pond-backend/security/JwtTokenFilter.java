@@ -30,6 +30,13 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         try {
             if (token != null) {
+                if (jwtTokenProvider.isTokenBlacklisted(token)) {
+                    logger.warn("Blacklisted token detected");
+                    SecurityContextHolder.clearContext();
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token has been invalidated");
+                    return;
+                }
+
                 boolean isValid = jwtTokenProvider.validateToken(token);
                 logger.info("Token validation result: {}", isValid);
 
@@ -44,6 +51,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                             currentAuth.getName(), currentAuth.getAuthorities());
                 } else {
                     logger.warn("Invalid token");
+                    SecurityContextHolder.clearContext();
                 }
             } else {
                 logger.warn("No token found in request");

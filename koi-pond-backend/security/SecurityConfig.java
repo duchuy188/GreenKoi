@@ -86,9 +86,11 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/test/**").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/logout", "/api/test/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/manager/**").hasAuthority("ROLE_1")
+                        .requestMatchers("/api/projects/**").hasAuthority("ROLE_1")
+                        .requestMatchers("/api/consultation-requests/**").hasAuthority("ROLE_5")
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsService)

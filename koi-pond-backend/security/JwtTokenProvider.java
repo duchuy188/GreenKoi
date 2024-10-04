@@ -19,6 +19,8 @@ import java.util.Date;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class JwtTokenProvider {
@@ -34,6 +36,8 @@ public class JwtTokenProvider {
     private Key key;
 
     private final UserDetailsService userDetailsService;
+
+    private final Set<String> blacklistedTokens = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public JwtTokenProvider(UserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
@@ -95,6 +99,10 @@ public class JwtTokenProvider {
     public boolean validateToken(String token) {
         try {
             logger.info("Validating token: {}", token.substring(0, Math.min(20, token.length())) + "...");
+            if (isTokenBlacklisted(token)) {
+                logger.warn("Token is blacklisted");
+                return false;
+            }
             Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             Date expiration = claims.getBody().getExpiration();
             logger.info("Token expiration: {}", expiration);
@@ -109,6 +117,15 @@ public class JwtTokenProvider {
             logger.error("Error validating token", e);
             return false;
         }
+    }
+
+    public void invalidateToken(String token) {
+        logger.info("Invalidating token: {}", token.substring(0, Math.min(20, token.length())) + "...");
+        blacklistedTokens.add(token);
+    }
+
+    public boolean isTokenBlacklisted(String token) {
+        return blacklistedTokens.contains(token);
     }
 
     public void checkKey() {
