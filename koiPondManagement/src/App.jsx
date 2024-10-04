@@ -11,6 +11,8 @@ import Register2 from "./components/elements/Register2";
 // Change this line to match the correct path and filename of your Profile component
 import Profile from "./components/profile/Profile";
 
+import ProjectPage2 from "./components/elements/ProjectPage2";
+import Detail from "./components/Project/Detail";
 function App() {
   const router = createBrowserRouter([
     {
@@ -37,6 +39,14 @@ function App() {
           path: "/register",
           element: <Register2 />,
         },
+        {
+          path: "/duan",
+          element: <ProjectPage2 />,
+        },
+        {
+          path: "/duan/:id",
+          element: <Detail />,
+        },
       ],
     },
     {
@@ -51,6 +61,8 @@ function App() {
       path: "/dashboard",
       element: <Dashboard />,
     },
+    
+
   ]);
 
   return <RouterProvider router={router} />;
