@@ -15,6 +15,8 @@ import Category from "./components/page/admin/category";
 
 import ProjectPage2 from "./components/elements/ProjectPage2";
 import Detail from "./components/Project/Detail";
+import Store from "./components/page/admin/manage3";
+import Sevice from "./components/page/admin/manage-sevice";
 function App() {
   const router = createBrowserRouter([
     {
@@ -66,6 +68,14 @@ function App() {
         {
           path: "category",
           element: <Category />,
+        },
+        {
+          path: "store",
+          element: <Store />,
+        },
+        {
+          path: "sevice",
+          element: <Sevice />,
         },
       ],
     },

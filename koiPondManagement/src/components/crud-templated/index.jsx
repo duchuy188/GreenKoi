@@ -3,83 +3,18 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
 
-function Category() {
+function CrudTemplate({ columns, formItems, path }) {
   const [datas, setDatas] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState();
-
-  //GET
-  const fetchData = async () => {
-    try {
-      const response = await api.get("category");
-      setDatas(response.data);
-    } catch (err) {
-      toast.error(err.response.data);
-    }
-  };
-
-  //CREATE OR UPDATE
-  const handleSubmit = async (values) => {
-    console.log(values);
-    try {
-      setLoading(true);
-
-      if (values.id) {
-        // update
-        const response = await api.put("category/${values.id}", values);
-      } else {
-        // neu co create
-        const response = await api.post("category", values);
-      }
-
-      toast.success("Successfully");
-      fetchData();
-      form.resetFields();
-      setShowModal(false);
-    } catch (err) {
-      toast.error(err.response.data);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // DELETE
-  const handleDelete = async (id) => {
-    try {
-      const response = await api.delete("category/${id}");
-      toast.success("Successfully");
-      fetchData();
-    } catch (err) {
-      toast.error(err.response.data);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const columns = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-    },
-    {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "Description",
-      dataIndex: "description",
-      key: "description",
-    },
+  const tableColumns = [
+    ...columns,
     {
       title: "Action",
       dataIndex: "id",
       key: "id",
-      render: (id) => (
+      render: (id, category) => (
         <>
           <Button
             type="primary"
@@ -105,10 +40,61 @@ function Category() {
     },
   ];
 
+  //GET
+  const fetchData = async () => {
+    try {
+      const response = await api.get(path);
+      setDatas(response.data);
+    } catch (err) {
+      toast.error(err.response.data);
+    }
+  };
+
+  //CREATE OR UPDATE
+  const handleSubmit = async (values) => {
+    console.log(values);
+    try {
+      setLoading(true);
+
+      if (values.id) {
+        // update
+        const response = await api.put("${path}/${values.id}", values);
+      } else {
+        // neu co create
+        const response = await api.post(path, values);
+      }
+
+      toast.success("Successfully");
+      fetchData();
+      form.resetFields();
+      setShowModal(false);
+    } catch (err) {
+      toast.error(err.response.data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // DELETE
+  const handleDelete = async (id) => {
+    try {
+      const response = await api.delete("${path}/${id}");
+      toast.success("Successfully");
+      fetchData();
+    } catch (err) {
+      toast.error(err.response.data);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  
   return (
     <div>
       <Button onClick={() => setShowModal(true)}>Add</Button>
-      <Table dataSource={datas} columns={columns} />
+      <Table dataSource={datas} columns={tableColumns} />
 
       <Modal
         open={showModal}
@@ -124,7 +110,9 @@ function Category() {
           }}
           onFinish={handleSubmit}
         >
-          <Form.Item name="id" hidden>
+          {formItems}
+
+          {/* <Form.Item name="id" hidden>
             <Input/>
           </Form.Item>
           <Form.Item
@@ -138,11 +126,11 @@ function Category() {
           </Form.Item>
           <Form.Item name="description" label="Description">
             <Input.TextArea />
-          </Form.Item>
+          </Form.Item> */}
         </Form>
       </Modal>
     </div>
   );
 }
 
-export default Category;
+export default CrudTemplate;

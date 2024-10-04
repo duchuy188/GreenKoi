@@ -1,22 +1,21 @@
-import React, { useState } from "react";
-import {
-
-  PieChartOutlined,
-
-} from "@ant-design/icons";
+import { PieChartOutlined } from "@ant-design/icons";
 import { Breadcrumb, Layout, Menu, theme } from "antd";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 const { Header, Content, Footer, Sider } = Layout;
 function getItem(label, key, icon, children) {
   return {
     key,
     icon,
     children,
-    label,
+    label: <Link to={"/dashboard/${key}"}>{label}</Link>,
   };
 }
 const items = [
   getItem("Category", "category", <PieChartOutlined />),
+  getItem("Store", "store", <PieChartOutlined />),
 ];
+
 const Dashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
   const {
@@ -68,9 +67,7 @@ const Dashboard = () => {
               background: colorBgContainer,
               borderRadius: borderRadiusLG,
             }}
-          >
-           
-          </div>
+          ></div>
         </Content>
         <Footer
           style={{
