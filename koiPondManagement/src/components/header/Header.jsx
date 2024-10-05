@@ -78,7 +78,7 @@ function Header() {
             >
               Dự án
             </Link>
-            <Dropdown menu={{ items: serviceItems }}>
+            <Dropdown menu={{ items: priceItems }}>
               <a
                 onClick={(e) => e.preventDefault()}
                 className={`nav-item nav-link ${isActive("/dichvu")}`}
@@ -86,7 +86,7 @@ function Header() {
                 Dịch Vụ <DownOutlined className="dropdown-icon" />
               </a>
             </Dropdown>
-            <Dropdown menu={{ items: priceItems }}>
+            <Dropdown menu={{ items: serviceItems }}>
               <a
                 onClick={(e) => e.preventDefault()}
                 className={`nav-item nav-link ${isActive("/baogia")}`}
