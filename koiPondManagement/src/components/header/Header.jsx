@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Dropdown } from "antd";
 import { DownOutlined } from "@ant-design/icons"; // Thay đổi import này
@@ -7,10 +7,19 @@ import "../header/Header.css";
 
 function Header() {
   const location = useLocation();
+  const indicatorRef = useRef(null);
 
   const isActive = (path) => {
     return location.pathname === path ? "active" : "";
   };
+
+  useEffect(() => {
+    const activeItem = document.querySelector(".nav-item.active");
+    if (activeItem && indicatorRef.current) {
+      indicatorRef.current.style.width = `${activeItem.offsetWidth}px`;
+      indicatorRef.current.style.left = `${activeItem.offsetLeft}px`;
+    }
+  }, [location]);
 
   const priceItems = [
     {
@@ -63,6 +72,7 @@ function Header() {
         </button>
         <div className="collapse navbar-collapse" id="navbarCollapse">
           <div className="navbar-nav ms-auto py-0">
+            <div className="nav-indicator" ref={indicatorRef}></div>
             <Link to="/" className={`nav-item nav-link ${isActive("/")}`}>
               Trang chủ
             </Link>
@@ -79,20 +89,22 @@ function Header() {
               Dự án
             </Link>
             <Dropdown menu={{ items: priceItems }}>
-              <a
-                onClick={(e) => e.preventDefault()}
+              <Link
+                to="/dichvu"
                 className={`nav-item nav-link ${isActive("/dichvu")}`}
+                onClick={(e) => e.preventDefault()}
               >
                 Dịch Vụ <DownOutlined className="dropdown-icon" />
-              </a>
+              </Link>
             </Dropdown>
             <Dropdown menu={{ items: serviceItems }}>
-              <a
+              <Link
+                to="/baogia"
                 onClick={(e) => e.preventDefault()}
                 className={`nav-item nav-link ${isActive("/baogia")}`}
               >
                 Báo Giá <DownOutlined className="dropdown-icon" />
-              </a>
+              </Link>
             </Dropdown>
             <Link
               to="/lapthietketheoyeucau"
