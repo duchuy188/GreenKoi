@@ -1,4 +1,4 @@
-import React from 'react'; 
+import React from "react";
 import Elements from "./components/elements/HomePage";
 import Introduction from "./components/elements/IntroductionPage";
 import "./App.css";
@@ -15,7 +15,7 @@ import Category from "./components/page/admin/category";
 import BlogPage2 from "./components/elements/BlogPage2";
 import Blog from "./components/page/Blog/Blog";
 
-import ContactPage from './components/page/Contact/ContactPage';
+import ContactPage from "./components/page/Contact/ContactPage";
 import ProjectPage2 from "./components/elements/ProjectPage2";
 import Detail from "./components/Project/Detail";
 import Store from "./components/page/admin/manage3";
@@ -94,8 +94,6 @@ function App() {
         },
       ],
     },
-    
-
   ]);
 
   return <RouterProvider router={router} />;
