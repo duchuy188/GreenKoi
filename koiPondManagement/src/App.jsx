@@ -11,6 +11,8 @@ import Register2 from "./components/elements/Register2";
 // Change this line to match the correct path and filename of your Profile component
 import Profile from "./components/profile/Profile";
 import Category from "./components/page/admin/category";
+import BlogPage2 from "./components/elements/BlogPage2";
+import Blog from "./components/page/Blog/Blog";
 
 
 import ProjectPage2 from "./components/elements/ProjectPage2";
@@ -50,6 +52,14 @@ function App() {
         {
           path: "/duan/:id",
           element: <Detail />,
+        },
+        {
+          path: "/blog/:id",
+          element: <Blog />,
+        },
+        {
+          path: "/blog",
+          element: <BlogPage2 />,
         },
       ],
     },

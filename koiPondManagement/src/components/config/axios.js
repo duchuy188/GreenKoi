@@ -1,7 +1,7 @@
 import axios from "axios";
 // api swagger
 const api = axios.create({
-  baseURL: "https://a733-2405-4802-93e3-4ba6-aced-135b-d3f3-6abb.ngrok-free.app",//url 
+  baseURL: "https://772d-2405-4802-7a15-b220-c804-d76b-68f7-854a.ngrok-free.app",//url 
 });
 // 
 const handleBefore = (config) => {
