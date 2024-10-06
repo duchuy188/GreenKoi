@@ -21,22 +21,6 @@ function Header() {
     }
   }, [location]);
 
-  const priceItems = [
-    {
-      key: "1",
-      label: (
-        <Link to="/thietkevathicongsanvuon">Thiết Kế Và Thi Công Sân Vườn</Link>
-      ),
-    },
-    {
-      key: "2",
-      label: (
-        <Link to="/thietkevathiconghocakoi">
-          Thiết Kế Và Thi Công Hồ Cá Koi
-        </Link>
-      ),
-    },
-  ];
 
   const serviceItems = [
     {
@@ -88,15 +72,12 @@ function Header() {
             >
               Dự án
             </Link>
-            <Dropdown menu={{ items: priceItems }}>
-              <Link
-                to="/dichvu"
-                className={`nav-item nav-link ${isActive("/dichvu")}`}
-                onClick={(e) => e.preventDefault()}
-              >
-                Dịch Vụ <DownOutlined className="dropdown-icon" />
-              </Link>
-            </Dropdown>
+            <Link
+              to="/thiconghocakoi"
+              className={`nav-item nav-link ${isActive("/thiconghocakoi")}`}
+            >
+              Thi công hồ cá koi
+            </Link>
             <Dropdown menu={{ items: serviceItems }}>
               <Link
                 to="/baogia"
