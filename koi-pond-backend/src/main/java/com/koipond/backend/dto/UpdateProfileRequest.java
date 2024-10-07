@@ -7,5 +7,5 @@ public class UpdateProfileRequest {
     private String fullName;
     private String phone;
     private String address;
-    private String email; // Thêm trường email
+    private String email;
 }

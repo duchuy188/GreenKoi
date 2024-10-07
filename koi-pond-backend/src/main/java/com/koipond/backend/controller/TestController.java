@@ -19,7 +19,7 @@ public class TestController {
 
     @GetMapping("/token")
     public ResponseEntity<String> testToken() {
-        String token = jwtTokenProvider.createToken("testuser");
+        String token = jwtTokenProvider.createToken("testuser", "6"); // Thêm roleId, ví dụ "6" cho khách hàng
         boolean isValid = jwtTokenProvider.validateToken(token);
         return ResponseEntity.ok("Token created and validated: " + isValid + ". Full token: " + token);
     }
