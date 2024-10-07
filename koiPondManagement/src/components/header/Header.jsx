@@ -117,7 +117,7 @@ function Header() {
                 Đăng nhập
               </Link>
             ) : (
-              <div>
+              <div className="d-flex align-items-center">
                 <Link to="/profile" className={`nav-item nav-link ${isActive('/profile')}`}>
                 <h5>{user.username}</h5>
             </Link>

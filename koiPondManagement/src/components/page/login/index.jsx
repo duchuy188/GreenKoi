@@ -13,37 +13,23 @@ function LoginPage() {
   const handleLogin = async (values) => {
     try {
       const response = await api.post("/api/auth/login", values);
+      console.log(response);
+      const { token, roleId, ...userData } = response.data;
+      localStorage.setItem("token", token);
+      
+      // Dispatch only serializable data
+      dispatch(login(userData));
+      
+      toast.success("Login Successful!");
 
-      if (response && response.data) {
-        const { token, userId, username, roleId, status } = response.data;
-
-        // Check if the account is blocked
-        if (status === "blocked") {
-          toast.error(
-            "Your account has been blocked. Please contact the administrator."
-          );
-          return;
-        }
-
-        toast.success("Login Successful!");
-        dispatch(login(response.data));
-        // Lưu toàn bộ thông tin người dùng
-        localStorage.setItem(
-          "userInfo",
-          JSON.stringify({ token, userId, username, roleId })
-        );
-
-        // Phân quyền dựa trên roleId
-        const role = parseInt(roleId);
-        if (role >= 1 && role <= 4) {
-          navigate("/dashboard");
-        } else if (role === 5) {
-          navigate("/"); // Chuyển đến trang chủ
-        } else {
-          toast.error("Invalid role. Please contact administrator.");
-        }
+      // Phân quyền dựa trên roleId
+      const role = parseInt(roleId);
+      if (role >= 1 && role <= 4) {
+        navigate("/dashboard");
+      } else if (role === 5) {
+        navigate("/"); // Chuyển đến trang chủ
       } else {
-        toast.error("Login failed. Please try again.");
+        toast.error("Invalid role. Please contact administrator.");
       }
     } catch (err) {
       console.error("Login error:", err);
