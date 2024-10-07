@@ -13,9 +13,17 @@ function Category() {
   const fetchData = async () => {
     try {
       const response = await api.get("category");
-      setDatas(response.data);
+      if (Array.isArray(response.data)) {
+        setDatas(response.data);
+      } else {
+        console.error("Received data is not an array:", response.data);
+        setDatas([]);
+        toast.error("Received invalid data from the server");
+      }
     } catch (err) {
-      toast.error(err.response.data);
+      console.error("Error fetching categories:", err);
+      setDatas([]);
+      toast.error(err.response?.data || "An error occurred while fetching categories");
     }
   };
 

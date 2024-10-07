@@ -18,8 +18,10 @@ import Blog from "./components/page/Blog/Blog";
 import ContactPage from "./components/page/Contact/ContactPage";
 import ProjectPage2 from "./components/elements/ProjectPage2";
 import Detail from "./components/Project/Detail";
-import Store from "./components/page/admin/manage3";
-import Sevice from "./components/page/admin/manage-sevice";
+
+import UserManagement from "./components/page/admin/manage-user";
+import ManageUser from './components/page/admin/manage-user';
+
 function App() {
   const router = createBrowserRouter([
     {
@@ -84,15 +86,19 @@ function App() {
           path: "category",
           element: <Category />,
         },
-        // {
-        //   path: "store",
-        //   element: <Store />,
-        // },
+        {
+          path: "usermanagement",
+          element: <UserManagement/>,
+        },
         // {
         //   path: "sevice",
         //   element: <Sevice />,
         // },
       ],
+    },
+    {
+      path: "/admin/manage-users",
+      element: <ManageUser />,
     },
   ]);
 

@@ -18,7 +18,9 @@ function getItem(label, key, icon, children) {
   };
 }
 const items = [
-  getItem(<Link to="/dashboard/category">Category</Link>, "category", <PieChartOutlined />)];
+  getItem(<Link to="/dashboard/category">Category</Link>, "category", <PieChartOutlined />),
+  getItem(<Link to="/dashboard/usermanagement">User Management</Link>, "usermanagement", <UserOutlined />)
+];
 
 const Dashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
