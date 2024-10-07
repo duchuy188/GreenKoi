@@ -84,14 +84,14 @@ function App() {
           path: "category",
           element: <Category />,
         },
-        {
-          path: "store",
-          element: <Store />,
-        },
-        {
-          path: "sevice",
-          element: <Sevice />,
-        },
+        // {
+        //   path: "store",
+        //   element: <Store />,
+        // },
+        // {
+        //   path: "sevice",
+        //   element: <Sevice />,
+        // },
       ],
     },
   ]);

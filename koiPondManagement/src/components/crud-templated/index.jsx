@@ -90,7 +90,6 @@ function CrudTemplate({ columns, formItems, path }) {
     fetchData();
   }, []);
 
-  
   return (
     <div>
       <Button onClick={() => setShowModal(true)}>Add</Button>

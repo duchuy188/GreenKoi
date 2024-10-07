@@ -27,7 +27,7 @@ function Category() {
 
       if (values.id) {
         // update
-        const response = await api.put("category/${values.id}", values);
+        const response = await api.put(`category/${values.id}`, values);
       } else {
         // neu co create
         const response = await api.post("category", values);
@@ -47,7 +47,7 @@ function Category() {
   // DELETE
   const handleDelete = async (id) => {
     try {
-      const response = await api.delete("category/${id}");
+      const response = await api.delete(`category/${id}`);
       toast.success("Successfully");
       fetchData();
     } catch (err) {
@@ -85,7 +85,7 @@ function Category() {
             type="primary"
             onClick={() => {
               setShowModal(true);
-              form.setFieldValue(category);
+              form.setFieldValue("id", id);
             }}
           >
             Edit
@@ -125,7 +125,7 @@ function Category() {
           onFinish={handleSubmit}
         >
           <Form.Item name="id" hidden>
-            <Input/>
+            <Input />
           </Form.Item>
           <Form.Item
             name="name"
@@ -134,7 +134,7 @@ function Category() {
               { required: true, message: "Please input category's name!" },
             ]}
           >
-            <Input/>
+            <Input />
           </Form.Item>
           <Form.Item name="description" label="Description">
             <Input.TextArea />
