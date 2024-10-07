@@ -4,9 +4,11 @@ import { Button, Form, Input } from "antd";
 import { toast } from "react-toastify";
 import api from "../../config/axios";
 import AuthenTemplate from "../../authen-templated";
-
+import { useDispatch } from "react-redux";
+import { login } from "../../redux/features/useSlice";
 function LoginPage() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogin = async (values) => {
     try {
@@ -24,7 +26,7 @@ function LoginPage() {
         }
 
         toast.success("Login Successful!");
-
+        dispatch(login(response.data));
         // Lưu toàn bộ thông tin người dùng
         localStorage.setItem(
           "userInfo",

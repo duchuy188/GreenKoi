@@ -4,11 +4,14 @@ import { Dropdown } from "antd";
 import { DownOutlined } from "@ant-design/icons"; // Thay đổi import này
 import { headerLogo } from "../Share/listImage";
 import "../header/Header.css";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../redux/features/useSlice";
 
 function Header() {
   const location = useLocation();
   const indicatorRef = useRef(null);
-
+  const user = useSelector((store) => store.user);
+  const dispatch = useDispatch();
   const isActive = (path) => {
     return location.pathname === path ? "active" : "";
   };
@@ -109,12 +112,19 @@ function Header() {
             </Link>
           </div>
           <div className="navbar-login">
-            <Link
-              to="/login"
-              className={`nav-item nav-link btn-login ${isActive("/login")}`}
-            >
-              Đăng nhập
+            {user === null ? (
+              <Link to="/login" className={`nav-item nav-link btn-login ${isActive('/login')}`}>
+                Đăng nhập
+              </Link>
+            ) : (
+              <div>
+                <Link to="/profile" className={`nav-item nav-link ${isActive('/profile')}`}>
+                <h5>{user.username}</h5>
             </Link>
+                
+                <button onClick={() => dispatch(logout())}>Đăng xuất</button>
+              </div>
+            )}
           </div>
         </div>
       </div>
