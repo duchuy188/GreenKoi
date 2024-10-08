@@ -1,61 +1,79 @@
-import { Button, Form, Input, Modal, Popconfirm, Table } from "antd";
+import { Button, Form, Input, Modal, Popconfirm, Table, Select, Checkbox } from "antd";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import api from "../../../config/axios"; // Đảm bảo cấu hình axios đúng cách
+import api from "../../../config/axios";
 
 function UserManagement() {
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]); // To store filtered users
   const [showModal, setShowModal] = useState(false);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [userType, setUserType] = useState('employees'); // State to toggle between employees/customers
+
+  const roles = [
+    { id: '1', name: "Manager" },
+    { id: '2', name: "Consulting Staff" },
+    { id: '3', name: "Design Staff" },
+    { id: '4', name: "Construction Staff" },
+    { id: '5', name: "Customer" },
+  ];
+
+  const employeeRoles = ['1', '2', '3', '4'];
+  const customerRoles = ['5'];
 
   // Fetch users
   const fetchUsers = async () => {
     try {
       setLoading(true);
       const response = await api.get("/api/manager/users");
-      console.log("API Response:", response);
 
       if (Array.isArray(response.data)) {
         setUsers(response.data);
       } else if (typeof response.data === 'object' && Array.isArray(response.data.users)) {
         setUsers(response.data.users);
       } else {
-        console.error("Unexpected data structure:", response.data);
         setUsers([]);
         toast.error("Failed to load users. Unexpected data structure.");
       }
     } catch (err) {
-      console.error("Error fetching users:", err);
       setUsers([]);
       if (err.response) {
-        console.error("Error response:", err.response);
         toast.error(`Error: ${err.response.status} - ${err.response.data.message || err.response.statusText}`);
-      } else if (err.request) {
-        console.error("Error request:", err.request);
-        toast.error("Network error. Please check your connection and API URL.");
       } else {
-        console.error("Error message:", err.message);
-        toast.error("An unexpected error occurred.");
+        toast.error("Network error. Please check your connection and API URL.");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // Xử lý tạo hoặc cập nhật người dùng
+  // Filter users based on the user type (employees/customers)
+  const filterUsers = () => {
+    if (userType === 'employees') {
+      setFilteredUsers(users.filter(user => employeeRoles.includes(String(user.roleId))));
+    } else {
+      setFilteredUsers(users.filter(user => customerRoles.includes(String(user.roleId))));
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    filterUsers();
+  }, [users, userType]);
+
+  // Handle create or update user
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
 
       if (values.id) {
-        // Cập nhật người dùng
         await api.put(`/api/manager/users/${values.id}`, values);
       } else {
-        // Tạo mới người dùng
         const response = await api.post("/api/manager/users", values);
-
-        // Phân quyền người dùng
         const roleId = values.roleId;
         const userId = response.data.id;
         await api.post("/api/manager/user_roles", { userId, roleId });
@@ -66,51 +84,37 @@ function UserManagement() {
       form.resetFields();
       setShowModal(false);
     } catch (err) {
-      toast.error(err.response.data);
+      toast.error(err.response?.data || "An error occurred");
     } finally {
       setLoading(false);
     }
   };
 
-  // Xóa người dùng
-  const handleDelete = async (id) => {
-    try {
-      await api.delete(`/api/manager/users/${id}`);
-      toast.success("User deleted successfully!");
-      fetchUsers();
-    } catch (err) {
-      toast.error(err.response.data);
-    }
-  };
-
-  // Block người dùng
   const handleBlock = async (id) => {
     try {
       await api.put(`/api/manager/users/${id}/block`, { status: "inactive" });
-      toast.success("Block user thành công!");
+      toast.success("Blocked user successfully!");
       fetchUsers();
     } catch (err) {
-      toast.error(err.response.data);
+      toast.error(err.response?.data || "An error occurred");
     }
   };
 
-  // Unblock người dùng
   const handleUnblock = async (id) => {
     try {
       await api.put(`/api/manager/users/${id}/unblock`, { status: "active" });
-      toast.success("Unblock user thành công!");
+      toast.success("Unblocked user successfully!");
       fetchUsers();
     } catch (err) {
-      toast.error(err.response.data);
+      toast.error(err.response?.data || "An error occurred");
     }
   };
 
-  // Lấy danh sách người dùng khi component load
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const getRoleName = (roleId) => {
+    const role = roles.find((r) => r.id === String(roleId));
+    return role ? role.name : "Unknown";
+  };
 
-  // Cấu hình các cột trong bảng
   const columns = [
     {
       title: "ID",
@@ -138,9 +142,10 @@ function UserManagement() {
       key: "fullName",
     },
     {
-      title: "Role ID",
+      title: "Role",
       dataIndex: "roleId",
       key: "roleId",
+      render: (roleId) => getRoleName(roleId),
     },
     {
       title: "Active",
@@ -152,46 +157,27 @@ function UserManagement() {
       title: "Action",
       dataIndex: "id",
       key: "id",
-      render: (id) => (
+      render: (id, record) => (
         <>
           <Button
             type="primary"
             onClick={() => {
               setShowModal(true);
-              form.setFieldsValue({ id });
+              form.setFieldsValue(record);
             }}
             style={{ marginRight: 8 }}
           >
             Edit
           </Button>
 
-          <Popconfirm
-            title="Do you want to delete this user?"
-            onConfirm={() => handleDelete(id)}
-          >
-            <Button type="primary" danger>
-              Delete
-            </Button>
-          </Popconfirm>
-
-          <Popconfirm
-            title="Do you want to block this user?"
-            onConfirm={() => handleBlock(id)}
-            style={{ marginLeft: 8 }}
-          >
+          <Popconfirm title="Do you want to block this user?" onConfirm={() => handleBlock(id)}>
             <Button type="default" danger>
               Block
             </Button>
           </Popconfirm>
 
-          <Popconfirm
-            title="Do you want to unblock this user?"
-            onConfirm={() => handleUnblock(id)}
-            style={{ marginLeft: 8 }}
-          >
-            <Button type="default">
-              Unblock
-            </Button>
+          <Popconfirm title="Do you want to unblock this user?" onConfirm={() => handleUnblock(id)} style={{ marginLeft: 8 }}>
+            <Button type="default">Unblock</Button>
           </Popconfirm>
         </>
       ),
@@ -200,66 +186,51 @@ function UserManagement() {
 
   return (
     <div>
+      <Select value={userType} onChange={setUserType} style={{ marginBottom: 16 }}>
+        <Select.Option value="employees">Employees</Select.Option>
+        <Select.Option value="customers">Customers</Select.Option>
+      </Select>
+
       <Button type="primary" onClick={() => setShowModal(true)} style={{ marginBottom: 16 }}>
         Add User
       </Button>
 
-      <Table 
-        dataSource={users} 
-        columns={columns} 
-        rowKey="id" 
+      <Table
+        dataSource={filteredUsers}
+        columns={columns}
+        rowKey="id"
         loading={loading}
         locale={{ emptyText: "No users found or error loading data" }}
       />
 
-      <Modal
-        open={showModal}
-        onCancel={() => setShowModal(false)}
-        title="User Management"
-        onOk={() => form.submit()}
-        confirmLoading={loading}
-      >
+      <Modal open={showModal} onCancel={() => setShowModal(false)} title="User Management" onOk={() => form.submit()} confirmLoading={loading}>
         <Form form={form} labelCol={{ span: 24 }} onFinish={handleSubmit}>
           <Form.Item name="id" hidden>
             <Input />
           </Form.Item>
-          <Form.Item
-            name="username"
-            label="Username"
-            rules={[{ required: true, message: "Please input username!" }]}
-          >
+          <Form.Item name="username" label="Username" rules={[{ required: true, message: "Please input username!" }]}>
             <Input />
           </Form.Item>
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[{ required: true, message: "Please input email!" }]}
-          >
+          <Form.Item name="email" label="Email" rules={[{ required: true, message: "Please input email!" }]}>
             <Input />
           </Form.Item>
-          <Form.Item
-            name="phone"
-            label="Phone"
-            rules={[{ required: true, message: "Please input phone!" }]}
-          >
+          <Form.Item name="phone" label="Phone" rules={[{ required: true, message: "Please input phone!" }]}>
             <Input />
           </Form.Item>
-          <Form.Item
-            name="fullName"
-            label="Full Name"
-            rules={[{ required: true, message: "Please input full name!" }]}
-          >
+          <Form.Item name="fullName" label="Full Name" rules={[{ required: true, message: "Please input full name!" }]}>
             <Input />
           </Form.Item>
-          <Form.Item
-            name="roleId"
-            label="Role ID"
-            rules={[{ required: true, message: "Please input role ID!" }]}
-          >
-            <Input />
+          <Form.Item name="roleId" label="Role" rules={[{ required: true, message: "Please select role!" }]}>
+            <Select placeholder="Select a role">
+              {roles.map((role) => (
+                <Select.Option key={role.id} value={role.id}>
+                  {role.name}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
           <Form.Item name="active" label="Active" valuePropName="checked">
-            <Input type="checkbox" />
+            <Checkbox />
           </Form.Item>
         </Form>
       </Modal>

@@ -1,7 +1,7 @@
 import axios from "axios";
 // api swagger
 const api = axios.create({
-  baseURL: "https://2dd8-1-54-152-169.ngrok-free.app",
+  baseURL: "https://a7c1-1-54-152-169.ngrok-free.app",
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
