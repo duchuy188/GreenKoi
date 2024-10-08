@@ -14,6 +14,7 @@ import Profile from "./components/profile/Profile";
 import Category from "./components/page/admin/category";
 import BlogPage2 from "./components/elements/BlogPage2";
 import Blog from "./components/page/Blog/Blog";
+import GardenDesignFormPage from "./components/elements/GardenDesignFormPage";
 
 import ContactPage from "./components/page/Contact/ContactPage";
 import ProjectPage2 from "./components/elements/ProjectPage2";
@@ -76,6 +77,10 @@ function App() {
         {
           path: "/baogiathicong",
           element: <ConstructionPage />,
+        },
+        {
+          path: "/lapthietketheoyeucau",
+          element: <GardenDesignFormPage />,
         },
       ],
     },
