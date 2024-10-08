@@ -24,8 +24,6 @@ function Profile() {
           }
         });
 
-        console.log("Full API response:", response);
-
         if (response.data && typeof response.data === 'object') {
           setProfileData(response.data);
         } else {
@@ -47,8 +45,6 @@ function Profile() {
   if (error) return <div>Error: {error}</div>;
   if (!profileData) return <div>No profile data available. Please try refreshing the page.</div>;
 
-  // Debugging: Log the structure of profileData
-  console.log("Profile Data Structure:", profileData);
 
   return (
     <div className="profile-background">

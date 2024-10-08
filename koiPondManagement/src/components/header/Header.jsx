@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Dropdown } from "antd";
-import { DownOutlined } from "@ant-design/icons"; // Thay đổi import này
+import { DownOutlined, UserOutlined } from "@ant-design/icons"; // Thay đổi import này
 import { headerLogo } from "../Share/listImage";
 import "../header/Header.css";
 import { useSelector, useDispatch } from "react-redux";
@@ -12,6 +12,7 @@ function Header() {
   const indicatorRef = useRef(null);
   const user = useSelector((store) => store.user);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const isActive = (path) => {
     return location.pathname === path ? "active" : "";
   };
@@ -24,6 +25,11 @@ function Header() {
     }
   }, [location]);
 
+  const handleLogout = () => {
+    dispatch(logout());
+    localStorage.removeItem('token'); // Add this line
+    navigate('/'); // Add this line to redirect to home page
+  };
 
   const serviceItems = [
     {
@@ -33,6 +39,21 @@ function Header() {
     {
       key: "2",
       label: <Link to="/baogiabaoduong">Báo giá bảo dưỡng</Link>,
+    },
+  ];
+
+  const userMenuItems = [
+    {
+      key: "1",
+      label: <Link to="/profile">Tài Khoản Của Tôi</Link>,
+    },
+    {
+      key: "2",
+      label: <Link to="/orders">Đơn Mua</Link>,
+    },
+    {
+      key: "3",
+      label: <span onClick={handleLogout}>Đăng Xuất</span>, // Change this line
     },
   ];
 
@@ -117,13 +138,11 @@ function Header() {
                 Đăng nhập
               </Link>
             ) : (
-              <div className="d-flex align-items-center">
-                <Link to="/profile" className={`nav-item nav-link ${isActive('/profile')}`}>
-                <h5>{user.username}</h5>
-            </Link>
-                
-                <button onClick={() => dispatch(logout())}>Đăng xuất</button>
-              </div>
+              <Dropdown menu={{ items: userMenuItems }} trigger={['click']}>
+                <a onClick={(e) => e.preventDefault()} className="ant-dropdown-link" style={{ color: '#000' }}>
+                  <UserOutlined /> {user.username} <DownOutlined />
+                </a>
+              </Dropdown>
             )}
           </div>
         </div>
