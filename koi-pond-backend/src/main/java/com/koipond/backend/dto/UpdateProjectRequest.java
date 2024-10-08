@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
-public class CreateProjectRequest {
+public class UpdateProjectRequest {
     private String name;
     private String description;
     private BigDecimal totalPrice;
@@ -18,9 +18,7 @@ public class CreateProjectRequest {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate endDate;
 
+    private String address;
     private String designId;
     private String promotionId;
-    private String address;
-    private String customerId;
-    private String consultantId;
 }

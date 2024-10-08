@@ -52,8 +52,9 @@ public class Project {
     private BigDecimal depositAmount;
 
     private LocalDate startDate;
-
     private LocalDate endDate;
+    private LocalDate approvalDate;
+    private LocalDate completionDate;
 
     private String address;
 

@@ -35,4 +35,7 @@ public interface ProjectRepository extends JpaRepository<Project, String> {
     // Tìm dự án trong khoảng giá cụ thể
     @Query("SELECT p FROM Project p WHERE p.totalPrice BETWEEN :minPrice AND :maxPrice")
     List<Project> findByPriceRange(@Param("minPrice") double minPrice, @Param("maxPrice") double maxPrice);
+
+    // Tìm tất cả dự án của một nhân viên tư vấn cụ thể theo ID
+    List<Project> findByConsultantId(String consultantId);
 }
