@@ -1,0 +1,41 @@
+.service-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.service-content {
+  display: flex;
+  gap: 30px;
+}
+
+.service-sidebar {
+  flex: 0 0 250px;
+}
+
+.service-sidebar ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.service-sidebar li {
+  margin-bottom: 10px;
+}
+
+.service-main {
+  flex: 1;
+}
+
+.featured-service img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 20px;
+}
+
+h1, h2, h3 {
+  color: #fffafa;
+}
+
+p {
+  line-height: 1.6;
+}

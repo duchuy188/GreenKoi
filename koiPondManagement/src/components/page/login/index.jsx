@@ -6,9 +6,39 @@ import api from "../../config/axios";
 import AuthenTemplate from "../../authen-templated";
 import { useDispatch } from "react-redux";
 import { login } from "../../redux/features/useSlice";
+import { getAuth, signInWithPopup } from "firebase/auth";
+import { googleProvider } from "../../config/firebase";
+import { GoogleAuthProvider } from "firebase/auth/web-extension";
 function LoginPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const handleLoginGoogle = () => {
+    const auth = getAuth();
+    signInWithPopup(auth, googleProvider)
+      .then((result) => {
+        // This gives you a Google Access Token. You can use it to access the Google API.
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        const token = credential.accessToken;
+        // The signed-in user info.
+        const user = result.user;
+
+        console.log("Google login successful", user);
+        toast.success("Google login successful!");
+        // TODO: Handle successful login (e.g., update Redux state, navigate to dashboard)
+      }).catch((error) => {
+        console.error("Google login error", error);
+        toast.error(`Google login failed: ${error.message}`);
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        // The email of the user's account used.
+        const email = error.customData?.email;
+        // The AuthCredential type that was used.
+        const credential = GoogleAuthProvider.credentialFromError(error);
+      });
+  }
+  
 
   const handleLogin = async (values) => {
     try {
@@ -93,7 +123,8 @@ function LoginPage() {
           <Button
             type="default"
             block
-            onClick={() => console.log("Google login not implemented")}
+            // onClick={() => console.log("Google login not implemented")}
+            onClick={handleLoginGoogle}
           >
             Login with Google
           </Button>

@@ -32,11 +32,12 @@ body, html {
   .carousel-title {
     font-size: 2rem;
     margin-bottom: 1rem;
+    color: #fffffc; /* Changed to gold color */
   }
   
   .carousel-subtitle {
     font-size: 1.2rem;
-    color: #a0a0a0;
+    color: #E0E0E0; /* Changed to light gray */
   }
   
   .carousel-button {

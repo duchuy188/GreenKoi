@@ -18,9 +18,10 @@ import Blog from "./components/page/Blog/Blog";
 import ContactPage from "./components/page/Contact/ContactPage";
 import ProjectPage2 from "./components/elements/ProjectPage2";
 import Detail from "./components/Project/Detail";
-
 import UserManagement from "./components/page/admin/manage-user";
 import ManageUser from './components/page/admin/manage-user';
+import ServicePage from "./components/page/Service/ServicePage";
+import ConstructionPage from "./components/page/constructionquote/ConstructionPage";
 
 function App() {
   const router = createBrowserRouter([
@@ -67,6 +68,14 @@ function App() {
         {
           path: "/lienhe",
           element: <ContactPage />,
+        },
+        {
+          path: "/thiconghocakoi",
+          element: <ServicePage />,
+        },
+        {
+          path: "/baogiathicong",
+          element: <ConstructionPage />,
         },
       ],
     },

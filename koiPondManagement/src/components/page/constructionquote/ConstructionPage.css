@@ -1,0 +1,36 @@
+.construction-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  h1, h2, h3 {
+    color: #333;
+  }
+  
+  .koi-pond-image {
+    max-width: 100%;
+    height: auto;
+    margin: 20px 0;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  th {
+    background-color: #f2f2f2;
+  }
+  
+  ul {
+    padding-left: 20px;
+  }
