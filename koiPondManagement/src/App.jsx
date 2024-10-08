@@ -15,7 +15,7 @@ import Category from "./components/page/admin/category";
 import BlogPage2 from "./components/elements/BlogPage2";
 import Blog from "./components/page/Blog/Blog";
 import GardenDesignFormPage from "./components/elements/GardenDesignFormPage";
-
+import MaintenancePage from "./components/page/maintenance/MaintenancePage";
 import ContactPage from "./components/page/Contact/ContactPage";
 import ProjectPage2 from "./components/elements/ProjectPage2";
 import Detail from "./components/Project/Detail";
@@ -82,6 +82,11 @@ function App() {
           path: "/lapthietketheoyeucau",
           element: <GardenDesignFormPage />,
         },
+    
+        {
+          path: "/baogiabaoduong",
+          element: <MaintenancePage />,
+        }      
       ],
     },
     {
