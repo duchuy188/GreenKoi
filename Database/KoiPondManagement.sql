@@ -360,3 +360,5 @@ VALUES
 ('D3', N'Hồ Cá Koi Hiện Đại', N'Thiết kế hồ cá Koi phong cách hiện đại', 'https://example.com/modern-koi-pond.jpg', 7500.00, N'Hình chữ nhật', '5m x 3m x 1.5m', N'Hệ thống lọc tự động, đèn LED, thác nước mini', '3', 1),
 ('D4', N'Hồ Cá Koi Tự Nhiên', N'Thiết kế hồ cá Koi kiểu tự nhiên', 'https://example.com/natural-koi-pond.jpg', 6500.00, N'Hình tự do', '4m x 3m x 1.2m', N'Thác đá tự nhiên, cây thủy sinh', '3', 1),
 ('D5', N'Hồ Cá Koi Mini', N'Thiết kế hồ cá Koi nhỏ gọn', 'https://example.com/mini-koi-pond.jpg', 4500.00, N'Hình tròn', '2m đường kính x 1m sâu', N'Hệ thống lọc compact, đèn LED', '3', 1);
+
+UPDATE designs SET status = 'PENDING_APPROVAL' WHERE status IS NULL;
