@@ -81,22 +81,25 @@ function Header() {
         <div className="collapse navbar-collapse" id="navbarCollapse">
           <div className="navbar-nav ms-auto py-0">
             <div className="nav-indicator" ref={indicatorRef}></div>
-            <Link to="/" className={`nav-item nav-link ${isActive("/")}`}>
+            <Link style={{color: '#FFDAB9'}} to="/" className={`nav-item nav-link ${isActive("/")}`}>
               Trang chủ
             </Link>
             <Link
+              style={{color: '#FFDAB9'}}
               to="/gioithieu"
               className={`nav-item nav-link ${isActive("/gioithieu")}`}
             >
               Giới thiệu
             </Link>
             <Link
+              style={{color: '#FFDAB9'}}
               to="/duan"
               className={`nav-item nav-link ${isActive("/duan")}`}
             >
               Dự án
             </Link>
             <Link
+              style={{color: '#FFDAB9'}}
               to="/thiconghocakoi"
               className={`nav-item nav-link ${isActive("/thiconghocakoi")}`}
             >
@@ -104,6 +107,7 @@ function Header() {
             </Link>
             <Dropdown menu={{ items: serviceItems }}>
               <Link
+              style={{color: '#FFDAB9'}}
                 to="/baogia"
                 onClick={(e) => e.preventDefault()}
                 className={`nav-item nav-link ${isActive("/baogia")}`}
@@ -112,6 +116,7 @@ function Header() {
               </Link>
             </Dropdown>
             <Link
+            style={{color: '#FFDAB9'}}
               to="/lapthietketheoyeucau"
               className={`nav-item nav-link ${isActive(
                 "/lapthietketheoyeucau"
@@ -120,12 +125,14 @@ function Header() {
               Lập thiết kế theo yêu cầu
             </Link>
             <Link
+            style={{color: '#FFDAB9'}}
               to="/lienhe"
               className={`nav-item nav-link ${isActive("/lienhe")}`}
             >
               Liên hệ
             </Link>
             <Link
+            style={{color: '#FFDAB9'}}
               to="/blog"
               className={`nav-item nav-link ${isActive("/blog")}`}
             >

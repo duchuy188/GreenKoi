@@ -1,21 +1,35 @@
-.authen-template{
-    width: 100vw;
-    height: 100vh;
-    
-    background-size: cover;
-    
+/* CSS chung cho AuthenTemplate */
+.authen-template {
     display: flex;
+    justify-content: flex-start; /* Đưa form về bên trái */
     align-items: center;
-    justify-content: center; 
-
+    min-height: 100vh; /* Chiều cao tối thiểu là toàn màn hình */
+    padding: 20px;
+    background: #f0f0f0; /* Màu nền nhẹ cho phần chứa form */
 }
 
-.authen-template_form{
-    width: 500px;
-    height: 80vh;
-    background-color: aliceblue;
-     margin-left: 50px; 
+/* Form */
+.authen-template_form {
+    background-color: white;
+    border: 2px solid white; /* Thêm khung màu trắng */
     border-radius: 12px;
-    padding: 30px;
-    
+    padding: 50px;
+    width: 500%; /* Đặt lại width là 100% */
+    max-width: 800px; /* Giới hạn chiều rộng lớn hơn */
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Khoảng cách giữa các phần tử bên trong */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Hiệu ứng đổ bóng mềm */
+    margin-left: 10%; /* Đẩy form một chút qua trái */
+    transform: translateX(37%); /* Xích form qua trái 10% */
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .authen-template_form {
+        padding: 30px;
+        max-width: 100%; /* Đảm bảo form chiếm toàn bộ chiều rộng trên mobile */
+        margin-left: 0; /* Đặt lại margin để form căn giữa khi trên thiết bị nhỏ */
+        transform: none; /* Xóa hiệu ứng transform trên thiết bị nhỏ */
+    }
 }

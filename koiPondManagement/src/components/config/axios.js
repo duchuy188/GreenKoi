@@ -1,7 +1,7 @@
 import axios from "axios";
 // api swagger
 const api = axios.create({
-  baseURL: "/api", // Change this to use the proxy
+  baseURL: "/api", // xuong vite.congig.js
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
