@@ -2,6 +2,7 @@ package com.koipond.backend.model;
 
 import lombok.Data;
 import jakarta.persistence.*;
+import org.hibernate.annotations.GenericGenerator;
 import java.time.LocalDateTime;
 
 @Data
@@ -9,7 +10,8 @@ import java.time.LocalDateTime;
 @Table(name = "project_cancellations")
 public class ProjectCancellation {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(generator = "uuid")
+    @GenericGenerator(name = "uuid", strategy = "uuid2")
     private String id;
 
     @ManyToOne
@@ -29,5 +31,5 @@ public class ProjectCancellation {
     @Column(nullable = false)
     private LocalDateTime cancellationDate;
 
-    // Getters and setters are provided by Lombok @Data annotation
+   
 }
