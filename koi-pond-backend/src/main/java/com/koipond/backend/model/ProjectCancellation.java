@@ -31,5 +31,5 @@ public class ProjectCancellation {
     @Column(nullable = false)
     private LocalDateTime cancellationDate;
 
-   
+
 }
