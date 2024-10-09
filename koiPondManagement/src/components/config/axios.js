@@ -1,35 +1,26 @@
 import axios from "axios";
 // api swagger
 const api = axios.create({
-  baseURL: "https://6455-1-54-152-169.ngrok-free.app",
+  baseURL: "/api", // Change this to use the proxy
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  withCredentials: true // Thêm dòng này
+  withCredentials: false // Change this to false for now
 });
-// 
 const handleBefore = (config) => {
-  const token = localStorage.getItem("token")?.replaceAll('"', "");
-  config.headers["Authorization"] = `Bearer ${token}`;
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers["Authorization"] = `Bearer ${token}`;
+  }
   return config;
 };
 
 const handleError = (error) => {
-  console.log(error);
+  console.error("Axios error:", error);
+  return Promise.reject(error);
 };
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+api.interceptors.request.use(handleBefore, handleError);
 
 export default api;

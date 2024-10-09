@@ -17,22 +17,31 @@ function Profile() {
           throw new Error("No token found");
         }
 
-        const response = await api.get("/api/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Accept': 'application/json'
-          }
-        });
+        const response = await api.get("/api/profile");
 
-        if (response.data && typeof response.data === 'object') {
+        console.log("Full API response:", response);
+
+        if (response.data && typeof response.data === 'object' && !response.data.toString().includes('<!DOCTYPE html>')) {
           setProfileData(response.data);
         } else {
           console.error("Unexpected API response structure:", response);
-          setError("Unexpected API response structure. Please check the console for details.");
+          if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
+            setError("Received HTML instead of JSON. This might be due to an authentication issue or server error.");
+          } else {
+            setError("Unexpected API response structure. Please check the console for details.");
+          }
         }
       } catch (err) {
         console.error("Error fetching profile data:", err);
-        setError(err.response?.data?.message || err.message || "An error occurred while fetching profile data");
+        if (err.response) {
+          console.error("Error response:", err.response);
+          setError(`Error ${err.response.status}: ${err.response.data.message || err.response.statusText || "Unknown error"}`);
+        } else if (err.request) {
+          console.error("Error request:", err.request);
+          setError("No response received from server");
+        } else {
+          setError(err.message || "An unexpected error occurred");
+        }
       } finally {
         setLoading(false);
       }
