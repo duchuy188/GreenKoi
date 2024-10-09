@@ -10,6 +10,7 @@ function UserManagement() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [userType, setUserType] = useState('employees');
+  const [isEdit, setIsEdit] = useState(false); // To track if it's edit mode
 
   const roles = [
     { id: '1', name: "Manager" },
@@ -25,7 +26,6 @@ function UserManagement() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      console.log("Fetching users with token:", api.defaults.headers.common['Authorization']); // Log the token
       const response = await api.get("/api/manager/users");
       if (Array.isArray(response.data)) {
         setUsers(response.data);
@@ -37,7 +37,6 @@ function UserManagement() {
       }
     } catch (err) {
       setUsers([]);
-      console.error("Error fetching users:", err); // Log the error
       toast.error(err.response ? `Error: ${err.response.status} - ${err.response.data.message}` : "Network error. Please check your connection.");
     } finally {
       setLoading(false);
@@ -51,8 +50,6 @@ function UserManagement() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    console.log("Current token:", token); // Kiểm tra token trong console
     fetchUsers();
   }, []);
 
@@ -123,7 +120,7 @@ function UserManagement() {
     {
       title: "Action", dataIndex: "id", key: "id", render: (id, record) => (
         <>
-          <Button type="primary" onClick={() => { setShowModal(true); form.setFieldsValue(record); }} style={{ marginRight: 8 }}>Edit</Button>
+          <Button type="primary" onClick={() => { setShowModal(true); form.setFieldsValue(record); setIsEdit(true); }} style={{ marginRight: 8 }}>Edit</Button>
           <Popconfirm title="Do you want to block this user?" onConfirm={() => handleBlock(id)}>
             <Button type="default" danger>Block</Button>
           </Popconfirm>
@@ -141,7 +138,7 @@ function UserManagement() {
         <Select.Option value="employees">Employees</Select.Option>
         <Select.Option value="customers">Customers</Select.Option>
       </Select>
-      <Button type="primary" onClick={() => setShowModal(true)} style={{ marginBottom: 16 }}>Add User</Button>
+      <Button type="primary" onClick={() => { setShowModal(true); setIsEdit(false); form.resetFields(); }} style={{ marginBottom: 16 }}>Add User</Button>
       <Table dataSource={filteredUsers} columns={columns} rowKey="id" loading={loading} locale={{ emptyText: "No users found or error loading data" }} />
       <Modal open={showModal} onCancel={() => setShowModal(false)} title="User Management" onOk={() => form.submit()} confirmLoading={loading} width={400}>
         <Form form={form} labelCol={{ span: 24 }} onFinish={handleSubmit} size="small">
@@ -150,8 +147,14 @@ function UserManagement() {
           <Form.Item name="email" label="Email" rules={[{ required: true, message: "Please input email!" }]}><Input style={{ width: '100%' }} /></Form.Item>
           <Form.Item name="phone" label="Phone" rules={[{ required: true, message: "Please input phone!" }]}><Input style={{ width: '100%' }} /></Form.Item>
           <Form.Item name="fullName" label="Full Name" rules={[{ required: true, message: "Please input full name!" }]}><Input style={{ width: '100%' }} /></Form.Item>
-          <Form.Item name="password" label="Password" rules={[{ required: true, message: "Please input password!" }]}><Input.Password style={{ width: '100%' }} /></Form.Item>
-          <Form.Item name="roleId" label="Role" rules={[{ required: true, message: "Please select role!" }]}><Select placeholder="Select a role" style={{ width: '100%' }}>{roles.map((role) => <Select.Option key={role.id} value={role.id}>{role.name}</Select.Option>)}</Select></Form.Item>
+          {!isEdit && (
+            <Form.Item name="password" label="Password" rules={[{ required: true, message: "Please input password!" }]}><Input.Password style={{ width: '100%' }} /></Form.Item>
+          )}
+          <Form.Item name="roleId" label="Role" rules={[{ required: true, message: "Please select role!" }]}>
+            <Select placeholder="Select a role" style={{ width: '100%' }}>
+              {roles.map((role) => <Select.Option key={role.id} value={role.id}>{role.name}</Select.Option>)}
+            </Select>
+          </Form.Item>
           <Form.Item name="active" label="Active" valuePropName="checked"><Checkbox /></Form.Item>
         </Form>
       </Modal>
