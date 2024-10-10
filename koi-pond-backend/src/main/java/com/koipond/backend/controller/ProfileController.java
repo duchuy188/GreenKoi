@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.koipond.backend.exception.UserNotFoundException;
 
 @RestController
 @RequestMapping("/api/profile")
@@ -40,13 +41,12 @@ public class ProfileController {
         try {
             log.info("Attempting to get profile for user: {}", username);
             User user = userService.findByUsername(username);
-            if (user == null) {
-                log.error("User not found: {}", username);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            }
             UserProfileResponse response = mapUserToResponse(user);
             log.info("Successfully retrieved profile for user: {}", username);
             return ResponseEntity.ok(response);
+        } catch (UserNotFoundException e) {
+            log.error("User not found: {}", username);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
             log.error("Error retrieving profile for user: {}", username, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

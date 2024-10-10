@@ -81,22 +81,15 @@ public class UserService {
                 log.warn("Login failed: Incorrect password for user: {}", username);
                 throw new AuthenticationException("Incorrect password");
             }
-        } catch (AuthenticationException e) {
+        } catch (UserNotFoundException e) {
             log.error("Login failed for user: {}. Reason: {}", username, e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Unexpected error during login for user: {}. Error: {}", username, e.getMessage());
-            throw new RuntimeException("An unexpected error occurred during login", e);
+            throw e; // Ném trực tiếp UserNotFoundException
         }
     }
 
-    public User findByUsername(String username) {
-        log.info("Finding user by username: {}", username);
+    public User findByUsername(String username) throws UserNotFoundException {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> {
-                    log.warn("User not found with username: {}", username);
-                    return new UserNotFoundException("User not found with username: " + username);
-                });
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
     }
 
     public User getUserProfile(String username) {
