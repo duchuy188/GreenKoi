@@ -11,8 +11,8 @@ function UserManagement() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [userType, setUserType] = useState('employees');
-  const [isEdit, setIsEdit] = useState(false); // To track if it's edit mode
-  const navigate = useNavigate(); // For redirection
+  const [isEdit, setIsEdit] = useState(false); 
+  const navigate = useNavigate(); 
 
   const roles = [
     { id: '1', name: "Manager" },
@@ -67,13 +67,10 @@ function UserManagement() {
         toast.success("User updated successfully");
       } else {
         const response = await api.post("/api/manager/users", values);
-        if (response.data && response.data.id) {
-          const roleId = values.roleId;
-          const userId = response.data.id;
-          await api.post("/api/manager/user_roles", { userId, roleId });
+        if (response.status === 200) {
           toast.success("User added successfully");
         } else {
-          throw new Error("Failed to create user");
+          throw new Error(`Request failed with status code ${response.status}`);
         }
       }
       fetchUsers();
