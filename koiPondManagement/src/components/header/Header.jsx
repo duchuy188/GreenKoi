@@ -126,13 +126,6 @@ function Header() {
             </Link>
             <Link
             style={{color: '#FFDAB9'}}
-              to="/lienhe"
-              className={`nav-item nav-link ${isActive("/lienhe")}`}
-            >
-              Liên hệ
-            </Link>
-            <Link
-            style={{color: '#FFDAB9'}}
               to="/blog"
               className={`nav-item nav-link ${isActive("/blog")}`}
             >

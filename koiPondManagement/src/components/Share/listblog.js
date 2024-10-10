@@ -5,7 +5,7 @@ export const ListBlog = [
       description: "Thiết kế hồ cá Koi với phong cách hiện đại và tinh tế",
       summary: "Khám phá những phong cách thiết kế hồ Koi hiện đại, tối giản nhưng sang trọng tại Hà Nội.",
       date: "02/10/2024",
-      img: "https://lh6.googleusercontent.com/proxy/fQFFOijpebCYzBqkdtzBzxQlzec8Tg7UdCSMDMKCNsMuXImAYQZju1u5hP5tbeLkxYvRK5H2ei3WLAWyh3riQZKNxdiWJd86r29TZ23zJaRQBByLFDLLxeoYN2ghwkYEXa8rGXLFj1-D2igGbGSIPxijkmXTw0L6Ogc7_7rT6pjUqzMpFehxB6bZmwXePHfJp7lcMH9hnTvMamJLjvy3AldY-gJ8-DQ-p2gugYM8arQ8bH9yXb9r-sIw"
+      img: "https://asgreen.vn/wp-content/uploads/2016/01/mau-ho-koi-hien-dai-4.jpg"
     },
     {
       id: 2,

@@ -13,16 +13,15 @@ import Register2 from "./components/elements/Register2";
 import Profile from "./components/profile/Profile";
 import Category from "./components/page/admin/category";
 import BlogPage2 from "./components/elements/BlogPage2";
-import Blog from "./components/page/Blog/Blog";
 import GardenDesignFormPage from "./components/elements/GardenDesignFormPage";
-import MaintenancePage from "./components/page/maintenance/MaintenancePage";
-import ContactPage from "./components/page/Contact/ContactPage";
 import ProjectPage2 from "./components/elements/ProjectPage2";
-import Detail from "./components/Project/Detail";
 import UserManagement from "./components/page/admin/manage-user";
 import ManageUser from './components/page/admin/manage-user';
-import ServicePage from "./components/page/Service/ServicePage";
-import ConstructionPage from "./components/page/constructionquote/ConstructionPage";
+import ServicePage2 from "./components/elements/ServicePage2";
+import Detail2 from "./components/elements/Detail2";
+import ConstructionPage2 from "./components/elements/ConstructionPage2";
+import MaintenancePage2 from "./components/elements/MaintenancePage2";
+import Blog2 from "./components/elements/Blog2";
 
 function App() {
   const router = createBrowserRouter([
@@ -56,27 +55,23 @@ function App() {
         },
         {
           path: "/duan/:id",
-          element: <Detail />,
+          element: <Detail2 />,
         },
         {
           path: "/blog/:id",
-          element: <Blog />,
+          element: <Blog2 />,
         },
         {
           path: "/blog",
           element: <BlogPage2 />,
-        },
-        {
-          path: "/lienhe",
-          element: <ContactPage />,
-        },
+        },     
         {
           path: "/thiconghocakoi",
-          element: <ServicePage />,
+          element: <ServicePage2 />,
         },
         {
           path: "/baogiathicong",
-          element: <ConstructionPage />,
+          element: <ConstructionPage2 />,
         },
         {
           path: "/lapthietketheoyeucau",
@@ -85,7 +80,7 @@ function App() {
     
         {
           path: "/baogiabaoduong",
-          element: <MaintenancePage />,
+          element: <MaintenancePage2 />,
         }      
       ],
     },
