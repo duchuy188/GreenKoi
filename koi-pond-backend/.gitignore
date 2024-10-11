@@ -33,3 +33,4 @@ build/
 .vscode/
 
 src/main/resources/koi-pond-737e8-firebase-adminsdk-fdhs2-a910406ccd.json
+node_modules

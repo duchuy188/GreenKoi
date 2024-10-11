@@ -66,10 +66,14 @@ public class ProfileController {
         String username = authentication.getName();
         try {
             log.info("Attempting to update profile for user: {}", username);
+            log.debug("Update request: {}", request);
             User updatedUser = userService.updateUserProfile(username, request);
             UserProfileResponse response = mapUserToResponse(updatedUser);
             log.info("Successfully updated profile for user: {}", username);
             return ResponseEntity.ok(response);
+        } catch (UserNotFoundException e) {
+            log.error("User not found while updating profile: {}", username, e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
             log.error("Error updating profile for user: {}", username, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
