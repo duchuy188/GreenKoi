@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import api from '/src/components/config/axios';
 import "./Profile.css";
+import { Button, Form, Input, Modal } from 'antd';
 
 // Tạo instance axios với interceptor
 function Profile() {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [form] = Form.useForm();
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -50,6 +53,26 @@ function Profile() {
     fetchProfileData();
   }, []);
 
+  const handleEdit = () => {
+    form.setFieldsValue(profileData);
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
+  const handleSubmit = async (values) => {
+    try {
+      const response = await api.put("/api/profile", values);
+      setProfileData(response.data);
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      // Handle error (e.g., show error message)
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
   if (!profileData) return <div>No profile data available. Please try refreshing the page.</div>;
@@ -83,7 +106,9 @@ function Profile() {
               </div>
             </div>
             <div className="col-md-2">
-              <input type="submit" className="profile-edit-btn" name="btnAddMore" value="Chỉnh sửa" />
+              <Button onClick={handleEdit} className="profile-edit-btn">
+                Chỉnh sửa
+              </Button>
             </div>
           </div>
           <div className="row">
@@ -178,6 +203,34 @@ function Profile() {
           </div>
 
         </form>
+        <Modal
+          visible={isEditing}
+          title="Chỉnh sửa thông tin"
+          onCancel={handleCancel}
+          footer={[
+            <Button key="cancel" onClick={handleCancel}>
+              Hủy
+            </Button>,
+            <Button key="submit" type="primary" onClick={() => form.submit()}>
+              Lưu
+            </Button>,
+          ]}
+        >
+          <Form form={form} onFinish={handleSubmit} layout="vertical">
+            <Form.Item name="fullName" label="Họ và tên" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="phone" label="Số điện thoại" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="address" label="Địa chỉ" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+          </Form>
+        </Modal>
       </div>
     </div>
   );
