@@ -23,6 +23,7 @@ import ConstructionPage2 from "./components/elements/ConstructionPage2";
 import MaintenancePage2 from "./components/elements/MaintenancePage2";
 import Blog2 from "./components/elements/Blog2";
 
+import PondDesign from "./components/page/admin/ponddesign/PondDesign";
 function App() {
   const router = createBrowserRouter([
     {
@@ -103,6 +104,10 @@ function App() {
         {
           path: "usermanagement",
           element: <UserManagement/>,
+        },
+        {
+          path: "ponddesign",
+          element: <PondDesign/>,
         },
         // {
         //   path: "sevice",

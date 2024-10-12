@@ -19,7 +19,8 @@ function getItem(label, key, icon, children) {
 }
 const items = [
   getItem(<Link to="/dashboard/category">Category</Link>, "category", <PieChartOutlined />),
-  getItem(<Link to="/dashboard/usermanagement">User Management</Link>, "usermanagement", <UserOutlined />)
+  getItem(<Link to="/dashboard/usermanagement">User Management</Link>, "usermanagement", <UserOutlined />),
+  getItem(<Link to="/dashboard/ponddesign">Pond Design</Link>, "ponddesign", <UserOutlined />)
 ];
 
 const Dashboard = () => {
