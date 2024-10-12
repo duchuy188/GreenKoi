@@ -5,9 +5,10 @@ import {
   PieChartOutlined,
   TeamOutlined,
   UserOutlined,
+  CommentOutlined,
 } from "@ant-design/icons";
 import { Breadcrumb, Layout, Menu, theme } from "antd";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 const { Header, Content, Footer, Sider } = Layout;
 function getItem(label, key, icon, children) {
   return {
@@ -21,7 +22,8 @@ const items = [
   getItem(<Link to="/dashboard/category">Category</Link>, "category", <PieChartOutlined />),
   getItem(<Link to="/dashboard/usermanagement">User Management</Link>, "usermanagement", <UserOutlined />),
   getItem(<Link to="/dashboard/ponddesigncolumns">Pond Design Columnst</Link>, "ponddesigncolumns", <UserOutlined />),
-  getItem(<Link to="/dashboard/ponddesign">Pond Design</Link>, "ponddesign", <UserOutlined />)
+  getItem(<Link to="/dashboard/ponddesign">Pond Design</Link>, "ponddesign", <UserOutlined />),
+  getItem(<Link to="/dashboard/consulting">Consulting Requests</Link>, "consulting", <CommentOutlined />),
 ];
 
 const Dashboard = () => {
@@ -29,6 +31,18 @@ const Dashboard = () => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+  const location = useLocation();
+
+  // Tạo items cho Breadcrumb dựa trên đường dẫn hiện tại
+  const pathSnippets = location.pathname.split('/').filter((i) => i);
+  const breadcrumbItems = pathSnippets.map((_, index) => {
+    const url = `/${pathSnippets.slice(0, index + 1).join('/')}`;
+    return {
+      key: url,
+      title: <Link to={url}>{pathSnippets[index]}</Link>,
+    };
+  });
+
   return (
     <Layout
       style={{
@@ -64,10 +78,8 @@ const Dashboard = () => {
             style={{
               margin: "16px 0",
             }}
-          >
-            <Breadcrumb.Item>User</Breadcrumb.Item>
-            <Breadcrumb.Item>Bill</Breadcrumb.Item>
-          </Breadcrumb>
+            items={breadcrumbItems}
+          />
           <div
             style={{
               padding: 24,
