@@ -1,26 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { Form, Input, InputNumber, Button, message, Card, Row, Col, Table } from "antd";
+import { Form, Input, InputNumber, Button, message, Card, Row, Col, Table, Tag } from "antd";
 import { useNavigate } from "react-router-dom";
 import api from "../../../config/axios";
 
-const { Search } = Input;  // Sử dụng thành phần Search từ Input
+const { Search } = Input;
 
 function PondDesign() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [pondData, setPondData] = useState(null); // Dữ liệu hiện tại của hồ cá
-  const [pondList, setPondList] = useState([]); // Danh sách các hồ cá
-  const [searchResult, setSearchResult] = useState(null); // Kết quả tìm kiếm
+  const [pondData, setPondData] = useState(null);
+  const [searchResult, setSearchResult] = useState(null);
+  const [designerPonds, setDesignerPonds] = useState([]);
   const navigate = useNavigate();
 
-  // Fetch all pond designs
-  const fetchPondDesigns = async () => {
+  // Fetch pond designs for the designer
+  const fetchDesignerPonds = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/api/pond-designs");
-      setPondList(response.data);
+      const response = await api.get("/api/pond-designs/designer");
+      setDesignerPonds(response.data);
     } catch (err) {
-      console.error("Error fetching pond designs:", err);
+      console.error("Error fetching designer's pond designs:", err);
     } finally {
       setLoading(false);
     }
@@ -31,7 +31,7 @@ function PondDesign() {
     try {
       setLoading(true);
       const response = await api.get(`/api/pond-designs/${id}`);
-      setSearchResult(response.data);  // Lưu kết quả tìm kiếm vào state
+      setSearchResult(response.data);
     } catch (err) {
       message.error("Failed to fetch pond design: " + (err.response?.data?.message || err.message));
     } finally {
@@ -40,56 +40,42 @@ function PondDesign() {
   };
 
   useEffect(() => {
-    fetchPondDesigns(); // Fetch all pond designs on component mount
+    fetchDesignerPonds();
   }, []);
 
-  // Create new pond design
+  // Handle form submission (create or update)
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
-      const response = await api.post("/api/pond-designs", values);
-      message.success("Pond design created successfully");
+      console.log("Form values:", values); // Kiểm tra dữ liệu gửi đi
+
+      if (pondData) {
+        // Update existing pond design
+        console.log("Updating pond design with ID:", pondData.id);
+        await api.put(`/api/pond-designs/${pondData.id}`, values);
+        message.success("Pond design updated successfully");
+        setPondData(null);
+      } else {
+        // Create new pond design
+        await api.post("/api/pond-designs", values);
+        message.success("Pond design created successfully");
+      }
       form.resetFields();
-      setPondList([...pondList, response.data]); // Add newly created design to the list
+      fetchDesignerPonds();
     } catch (err) {
-      message.error("Failed to create pond design: " + (err.response?.data?.message || err.message));
+      message.error("Failed to " + (pondData ? "update" : "create") + " pond design: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
   };
 
-  // Update existing pond design
-  const handleUpdate = async (values) => {
-    if (!pondData) {
-      message.error("No pond design selected to update.");
-      return;
-    }
-    try {
-      setLoading(true);
-      await api.put(`/api/pond-designs/${pondData.id}`, values);
-      message.success("Pond design updated successfully");
-
-      // Update pond list with new data
-      const updatedList = pondList.map((item) =>
-        item.id === pondData.id ? { ...item, ...values } : item
-      );
-      setPondList(updatedList);
-      setPondData(null);
-      form.resetFields();
-    } catch (err) {
-      message.error("Failed to update pond design: " + (err.response?.data?.message || err.message));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Delete pond design
+  // Handle delete pond design
   const handleDelete = async (id) => {
     try {
       setLoading(true);
       await api.delete(`/api/pond-designs/${id}`);
       message.success("Pond design deleted successfully");
-      setPondList(pondList.filter((item) => item.id !== id)); // Remove deleted design from list
+      fetchDesignerPonds();
     } catch (err) {
       message.error("Failed to delete pond design: " + (err.response?.data?.message || err.message));
     } finally {
@@ -97,33 +83,46 @@ function PondDesign() {
     }
   };
 
+  // Handle logout
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     message.success("Logged out successfully");
     navigate("/login");
   };
 
-  // Table columns
+  // Updated columns definition
   const columns = [
     { title: "ID", dataIndex: "id", key: "id" },
-    { title: "NAME", dataIndex: "name", key: "name" },
-    { title: "DESCRIPTION", dataIndex: "description", key: "description" },
-    { title: "IMAGE URL", dataIndex: "imageUrl", key: "imageUrl" },
-    { title: "BASE PRICE", dataIndex: "basePrice", key: "basePrice" },
-    { title: "SHAPE", dataIndex: "shape", key: "shape" },
-    { title: "DIMENSIONS", dataIndex: "dimensions", key: "dimensions" },
-    { title: "FEATURES", dataIndex: "features", key: "features" },
-    { title: "CREATED BY", dataIndex: "createdById", key: "createdById" }, // Thêm cột createdById
+    { title: "Name", dataIndex: "name", key: "name" },
+    { title: "Description", dataIndex: "description", key: "description" },
+    { title: "Base Price", dataIndex: "basePrice", key: "basePrice" },
+    { title: "Shape", dataIndex: "shape", key: "shape" },
+    { title: "Dimensions", dataIndex: "dimensions", key: "dimensions" },
+    { title: "Description", dataIndex: "description", key: "description" },
     {
-      title: "ACTION",
+      title: "Status",
+      key: "status",
+      render: (_, record) => (
+        <span>
+          {record.status === 'approved' ? (
+            <Tag color="green">Approved</Tag>
+          ) : record.status === 'rejected' ? (
+            <Tag color="red">Rejected</Tag>
+          ) : (
+            <Tag color="orange">Pending</Tag>
+          )}
+        </span>
+      ),
+    },
+    {
+      title: "Action",
       key: "action",
       render: (_, record) => (
         <span>
-          {/* Edit button fetches the pond design by its ID */}
-          <Button
-            type="link"
-            onClick={() => fetchPondDesignById(record.id)} // Fetch pond design by ID
-          >
+          <Button type="link" onClick={() => {
+            setPondData(record);
+            form.setFieldsValue(record);
+          }}>
             Edit
           </Button>
           <Button type="link" danger onClick={() => handleDelete(record.id)}>
@@ -135,25 +134,22 @@ function PondDesign() {
   ];
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: 24, marginLeft: "4%" }}>
-      {/* Search input for fetching pond design by ID */}
+    <div style={{ maxWidth: 800, margin: "0 auto", padding: 24, marginLeft: "8%" }}>
       <Card title="Search Pond Design by ID" bordered={false}>
         <Search
           placeholder="Enter Pond Design ID"
           enterButton="Search"
-          onSearch={fetchPondDesignById}  // Gọi API tìm kiếm theo ID
+          onSearch={fetchPondDesignById}
           style={{ marginBottom: 24 }}
         />
       </Card>
 
-      {/* Nếu có kết quả tìm kiếm thì hiển thị bảng với kết quả này */}
       {searchResult && (
         <Table columns={columns} dataSource={[searchResult]} rowKey="id" pagination={false} style={{ marginTop: 24 }} />
       )}
 
-      {/* Form for creating or editing a pond design */}
-      <Card title="Create or Edit Pond Design" bordered={false}>
-        <Form form={form} layout="vertical" onFinish={pondData ? handleUpdate : handleSubmit}>
+      <Card title={pondData ? "Edit Pond Design" : "Create Pond Design"} bordered={false}>
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="name" label="Name" rules={[{ required: true }]}>
@@ -184,24 +180,25 @@ function PondDesign() {
             <Input.TextArea placeholder="Enter pond description" />
           </Form.Item>
 
-          <Form.Item name="imageUrl" label="Image URL">
-            <Input placeholder="Enter image URL" />
-          </Form.Item>
-
-          <Form.Item name="features" label="Features">
-            <Input placeholder="Enter pond features" />
-          </Form.Item>
-
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading}>
               {pondData ? "Update Pond Design" : "Create Pond Design"}
             </Button>
+            {pondData && (
+              <Button style={{ marginLeft: 8 }} onClick={() => {
+                setPondData(null);
+                form.resetFields();
+              }}>
+                Cancel Edit
+              </Button>
+            )}
           </Form.Item>
         </Form>
       </Card>
 
-      {/* Table displaying pond designs */}
-      <Table columns={columns} dataSource={pondList} rowKey="id" pagination={false} style={{ marginTop: 24 }} />
+      <Card title="Your Pond Designs" bordered={false} style={{ marginTop: 24 }}>
+        <Table columns={columns} dataSource={designerPonds} rowKey="id" pagination={false} />
+      </Card>
 
       <div style={{ textAlign: "center", marginTop: 32 }}>
         <Button onClick={handleLogout} type="default">

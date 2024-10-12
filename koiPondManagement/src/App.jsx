@@ -24,6 +24,7 @@ import MaintenancePage2 from "./components/elements/MaintenancePage2";
 import Blog2 from "./components/elements/Blog2";
 
 import PondDesign from "./components/page/admin/ponddesign/PondDesign";
+import PondDesignColumns from "./components/page/admin/PondDesignColumns/PondDesignColumns";
 function App() {
   const router = createBrowserRouter([
     {
@@ -108,6 +109,10 @@ function App() {
         {
           path: "ponddesign",
           element: <PondDesign/>,
+        },
+        {
+          path: "ponddesigncolumns",
+          element: <PondDesignColumns/>,
         },
         // {
         //   path: "sevice",
