@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 const Consulting = () => {
   const [consultationRequests, setConsultationRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-
+//chua get duoc du lieu
   useEffect(() => {
     fetchConsultationRequests();
   }, []);
