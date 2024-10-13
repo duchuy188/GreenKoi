@@ -342,3 +342,44 @@ VALUES
 PRINT 'Database setup completed successfully.';
 
 ALTER TABLE designs ADD rejection_reason NVARCHAR(MAX);
+
+
+-- Thêm cột has_active_project vào bảng users
+ALTER TABLE users ADD has_active_project BIT NOT NULL DEFAULT 0;
+
+-- Thêm cột constructor_id vào bảng projects
+ALTER TABLE projects ADD constructor_id NVARCHAR(36);
+
+-- Thêm foreign key constraint
+ALTER TABLE projects ADD CONSTRAINT FK_projects_constructor FOREIGN KEY (constructor_id) REFERENCES users(id);
+
+CREATE TABLE task_templates (
+    id NVARCHAR(36) PRIMARY KEY,
+    name NVARCHAR(255) NOT NULL,
+    description NVARCHAR(MAX),
+    order_index INT NOT NULL
+);
+
+
+CREATE TABLE tasks (
+    id NVARCHAR(36) PRIMARY KEY,
+    project_id NVARCHAR(36) NOT NULL,
+    name NVARCHAR(255) NOT NULL,
+    description NVARCHAR(MAX),
+    status NVARCHAR(20) NOT NULL,
+    order_index INT NOT NULL,
+    completion_percentage INT NOT NULL DEFAULT 0,
+    notes NVARCHAR(MAX),
+    created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
+    updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
+    FOREIGN KEY (project_id) REFERENCES projects(id)
+);
+
+INSERT INTO task_templates (id, name, description, order_index) VALUES
+(NEWID(), N'Khảo sát và chuẩn bị mặt bằng', N'Khảo sát địa điểm và chuẩn bị mặt bằng cho việc xây dựng hồ cá Koi', 1),
+(NEWID(), N'Đào đất và tạo hình dáng hồ', N'Đào đất theo thiết kế và tạo hình dáng cơ bản cho hồ cá Koi', 2),
+(NEWID(), N'Xây dựng cấu trúc hồ và hệ thống lọc', N'Xây dựng các lớp cấu trúc của hồ và lắp đặt hệ thống lọc nước', 3),
+(NEWID(), N'Lắp đặt hệ thống điện và ánh sáng', N'Lắp đặt hệ thống điện và ánh sáng cho hồ cá Koi', 4),
+(NEWID(), N'Hoàn thiện cảnh quan xung quanh hồ', N'Tạo cảnh quan và trang trí xung quanh hồ cá Koi', 5),
+(NEWID(), N'Kiểm tra chất lượng nước và hệ thống lọc', N'Kiểm tra và điều chỉnh chất lượng nước cùng hệ thống lọc', 6),
+(NEWID(), N'Bàn giao và hướng dẫn sử dụng', N'Bàn giao dự án và hướng dẫn khách hàng cách sử dụng, bảo trì hồ cá Koi', 7);
