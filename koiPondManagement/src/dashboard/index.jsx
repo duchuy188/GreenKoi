@@ -6,9 +6,13 @@ import {
   TeamOutlined,
   UserOutlined,
   CommentOutlined,
+  LogoutOutlined
 } from "@ant-design/icons";
-import { Breadcrumb, Layout, Menu, theme } from "antd";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Breadcrumb, Layout, Menu, theme, Button } from "antd";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../components/redux/features/useSlice'; // Đảm bảo đường dẫn này chính xác
+
 const { Header, Content, Footer, Sider } = Layout;
 function getItem(label, key, icon, children) {
   return {
@@ -32,6 +36,9 @@ const Dashboard = () => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user);
 
   // Tạo items cho Breadcrumb dựa trên đường dẫn hiện tại
   const pathSnippets = location.pathname.split('/').filter((i) => i);
@@ -42,6 +49,13 @@ const Dashboard = () => {
       title: <Link to={url}>{pathSnippets[index]}</Link>,
     };
   });
+
+  const handleLogout = () => {
+    dispatch(logout()); // Dispatch action logout
+    localStorage.removeItem('token');
+    localStorage.removeItem('user'); // Xóa thông tin user từ localStorage nếu có
+    navigate('/login');
+  };
 
   return (
     <Layout
@@ -67,8 +81,20 @@ const Dashboard = () => {
           style={{
             padding: 0,
             background: colorBgContainer,
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center'
           }}
-        />
+        >
+          <Button
+            type="primary"
+            icon={<LogoutOutlined />}
+            onClick={handleLogout}
+            style={{ marginRight: 16 }}
+          >
+            Logout
+          </Button>
+        </Header>
         <Content
           style={{
             margin: "0 16px",

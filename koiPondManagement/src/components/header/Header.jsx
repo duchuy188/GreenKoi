@@ -10,7 +10,7 @@ import { logout } from "../redux/features/useSlice";
 function Header() {
   const location = useLocation();
   const indicatorRef = useRef(null);
-  const user = useSelector((store) => store.user);
+  const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isActive = (path) => {
