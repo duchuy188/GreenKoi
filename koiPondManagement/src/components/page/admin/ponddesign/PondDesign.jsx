@@ -102,7 +102,23 @@ function PondDesign() {
     { title: "CreatedById", dataIndex: "createdById", key: "createdById" },
     { title: "Dimensions", dataIndex: "dimensions", key: "dimensions" },
     { title: "Description", dataIndex: "description", key: "description" },
-    {title: "Status", dataIndex: "status", key: "status"},
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => {
+        switch (status) {
+          case "PENDING_APPROVAL":
+            return "Đang chờ xử lý";
+          case "APPROVED":
+            return "Đã chấp nhận";
+          case "REJECTED":
+            return "Đã từ chối";
+          default:
+            return status;
+        }
+      },
+    },
     {
       title: "Action",
       key: "action",

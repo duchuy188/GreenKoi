@@ -55,15 +55,31 @@ function PondDesignColumns() {
     { title: "Features", dataIndex: "features", key: "features" },
     { title: "BasePrice", dataIndex: "basePrice", key: "basePrice" },
     { title: "Created By", dataIndex: "createdById", key: "createdById" },
-    { title: "Status", dataIndex: "status", key: "status" },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => {
+        switch (status) {
+          case "PENDING_APPROVAL":
+            return "Đang chờ xử lý";
+          case "APPROVED":
+            return "Đã chấp nhận";
+          case "REJECTED":
+            return "Đã từ chối";
+          default:
+            return status;
+        }
+      },
+    },
     {
       title: "Action", dataIndex: "id", key: "id", render: (id) => (
         <>
           <Popconfirm title="Approve this design?" onConfirm={() => approvePondDesign(id)}>
-            <Button type="primary" style={{ marginRight: 8 }}>Approve</Button>
+            <Button type="primary" style={{ marginRight: 8 }}>Chấp nhận</Button>
           </Popconfirm>
           <Popconfirm title="Reject this design?" onConfirm={() => rejectPondDesign(id)}>
-            <Button type="danger">Reject</Button>
+            <Button type="danger">Không chấp nhận</Button>
           </Popconfirm>
         </>
       ),
