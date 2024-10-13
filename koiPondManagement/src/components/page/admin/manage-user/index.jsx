@@ -1,6 +1,5 @@
 import { Button, Form, Input, Modal, Popconfirm, Table, Select, Checkbox } from "antd";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // For navigation
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
 
@@ -12,7 +11,6 @@ function UserManagement() {
   const [loading, setLoading] = useState(false);
   const [userType, setUserType] = useState('employees');
   const [isEdit, setIsEdit] = useState(false); 
-  const navigate = useNavigate(); 
 
   const roles = [
     { id: '1', name: "Manager" },
@@ -108,13 +106,6 @@ function UserManagement() {
     return role ? role.name : "Unknown";
   };
 
-  const handleLogout = () => {
-    // Assuming token is stored in localStorage
-    localStorage.removeItem('authToken');
-    toast.success("Logged out successfully");
-    navigate("/login"); // Redirect to login page
-  };
-
   const columns = [
     { title: "ID", dataIndex: "id", key: "id" },
     { title: "Username", dataIndex: "username", key: "username" },
@@ -140,12 +131,11 @@ function UserManagement() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 16 }}>
         <Select value={userType} onChange={setUserType}>
           <Select.Option value="employees">Employees</Select.Option>
           <Select.Option value="customers">Customers</Select.Option>
         </Select>
-        <Button type="default" onClick={handleLogout}>Logout</Button>
       </div>
       <Button type="primary" onClick={() => { setShowModal(true); setIsEdit(false); form.resetFields(); }} style={{ marginBottom: 16 }}>Add User</Button>
       <Table dataSource={filteredUsers} columns={columns} rowKey="id" loading={loading} locale={{ emptyText: "No users found or error loading data" }} />
