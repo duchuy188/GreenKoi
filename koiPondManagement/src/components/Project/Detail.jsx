@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Row, Typography, Layout } from "antd";
+import { Card, Col, Row, Typography, Layout, Button, Modal, Form, Input, message } from "antd";
 import { useParams } from "react-router-dom";
 import api from "../config/axios";
 
@@ -10,6 +10,8 @@ const ProjectDetails = () => {
   const { id } = useParams(); // Lấy id từ URL
   const [project, setProject] = useState(null); // State lưu thông tin dự án
   const [loading, setLoading] = useState(true);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [form] = Form.useForm();
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
@@ -18,6 +20,10 @@ const ProjectDetails = () => {
         setProject(response.data);
       } catch (error) {
         console.error("Error fetching project details:", error);
+        if (error.response && error.response.status === 401) {
+          message.error("Unauthorized access. Please log in again.");
+          // Redirect to login page or refresh token
+        }
       } finally {
         setLoading(false);
       }
@@ -33,6 +39,52 @@ const ProjectDetails = () => {
   if (!project) {
     return <p>Project not found</p>;
   }
+
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+    form.resetFields();
+  };
+
+  const onFinish = async (values) => {
+    try {
+      const token = localStorage.getItem('token'); // Assuming you store the token in localStorage
+      const consultationRequest = {
+        designId: id,
+        customerName: values.customerName,
+        customerPhone: values.customerPhone,
+        customerAddress: values.customerAddress,
+        designName: project.name,
+        designDescription: project.description,
+        notes: values.notes,
+      };
+
+      const response = await api.post('/api/ConsultationRequests', consultationRequest, {
+        headers: {
+          'Authorization': `Bearer ${token}` // Include the token in the request header
+        }
+      });
+
+      if (response.status === 201 || response.status === 200) {
+        message.success('Consultation request submitted successfully!');
+        setIsModalVisible(false);
+        form.resetFields();
+      } else {
+        throw new Error('Unexpected response status');
+      }
+    } catch (error) {
+      console.error('Error submitting consultation request:', error);
+      if (error.response && error.response.status === 401) {
+        message.error('Unauthorized. Please log in again.');
+        // Redirect to login page or refresh token
+      } else {
+        message.error('Failed to submit consultation request. Please try again.');
+      }
+    }
+  };
 
   return (
     <Layout style={{ backgroundColor: "#f0f2f5" }}>
@@ -90,9 +142,39 @@ const ProjectDetails = () => {
                   <strong>Giá cả: {project.basePrice}</strong>
                 </Paragraph>
               </Typography>
+              <Button type="primary" onClick={showModal} style={{ marginTop: '20px' }}>
+                Request Consultation
+              </Button>
             </Card>
           </Col>
         </Row>
+
+        <Modal
+          title="Request Consultation"
+          visible={isModalVisible}
+          onCancel={handleCancel}
+          footer={null}
+        >
+          <Form form={form} onFinish={onFinish} layout="vertical">
+            <Form.Item name="customerName" label="Your Name" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="customerPhone" label="Phone Number" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="customerAddress" label="Address" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="notes" label="Additional Notes">
+              <Input.TextArea />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit">
+                Submit Request
+              </Button>
+            </Form.Item>
+          </Form>
+        </Modal>
       </Content>
     </Layout>
   );
