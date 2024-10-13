@@ -97,23 +97,12 @@ function PondDesign() {
     { title: "Description", dataIndex: "description", key: "description" },
     { title: "Base Price", dataIndex: "basePrice", key: "basePrice" },
     { title: "Shape", dataIndex: "shape", key: "shape" },
+    { title: "ImageUrl", dataIndex: "imageUrl", key: "imageUrl" },
+    { title: "Features", dataIndex: "features", key: "features" },
+    { title: "CreatedById", dataIndex: "createdById", key: "createdById" },
     { title: "Dimensions", dataIndex: "dimensions", key: "dimensions" },
     { title: "Description", dataIndex: "description", key: "description" },
-    {
-      title: "Status",
-      key: "status",
-      render: (_, record) => (
-        <span>
-          {record.status === 'approved' ? (
-            <Tag color="green">Approved</Tag>
-          ) : record.status === 'rejected' ? (
-            <Tag color="red">Rejected</Tag>
-          ) : (
-            <Tag color="orange">Pending</Tag>
-          )}
-        </span>
-      ),
-    },
+    {title: "Status", dataIndex: "status", key: "status"},
     {
       title: "Action",
       key: "action",
@@ -178,6 +167,14 @@ function PondDesign() {
 
           <Form.Item name="description" label="Description" rules={[{ required: true }]}>
             <Input.TextArea placeholder="Enter pond description" />
+          </Form.Item>
+
+          <Form.Item name="imageUrl" label="ImageUrl" rules={[{ required: true }]}>
+            <Input.TextArea placeholder="Enter pond imageUrl" />
+          </Form.Item>
+
+          <Form.Item name="features" label="Features" rules={[{ required: true }]}>
+            <Input.TextArea placeholder="Enter pond features" />
           </Form.Item>
 
           <Form.Item>

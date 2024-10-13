@@ -1,23 +1,42 @@
-import React from 'react';
-import listProject from '../Share/listproject';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import api from '../config/axios';
 import './Project.css';
 
 export default function ProjectPage() {
+  const [projects, setProjects] = useState([]);
+
+  const fetchApprovedPondDesigns = async () => {
+    try {
+      const response = await api.get("/api/pond-designs/approved");
+      if (Array.isArray(response.data)) {
+        setProjects(response.data);
+      } else {
+        toast.error("Failed to load approved projects.");
+        setProjects([]);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Error fetching approved projects.");
+      setProjects([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchApprovedPondDesigns();
+  }, []);
+
   return (
-    <div className="project-container">
-      {listProject.map((project) => (
-        <div key={project.id} className="project-card">
-          <Link to={`/duan/${project.id}`} className="project-link">
-            <div className="project-image-container">
-              <img src={project.image} alt={project.name} className="project-image" />
-              <div className="project-overlay">
-                <h2 className="project-title">{project.name}</h2>
-                <p className="project-description">{project.description}</p>
-              </div>
+    <div className="project-gallery">
+      {projects.map((project) => (
+        <Link to={`/duan/${project.id}`} key={project.id} className="project-card">
+          <div className="project-image-container">
+            <img src={project.imageUrl} alt={project.name} className="project-image" />
+            <div className="project-overlay">
+              <h2 className="project-title">{project.name}</h2>
             </div>
-          </Link>
-        </div>
+          </div>
+        </Link>
       ))}
     </div>
   );

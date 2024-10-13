@@ -53,6 +53,7 @@ function PondDesignColumns() {
     { title: "Shape", dataIndex: "shape", key: "shape" },
     { title: "Dimensions", dataIndex: "dimensions", key: "dimensions" },
     { title: "Features", dataIndex: "features", key: "features" },
+    { title: "BasePrice", dataIndex: "basePrice", key: "basePrice" },
     { title: "Created By", dataIndex: "createdById", key: "createdById" },
     { title: "Status", dataIndex: "status", key: "status" },
     {
