@@ -1,6 +1,7 @@
 package com.koipond.backend.controller;
 
 import com.koipond.backend.dto.DesignDTO;
+import com.koipond.backend.dto.RejectDesignRequest;
 import com.koipond.backend.service.DesignService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -87,9 +88,9 @@ public class PondDesignController {
     @PatchMapping("/{id}/reject")
     @PreAuthorize("hasAuthority('ROLE_1')")
     @Operation(summary = "Reject a pond design", 
-               description = "Rejects a specific pond design. Only managers (ROLE_1) can perform this action.")
-    public ResponseEntity<DesignDTO> rejectDesign(@PathVariable String id) {
-        DesignDTO rejectedDesign = designService.rejectDesign(id);
+               description = "Rejects a specific pond design with a reason. Only managers (ROLE_1) can perform this action.")
+    public ResponseEntity<DesignDTO> rejectDesign(@PathVariable String id, @RequestBody RejectDesignRequest request) {
+        DesignDTO rejectedDesign = designService.rejectDesign(id, request.getRejectionReason());
         return ResponseEntity.ok(rejectedDesign);
     }
 

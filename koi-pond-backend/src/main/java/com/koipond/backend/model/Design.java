@@ -69,4 +69,15 @@ public class Design {
     public enum DesignStatus {
         PENDING_APPROVAL, APPROVED, REJECTED
     }
+
+    @Column(columnDefinition = "TEXT")
+    private String rejectionReason;
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
+    }
 }

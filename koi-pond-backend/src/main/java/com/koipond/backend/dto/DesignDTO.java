@@ -15,4 +15,5 @@ public class DesignDTO {
     private String features;
     private String createdById;
     private String status;
+    private String rejectionReason;
 }

@@ -73,9 +73,10 @@ public class DesignService {
         return convertToDTO(updatedDesign);
     }
 
-    public DesignDTO rejectDesign(String id) {
+    public DesignDTO rejectDesign(String id, String rejectionReason) {
         Design design = findDesignById(id);
         design.setStatus(Design.DesignStatus.REJECTED);
+        design.setRejectionReason(rejectionReason);
         Design updatedDesign = designRepository.save(design);
         return convertToDTO(updatedDesign);
     }
@@ -111,6 +112,7 @@ public class DesignService {
         } else {
             design.setStatus(Design.DesignStatus.PENDING_APPROVAL);
         }
+        design.setRejectionReason(dto.getRejectionReason());
     }
 
     private DesignDTO convertToDTO(Design design) {
@@ -126,6 +128,7 @@ public class DesignService {
         dto.setCreatedById(design.getCreatedBy().getId());
         // Xử lý trường hợp status là null
         dto.setStatus(design.getStatus() != null ? design.getStatus().name() : Design.DesignStatus.PENDING_APPROVAL.name());
+        dto.setRejectionReason(design.getRejectionReason());
         return dto;
     }
 }

@@ -71,6 +71,9 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(Arrays.asList(allowedHeaders.split(",")));
         configuration.setAllowCredentials(allowCredentials);
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        
+        logger.info("Allowed methods for CORS: {}", allowedMethods);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -103,6 +106,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/pond-designs/*/approve").hasAuthority("ROLE_1")
                         .requestMatchers(HttpMethod.PATCH, "/api/pond-designs/*/reject").hasAuthority("ROLE_1")
                         .requestMatchers(HttpMethod.DELETE, "/api/pond-designs/**").hasAuthority("ROLE_3")
+                        // Cấu hình cho BlogController
+                        .requestMatchers(HttpMethod.POST, "/api/blog/drafts").hasAnyAuthority("ROLE_3", "ROLE_1")
+                        .requestMatchers(HttpMethod.PUT, "/api/blog/drafts/**").hasAnyAuthority("ROLE_3", "ROLE_1")
+                        .requestMatchers(HttpMethod.POST, "/api/blog/drafts/*/submit").hasAnyAuthority("ROLE_3", "ROLE_1")
+                        .requestMatchers(HttpMethod.POST, "/api/blog/posts/*/approve").hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.POST, "/api/blog/posts/*/reject").hasAuthority("ROLE_1")
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsService)
