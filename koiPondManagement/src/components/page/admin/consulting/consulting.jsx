@@ -125,7 +125,7 @@ const Consulting = () => {
       render: (_, record) => (
         <Space size="middle">
           <Button onClick={() => handleViewDetails(record)}>View Details</Button>
-          <FaEdit 
+          <FaEdit  
             onClick={() => handleEditRequest(record)} 
             style={{ cursor: 'pointer', fontSize: '18px' }} 
           />
