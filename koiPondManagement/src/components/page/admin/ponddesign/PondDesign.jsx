@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Form, Input, InputNumber, Button, message, Card, Row, Col, Table, Tag } from "antd";
+import { Form, Input, InputNumber, Button, message, Card, Row, Col, Table } from "antd";
 import { useNavigate } from "react-router-dom";
 import api from "../../../config/axios";
 
@@ -81,13 +81,6 @@ function PondDesign() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Handle logout
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    message.success("Logged out successfully");
-    navigate("/login");
   };
 
   // Updated columns definition
@@ -212,12 +205,6 @@ function PondDesign() {
       <Card title="Your Pond Designs" bordered={false} style={{ marginTop: 24 }}>
         <Table columns={columns} dataSource={designerPonds} rowKey="id" pagination={false} />
       </Card>
-
-      <div style={{ textAlign: "center", marginTop: 32 }}>
-        <Button onClick={handleLogout} type="default">
-          Logout
-        </Button>
-      </div>
     </div>
   );
 }
