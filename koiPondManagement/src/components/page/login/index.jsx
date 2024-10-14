@@ -23,12 +23,12 @@ function LoginPage() {
         // The signed-in user info.
         const user = result.user;
 
-        console.log("Google login successful", user);
-        toast.success("Google login successful!");
+        console.log("Đăng nhập Google thành công", user);
+        toast.success("Đăng nhập Google thành công!");
         // TODO: Handle successful login (e.g., update Redux state, navigate to dashboard)
       }).catch((error) => {
-        console.error("Google login error", error);
-        toast.error(`Google login failed: ${error.message}`);
+        console.error("Lỗi đăng nhập Google", error);
+        toast.error(`Đăng nhập Google không thành công: ${error.message}`);
         // Handle Errors here.
         const errorCode = error.code;
         const errorMessage = error.message;
@@ -50,7 +50,7 @@ function LoginPage() {
       // Dispatch only serializable data
       dispatch(login(userData));
       
-      toast.success("Login Successful!");
+      toast.success("Đăng nhập thành công!");
 
       // Phân quyền dựa trên roleId
       const role = parseInt(roleId);
@@ -59,28 +59,28 @@ function LoginPage() {
       } else if (role === 5) {
         navigate("/"); // Chuyển đến trang chủ
       } else {
-        toast.error("Invalid role. Please contact administrator.");
+        toast.error("Vai trò không hợp lệ. Vui lòng liên hệ với người quản trị.");
       }
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("Lỗi đăng nhập:", err);
       if (err.response) {
         if (
           err.response.status === false &&
-          err.response.data.message === "Account blocked"
+          err.response.data.message === "Tài khoản bị chặn"
         ) {
           toast.error(
-            "Your account has been blocked. Please contact the administrator."
+            "Tài khoản của bạn đã bị chặn. Vui lòng liên hệ với quản trị viên."
           );
         } else {
           toast.error(
             err.response.data.message ||
-              "Login failed. Please check your credentials."
+              "Đăng nhập không thành công. Vui lòng kiểm tra thông tin đăng nhập của bạn."
           );
         }
       } else if (err.request) {
-        toast.error("Unable to connect to the server. Please try again later.");
+        toast.error("Không thể kết nối tới máy chủ. Vui lòng thử lại sau.");
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        toast.error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.");
       }
     }
   };
@@ -94,29 +94,29 @@ function LoginPage() {
         layout="vertical"
       >
         <Form.Item
-          label="Username"
+          label="Tên Đăng Nhập"
           name="username"
-          rules={[{ required: true, message: "Please input your username!" }]}
+          rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập của bạn!" }]}
         >
           <Input/>
         </Form.Item>
 
         <Form.Item
-          label="Password"
+          label="Mật Khẩu"
           name="password"
-          rules={[{ required: true, message: "Please input your password!" }]}
+          rules={[{ required: true, message: "Vui lòng nhập mật khẩu của bạn!" }]}
         >
           <Input.Password />
         </Form.Item>
 
         <Form.Item>
           <Button type="primary" htmlType="submit" block>
-            Login
+            Đăng nhập
           </Button>
         </Form.Item>
 
         <Form.Item>
-          <Link to="/register">Create new account?</Link>
+          <Link to="/register">Đăng ký tài khoản</Link>
         </Form.Item>
 
         <Form.Item>
@@ -126,7 +126,7 @@ function LoginPage() {
             // onClick={() => console.log("Google login not implemented")}
             onClick={handleLoginGoogle}
           >
-            Login with Google
+            Đăng nhập bằng Google
           </Button>
         </Form.Item>
       </Form>
