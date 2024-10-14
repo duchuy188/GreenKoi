@@ -23,6 +23,9 @@ import MaintenancePage2 from "./components/elements/MaintenancePage2";
 import Blog2 from "./components/elements/Blog2";
 import Profile2 from "./components/elements/Profile2";
 
+import PondDesign from "./components/page/admin/ponddesign/PondDesign";
+import PondDesignColumns from "./components/page/admin/PondDesignColumns/PondDesignColumns";
+import Consulting from "./components/page/admin/consulting/consulting";
 function App() {
   const router = createBrowserRouter([
     {
@@ -104,6 +107,18 @@ function App() {
           path: "usermanagement",
           element: <UserManagement/>,
         },
+        {
+          path: "ponddesign",
+          element: <PondDesign/>,
+        },
+        {
+          path: "ponddesigncolumns",
+          element: <PondDesignColumns/>,
+        },
+        {
+          path: "consulting",
+          element: <Consulting />,
+        },  
         // {
         //   path: "sevice",
         //   element: <Sevice />,

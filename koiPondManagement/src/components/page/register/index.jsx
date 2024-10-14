@@ -12,12 +12,12 @@ function RegisterPage() {
       // Loại bỏ confirmPassword vì backend không cần nó
       const { confirmPassword, ...registerData } = values;
       const response = await api.post("/api/auth/register", registerData);
-      toast.success("Registration Successful!");
+      toast.success("Đăng ký thành công!");
       // Chuyển hướng người dùng đến trang đăng nhập sau khi đăng ký thành công
       navigate("/login");
     } catch (err) {
-      console.error("Registration error:", err);
-      toast.error(err.response?.data?.message || "Registration failed. Please try again.");
+      console.error("Lỗi đăng ký:", err);
+      toast.error(err.response?.data?.message || "Đăng ký không thành công. Vui lòng thử lại.");
     }
   };
 
@@ -30,12 +30,12 @@ function RegisterPage() {
         onFinish={handleRegister}
       >
         <Form.Item
-          label="Username"
+          label="Tên Đăng Nhập"
           name="username"
           rules={[
             {
               required: true,
-              message: 'Please input your username!',
+              message: 'Vui lòng nhập tên đăng nhập của bạn!',
             },
           ]}
         >
@@ -43,16 +43,16 @@ function RegisterPage() {
         </Form.Item>
 
         <Form.Item
-          label="Password"
+          label="Mật Khẩu"
           name="password"
           rules={[
             {
               required: true,
-              message: 'Please input your password!',
+              message: 'Vui lòng nhập mật khẩu của bạn!',
             },
             {
               min: 6,
-              message: 'Password must be at least 6 characters!',
+              message: 'Mật khẩu phải có ít nhất 6 ký tự!',
             },
           ]}
         >
@@ -60,20 +60,20 @@ function RegisterPage() {
         </Form.Item>
 
         <Form.Item
-          label="Re-enter Password"
+          label="Nhập lại mật khẩu"
           name="confirmPassword"
           dependencies={['password']}
           rules={[
             {
               required: true,
-              message: 'Please confirm your password!',
+              message: 'Vui lòng xác nhận mật khẩu của bạn!',
             },
             ({ getFieldValue }) => ({
               validator(_, value) {
                 if (!value || getFieldValue('password') === value) {
                   return Promise.resolve();
                 }
-                return Promise.reject(new Error('The two passwords do not match!'));
+                return Promise.reject(new Error('Hai mật khẩu không khớp nhau!'));
               },
             }),
           ]}
@@ -82,12 +82,12 @@ function RegisterPage() {
         </Form.Item>
 
         <Form.Item
-          label="Full Name"
+          label="Họ và tên đầy đủ"
           name="fullName"
           rules={[
             {
               required: true,
-              message: 'Please input your full name!',
+              message: 'Vui lòng nhập tên đầy đủ của bạn!',
             },
           ]}
         >
@@ -95,16 +95,16 @@ function RegisterPage() {
         </Form.Item>
 
         <Form.Item
-          label="Phone Number"
+          label="Số điện thoại"
           name="phoneNumber"
           rules={[
             {
               required: true,
-              message: 'Please input your phone number!',
+              message: 'Vui lòng nhập số điện thoại của bạn!',
             },
             {
               pattern: /^[0-9]+$/,
-              message: 'Phone number must contain only digits!',
+              message: 'Số điện thoại chỉ được chứa chữ số!',
             },
           ]}
         >
@@ -112,16 +112,16 @@ function RegisterPage() {
         </Form.Item>
 
         <Form.Item
-          label="Email"
+          label="E-mail"
           name="email"
           rules={[
             {
               required: true,
-              message: 'Please input your email!',
+              message: 'Vui lòng nhập email của bạn!',
             },
             {
               type: 'email',
-              message: 'Please input a valid email address!',
+              message: 'Vui lòng nhập địa chỉ email hợp lệ!',
             },
           ]}
         >
@@ -129,12 +129,12 @@ function RegisterPage() {
         </Form.Item>
 
         <Form.Item
-          label="Address"
+          label="Địa chỉ"
           name="address"
           rules={[
             {
               required: true,
-              message: 'Please input your address!',
+              message: 'Vui lòng nhập địa chỉ của bạn!',
             },
           ]}
         >
@@ -142,12 +142,12 @@ function RegisterPage() {
         </Form.Item>
 
         <Form.Item>
-          <Link to="/login">Already have an account? Login here</Link>
+          <Link to="/login">Bạn đã có tài khoản? Đăng nhập tại đây</Link>
         </Form.Item>
 
         <Form.Item>
           <Button type="primary" htmlType="submit" >
-            Register
+            Đăng ký
           </Button>
         </Form.Item>
       </Form>
