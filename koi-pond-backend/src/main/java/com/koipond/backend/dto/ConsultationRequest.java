@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 @Data
 public class ConsultationRequest {
     private String id;
+    private String customerId;
     private String designId;
     private String notes;
     private String status;

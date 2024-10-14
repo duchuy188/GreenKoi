@@ -131,4 +131,10 @@ public class DesignService {
         dto.setRejectionReason(design.getRejectionReason());
         return dto;
     }
+
+    public List<DesignDTO> searchDesignsByName(String name) {
+        return designRepository.findByNameContainingIgnoreCaseAndActiveTrue(name).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 }

@@ -53,5 +53,8 @@ public class User {
     @Column(name = "firebase_uid")
     private String firebaseUid;
 
+    @Column(name = "has_active_project")
+    private boolean hasActiveProject = false;
+
     // Các getter và setter đã được tạo bởi annotation @Data của Lombok
 }

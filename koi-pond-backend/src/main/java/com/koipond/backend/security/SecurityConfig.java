@@ -21,9 +21,14 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
+import org.springframework.security.authorization.AuthorityAuthorizationManager;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -66,11 +71,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
-        configuration.setAllowedMethods(Arrays.asList(allowedMethods.split(",")));
-        configuration.setAllowedHeaders(Arrays.asList(allowedHeaders.split(",")));
-        configuration.setAllowCredentials(allowCredentials);
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        configuration.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+        configuration.setAllowedMethods(List.of(allowedMethods.split(",")));
+        configuration.setAllowedHeaders(List.of(allowedHeaders.split(",")));
+        configuration.setExposedHeaders(List.of("Authorization"));
         
         logger.info("Allowed methods for CORS: {}", allowedMethods);
         
@@ -87,11 +91,21 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilterBefore(new CorsFilter(corsConfigurationSource()), UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authorize -> authorize
+                .authorizeHttpRequests(authorize -> {
+                    authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/logout", "/api/test/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        // Các cấu hình hiện có
+                        // Đặt các quy tắc cụ thể trước
+                        .requestMatchers(HttpMethod.GET, "/api/projects/*/tasks")
+                            .access(loggedAuthorizationManager("/api/projects/*/tasks", AuthorityAuthorizationManager.hasAnyAuthority("ROLE_1", "ROLE_4")))
+                        .requestMatchers(HttpMethod.GET, "/api/projects/*/project-tasks")
+                            .access(loggedAuthorizationManager("/api/projects/*/project-tasks", AuthorityAuthorizationManager.hasAnyAuthority("ROLE_1", "ROLE_4")))
+                        .requestMatchers(HttpMethod.PATCH, "/api/tasks/*/status")
+                            .access(loggedAuthorizationManager("/api/tasks/*/status", AuthorityAuthorizationManager.hasAuthority("ROLE_4")))
+                        .requestMatchers(HttpMethod.GET, "/api/tasks/project/*")
+                            .access(loggedAuthorizationManager("/api/tasks/project/*", AuthorityAuthorizationManager.hasAnyAuthority("ROLE_1", "ROLE_4")))
+                        // Sau đó là các quy tắc tổng quát
                         .requestMatchers(HttpMethod.POST, "/api/projects/**").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.GET, "/api/projects/**").hasAnyAuthority("ROLE_1", "ROLE_2")
                         .requestMatchers("/api/manager/**").hasAuthority("ROLE_1")
@@ -112,16 +126,39 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/blog/drafts/*/submit").hasAnyAuthority("ROLE_3", "ROLE_1")
                         .requestMatchers(HttpMethod.POST, "/api/blog/posts/*/approve").hasAuthority("ROLE_1")
                         .requestMatchers(HttpMethod.POST, "/api/blog/posts/*/reject").hasAuthority("ROLE_1")
-                        .anyRequest().authenticated()
-                )
+                        // Cấu hình cho ProjectController
+                        .requestMatchers(HttpMethod.GET, "/api/projects").hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.GET, "/api/projects/consultant").hasAuthority("ROLE_2")
+                        .requestMatchers(HttpMethod.POST, "/api/projects").hasAuthority("ROLE_2")
+                        .requestMatchers(HttpMethod.PUT, "/api/projects/**").hasAuthority("ROLE_2")
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/status").hasAnyAuthority("ROLE_1", "ROLE_2")
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/cancel").hasAnyAuthority("ROLE_1", "ROLE_2")
+                        // Thêm cấu hình mới cho gán và quản lý nhân viên xây dựng
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/assign-constructor").hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/complete").hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.GET, "/api/projects/*/tasks").hasAnyAuthority("ROLE_1", "ROLE_4")
+                        .requestMatchers(HttpMethod.PATCH, "/api/tasks/*/status").hasAuthority("ROLE_4")
+                        .requestMatchers(HttpMethod.GET, "/api/projects/*/project-tasks").hasAnyAuthority("ROLE_1", "ROLE_4")
+                        .requestMatchers(HttpMethod.GET, "/api/tasks/project/*").hasAnyAuthority("ROLE_1", "ROLE_4")
+                        // Thêm cấu hình mới cho ConsultationRequest
+                        .requestMatchers(HttpMethod.PUT, "/api/ConsultationRequests/*/status").hasAuthority("ROLE_2")
+                        .requestMatchers(HttpMethod.POST, "/api/ConsultationRequests").hasAuthority("ROLE_5")
+                        .requestMatchers(HttpMethod.GET, "/api/ConsultationRequests").hasAnyAuthority("ROLE_2", "ROLE_5")
+                        .requestMatchers(HttpMethod.GET, "/api/ConsultationRequests/**").hasAnyAuthority("ROLE_2", "ROLE_5")
+                        .requestMatchers(HttpMethod.PUT, "/api/ConsultationRequests/**").hasAuthority("ROLE_5")
+                        .requestMatchers(HttpMethod.DELETE, "/api/ConsultationRequests/**").hasAuthority("ROLE_5")
+                        .anyRequest().authenticated();
+                    
+                    logger.info("Authorization rules configured");
+                })
                 .userDetailsService(userDetailsService)
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
-                            logger.error("Unauthorized error: {}", authException.getMessage());
+                            logAuthenticationError(request, authException, "Unauthorized");
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            logger.error("Access denied error: {}", accessDeniedException.getMessage());
+                            logAuthenticationError(request, accessDeniedException, "Access denied");
                             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
                         })
                 )
@@ -130,5 +167,20 @@ public class SecurityConfig {
 
         logger.info("SecurityFilterChain configuration completed");
         return http.build();
+    }
+
+    private AuthorizationManager<RequestAuthorizationContext> loggedAuthorizationManager(String pattern, AuthorizationManager<RequestAuthorizationContext> delegate) {
+        return (authentication, context) -> {
+            AuthorizationDecision decision = delegate.check(authentication, context);
+            boolean isGranted = decision != null && decision.isGranted();
+            logger.info("Authorization decision for {} : {}", pattern, isGranted ? "GRANTED" : "DENIED");
+            return new AuthorizationDecision(isGranted);
+        };
+    }
+
+    private void logAuthenticationError(HttpServletRequest request, Exception exception, String errorType) {
+        logger.error("{} error: {}", errorType, exception.getMessage());
+        logger.error("Request URL: {}", request.getRequestURL());
+        logger.error("User principal: {}", request.getUserPrincipal());
     }
 }

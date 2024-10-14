@@ -35,4 +35,6 @@ public class ProjectDTO {
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
+
+    private String constructorId;  // Thêm trường này
 }

@@ -54,4 +54,40 @@ public class ConsultationRequestController {
     public ResponseEntity<List<String>> getValidStatuses() {
         return ResponseEntity.ok(consultationRequestService.getValidStatuses());
     }
+
+    @GetMapping("/customer/{customerId}")
+    public ResponseEntity<List<ConsultationRequest>> getConsultationRequestsByCustomerId(
+            @PathVariable String customerId,
+            Authentication authentication) {
+        // Có thể thêm kiểm tra quyền truy cập ở đây nếu cần
+        List<ConsultationRequest> requests = consultationRequestService.getConsultationRequestsByCustomerId(customerId);
+        return ResponseEntity.ok(requests);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateCustomerRequest(
+            @PathVariable String id,
+            @RequestBody ConsultationRequest updatedDTO,
+            Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            ConsultationRequest updatedRequest = consultationRequestService.updateCustomerRequest(id, updatedDTO, username);
+            return ResponseEntity.ok(updatedRequest);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> cancelCustomerRequest(
+            @PathVariable String id,
+            Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            consultationRequestService.cancelCustomerRequest(id, username);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

@@ -102,4 +102,12 @@ public class PondDesignController {
         designService.deleteDesign(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/search")
+    @Operation(summary = "Search pond designs by name", 
+               description = "Searches for pond designs based on the provided name. This endpoint is accessible to all authenticated users.")
+    public ResponseEntity<List<DesignDTO>> searchDesigns(@RequestParam String name) {
+        List<DesignDTO> designs = designService.searchDesignsByName(name);
+        return ResponseEntity.ok(designs);
+    }
 }

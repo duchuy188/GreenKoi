@@ -88,6 +88,15 @@ public class ConsultationRequestService {
         }
     }
 
+    public List<ConsultationRequest> getConsultationRequestsByCustomerId(String customerId) {
+        User customer = userRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        List<com.koipond.backend.model.ConsultationRequest> requests = consultationRequestRepository.findByCustomer(customer);
+        return requests.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     private ConsultationRequest convertToDTO(com.koipond.backend.model.ConsultationRequest request) {
         ConsultationRequest dto = new ConsultationRequest();
         dto.setId(request.getId());
@@ -98,6 +107,7 @@ public class ConsultationRequestService {
 
         User customer = request.getCustomer();
         if (customer != null) {
+            dto.setCustomerId(customer.getId());
             dto.setCustomerName(customer.getFullName());
             dto.setCustomerPhone(customer.getPhone());
             dto.setCustomerAddress(customer.getAddress());
@@ -118,6 +128,45 @@ public class ConsultationRequestService {
                      .map(Enum::name)
                      .collect(Collectors.toList());
     }
+
+    public ConsultationRequest updateCustomerRequest(String requestId, ConsultationRequest updatedDTO, String username) {
+        User customer = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        com.koipond.backend.model.ConsultationRequest request = consultationRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Consultation request not found"));
+
+        if (!request.getCustomer().getId().equals(customer.getId())) {
+            throw new RuntimeException("Unauthorized access to consultation request");
+        }
+
+        if (!request.getStatus().equals(ConsultationStatus.PENDING.name())) {
+            throw new RuntimeException("Can only update PENDING requests");
+        }
+
+        request.setNotes(updatedDTO.getNotes());
+        // Cập nhật các trường khác nếu cần
+
+        com.koipond.backend.model.ConsultationRequest updatedRequest = consultationRequestRepository.save(request);
+        return convertToDTO(updatedRequest);
+    }
+
+    public void cancelCustomerRequest(String requestId, String username) {
+        User customer = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        com.koipond.backend.model.ConsultationRequest request = consultationRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Consultation request not found"));
+
+        if (!request.getCustomer().getId().equals(customer.getId())) {
+            throw new RuntimeException("Unauthorized access to consultation request");
+        }
+
+        if (!request.getStatus().equals(ConsultationStatus.PENDING.name())) {
+            throw new RuntimeException("Can only cancel PENDING requests");
+        }
+
+        request.setStatus(ConsultationStatus.CANCELLED.name());
+        consultationRequestRepository.save(request);
+    }
 }
-
-

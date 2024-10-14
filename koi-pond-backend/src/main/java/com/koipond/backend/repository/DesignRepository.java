@@ -13,4 +13,5 @@ public interface DesignRepository extends JpaRepository<Design, String> {
     List<Design> findByStatusAndActiveTrue(Design.DesignStatus status);
     Optional<Design> findByIdAndActiveTrue(String id);
     List<Design> findByCreatedBy_IdAndActiveTrue(String createdById);
+    List<Design> findByNameContainingIgnoreCaseAndActiveTrue(String name);
 }

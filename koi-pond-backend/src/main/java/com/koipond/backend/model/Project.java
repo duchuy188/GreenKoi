@@ -97,4 +97,8 @@ public class Project {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    @ManyToOne
+    @JoinColumn(name = "constructor_id")
+    private User constructor;
 }
