@@ -11,10 +11,9 @@ import {
 import { Breadcrumb, Layout, Menu, theme, Button } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../components/redux/features/useSlice";
+import { logout } from "../components/redux/features/useSlice"; // Đảm bảo đường dẫn này chính xác
 
 const { Header, Content, Footer, Sider } = Layout;
-
 function getItem(label, key, icon, children) {
   return {
     key,
@@ -23,16 +22,40 @@ function getItem(label, key, icon, children) {
     label,
   };
 }
-
 const items = [
-  getItem(<Link to="/dashboard/category">Category</Link>, "category", <PieChartOutlined />),
-  getItem(<Link to="/dashboard/usermanagement">User Management</Link>, "usermanagement", <UserOutlined />),
-  getItem(<Link to="/dashboard/ponddesigncolumns">Pond Design Columns</Link>, "ponddesigncolumns", <DesktopOutlined />),
-  getItem(<Link to="/dashboard/ponddesign">Pond Design</Link>, "ponddesign", <FileOutlined/>),
-  getItem(<Link to="/dashboard/consulting">Consulting Requests</Link>, "consulting", <CommentOutlined />),
+  getItem(
+    <Link to="/dashboard/category">Category</Link>,
+    "category",
+    <PieChartOutlined />
+  ),
+  getItem(
+    <Link to="/dashboard/usermanagement">User Management</Link>,
+    "usermanagement",
+    <UserOutlined />
+  ),
+  getItem(
+    <Link to="/dashboard/ponddesigncolumns">Pond Design Columnst</Link>,
+    "ponddesigncolumns",
+    <UserOutlined />
+  ),
+  getItem(
+    <Link to="/dashboard/ponddesign">Pond Design</Link>,
+    "ponddesign",
+    <UserOutlined />
+  ),
+  getItem("Consulting", "consulting", <CommentOutlined />, [
+    getItem(
+      <Link to="/dashboard/consulting">Requests</Link>,
+      "consulting-requests"
+    ),
+    getItem(
+      <Link to="/dashboard/consulting/orders">Orders</Link>,
+      "consulting-orders"
+    ),
+  ]),
 ];
 
-const Dashboard = ({ adminName }) => {
+const Dashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -42,6 +65,7 @@ const Dashboard = ({ adminName }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
 
+  // Tạo items cho Breadcrumb dựa trên đường dẫn hiện tại
   const pathSnippets = location.pathname.split("/").filter((i) => i);
   const breadcrumbItems = pathSnippets.map((_, index) => {
     const url = `/${pathSnippets.slice(0, index + 1).join("/")}`;
@@ -52,17 +76,30 @@ const Dashboard = ({ adminName }) => {
   });
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logout()); // Dispatch action logout
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.removeItem("user"); // Xóa thông tin user từ localStorage nếu có
     navigate("/login");
   };
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
+    <Layout
+      style={{
+        minHeight: "100vh",
+      }}
+    >
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        onCollapse={(value) => setCollapsed(value)}
+      >
         <div className="demo-logo-vertical" />
-        <Menu theme="dark" defaultSelectedKeys={["chart"]} mode="inline" items={items} />
+        <Menu
+          theme="dark"
+          defaultSelectedKeys={["1"]}
+          mode="inline"
+          items={items}
+        />
       </Sider>
       <Layout>
         <Header
@@ -70,43 +107,27 @@ const Dashboard = ({ adminName }) => {
             padding: 0,
             background: colorBgContainer,
             display: "flex",
-            justifyContent: "center",
+            justifyContent: "flex-end",
             alignItems: "center",
           }}
         >
-          <div style={{ padding: "20px" }}>
-            <span
-              style={{
-                fontSize: "32px",
-                fontWeight: "bold",
-                color: "#1890ff",
-                fontFamily: "'Poppins', sans-serif",
-              }}
-            >
-              ADMIN DASHBOARD
-            </span>
-          </div>
           <Button
             type="primary"
             icon={<LogoutOutlined />}
             onClick={handleLogout}
-            style={{ marginRight: 16, position: "absolute", right: 16 }}
+            style={{ marginRight: 16 }}
           >
             Logout
           </Button>
         </Header>
         <Content
           style={{
-            margin: "20px",
-            padding: "20px",
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+            margin: "0 16px",
           }}
         >
           <Breadcrumb
             style={{
-              marginBottom: "16px",
+              margin: "16px 0",
             }}
             items={breadcrumbItems}
           />
@@ -114,17 +135,22 @@ const Dashboard = ({ adminName }) => {
             style={{
               padding: 24,
               minHeight: 360,
-              background: "#fff",
+              background: colorBgContainer,
               borderRadius: borderRadiusLG,
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
             }}
           >
             <Outlet />
           </div>
         </Content>
+        <Footer
+          style={{
+            textAlign: "center",
+          }}
+        >
+          Ant Design ©{new Date().getFullYear()} Created by Ant UED
+        </Footer>
       </Layout>
     </Layout>
   );
 };
-
 export default Dashboard;
