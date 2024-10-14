@@ -10,6 +10,7 @@ import MainLayout from "./layout";
 import LoginPage from "./components/page/login";
 import Register2 from "./components/elements/Register2";
 // Change this line to match the correct path and filename of your Profile component
+
 import Category from "./components/page/admin/category";
 import BlogPage2 from "./components/elements/BlogPage2";
 import GardenDesignFormPage from "./components/elements/GardenDesignFormPage";
@@ -21,11 +22,10 @@ import Detail2 from "./components/elements/Detail2";
 import ConstructionPage2 from "./components/elements/ConstructionPage2";
 import MaintenancePage2 from "./components/elements/MaintenancePage2";
 import Blog2 from "./components/elements/Blog2";
-import Profile2 from "./components/elements/Profile2";
-
 import PondDesign from "./components/page/admin/ponddesign/PondDesign";
 import PondDesignColumns from "./components/page/admin/PondDesignColumns/PondDesignColumns";
 import Consulting from "./components/page/admin/consulting/consulting";
+import Profile2 from "./components/elements/Profile2";
 function App() {
   const router = createBrowserRouter([
     {
@@ -42,7 +42,7 @@ function App() {
         },
         {
           path: "/profile",
-          element: <Profile2 />,
+          element: <Profile2/>,
         },
         {
           path: "/login",

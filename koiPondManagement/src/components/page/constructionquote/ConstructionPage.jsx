@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './ConstructionPage.css'
 
 const ConstructionPage = () => {
@@ -50,7 +51,19 @@ const ConstructionPage = () => {
           <ul>
             <li>Đổ bê tông, chống thấm hoàn hảo, đầy đủ và nâng lọc</li>
             <li>Công tác M&E đấu nối điện nước đến vườn</li>
+            <li>Hệ thống lọc</li>
+            <li>Thi công kè đá nghệ thuật</li>
+            <li>Thi công lắp đặt đèn đá Nhật</li>
+            <li>Thi công sàn gỗ hầm lọc</li>
+            <li>Thi công phối kết cây bụi và hoa tạo cảnh nghệ thuật</li>
+            <li>Thi công cây tầm trung</li>
           </ul>
+          <img src="https://sgl.com.vn/wp-content/uploads/2023/03/du-an-thiet-ke-thi-cong-san-vuon-biet-thu-go-vap-54-802x361.jpg" alt="Hồ cá koi" className="koi-pond-image" />
+          <div className="detailed-quote-container">
+            <Link to="/thiconghocakoi" className="detailed-quote-button">
+              Mời xem ảnh mẫu (click vào đây)
+            </Link>
+          </div>
         </div>
       );
 };

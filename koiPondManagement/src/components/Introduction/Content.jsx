@@ -11,8 +11,10 @@ export default class Content extends Component {
           <div className="row g-5 align-items-center">
             <div className="col-lg-7">
               <div className="section-title mb-4">
-                <h5 className=" text-primary text-uppercase mb-2">
-                  Về Green Koi
+                <h5 className="text-primary text-uppercase mb-2">
+                  <a href="/" className="text-primary text-decoration-none">
+                    Về Green Koi
+                  </a>
                 </h5>
                 <h1 className="display-5 mb-0">
                   Green Koi - Thiết kế hồ cá Koi đẳng cấp và chuyên nghiệp

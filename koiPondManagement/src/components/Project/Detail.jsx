@@ -19,9 +19,9 @@ const ProjectDetails = () => {
         const response = await api.get(`/api/pond-designs/${id}`);
         setProject(response.data);
       } catch (error) {
-        console.error("Error fetching project details:", error);
+        console.error("Lỗi khi tải thông tin chi tiết về dự án:", error);
         if (error.response && error.response.status === 401) {
-          message.error("Unauthorized access. Please log in again.");
+          message.error("Truy cập trái phép. Vui lòng đăng nhập lại.");
           // Redirect to login page or refresh token
         }
       } finally {
@@ -33,11 +33,11 @@ const ProjectDetails = () => {
   }, [id]);
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <p>Đang tải...</p>;
   }
 
   if (!project) {
-    return <p>Project not found</p>;
+    return <p>Không tìm thấy dự án</p>;
   }
 
   const showModal = () => {
@@ -69,19 +69,19 @@ const ProjectDetails = () => {
       });
 
       if (response.status === 201 || response.status === 200) {
-        message.success('Consultation request submitted successfully!');
+        message.success('Yêu cầu tư vấn đã được gửi thành công!');
         setIsModalVisible(false);
         form.resetFields();
       } else {
-        throw new Error('Unexpected response status');
+        throw new Error('Trạng thái phản hồi không mong đợi');
       }
     } catch (error) {
-      console.error('Error submitting consultation request:', error);
+      console.error('Lỗi khi gửi yêu cầu tư vấn:', error);
       if (error.response && error.response.status === 401) {
-        message.error('Unauthorized. Please log in again.');
+        message.error('Không được phép. Vui lòng đăng nhập lại.');
         // Redirect to login page or refresh token
       } else {
-        message.error('Failed to submit consultation request. Please try again.');
+        message.error('Không thể gửi yêu cầu tư vấn. Vui lòng thử lại.');
       }
     }
   };
@@ -143,7 +143,7 @@ const ProjectDetails = () => {
                 </Paragraph>
               </Typography>
               <Button type="primary" onClick={showModal} style={{ marginTop: '20px' }}>
-                Request Consultation
+              Yêu cầu tư vấn
               </Button>
             </Card>
           </Col>
@@ -170,7 +170,7 @@ const ProjectDetails = () => {
             </Form.Item>
             <Form.Item>
               <Button type="primary" htmlType="submit">
-                Submit Request
+              Gửi yêu cầu
               </Button>
             </Form.Item>
           </Form>

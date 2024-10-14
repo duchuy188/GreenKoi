@@ -92,7 +92,7 @@ const Dashboard = ({ adminName }) => {
             onClick={handleLogout}
             style={{ marginRight: 16, position: "absolute", right: 16 }}
           >
-            Logout
+            Đăng xuất
           </Button>
         </Header>
         <Content

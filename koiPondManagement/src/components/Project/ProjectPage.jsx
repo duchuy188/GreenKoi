@@ -13,11 +13,11 @@ export default function ProjectPage() {
       if (Array.isArray(response.data)) {
         setProjects(response.data);
       } else {
-        toast.error("Failed to load approved projects.");
+        toast.error("Không tải được các dự án đã phê duyệt.");
         setProjects([]);
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Error fetching approved projects.");
+      toast.error(err.response?.data?.message || "Có lỗi khi tải các dự án đã được phê duyệt.");
       setProjects([]);
     }
   };
