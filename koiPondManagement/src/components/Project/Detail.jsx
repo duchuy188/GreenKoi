@@ -33,8 +33,10 @@ const ProjectDetails = () => {
     const fetchCustomerInfo = async () => {
       try {
         const response = await api.get("/api/profile");
-        if (response.data && typeof response.data === 'object') {
-          console.log("Customer info:", response.data); // Thêm dòng này
+
+        if (response.data && typeof response.data === 'object' && !response.data.toString().includes('<!DOCTYPE html>')) {
+          console.log("Customer info:", response.data);
+          
           setCustomerInfo(response.data);
         } else {
           throw new Error("Unexpected API response structure");
@@ -61,15 +63,16 @@ const ProjectDetails = () => {
 
   const onFinish = async (values) => {
     try {
-      if (!customerInfo) {
-        message.error('Please log in to submit a consultation request.');
+
+      if (!customerInfo || !customerInfo.id) {
+        message.error('Customer information is missing. Please log in again.');
         return;
       }
       const consultationRequest = {
         customerId: customerInfo.id,
         customerName: customerInfo.fullName,
         customerPhone: customerInfo.phone,
-        customerAddress: customerInfo.address || 'No address provided', // Thêm fallback
+        customerAddress: customerInfo.address,
         designId: project.id,
         designName: project.name,
         designDescription: project.description,

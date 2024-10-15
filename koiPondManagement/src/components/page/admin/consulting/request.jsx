@@ -14,7 +14,7 @@ import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import moment from "moment";
 
-const Consulting = () => {
+const RequestConsulting = () => {
   const [consultationRequests, setConsultationRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -289,4 +289,4 @@ const Consulting = () => {
   );
 };
 
-export default Consulting;
+export default RequestConsulting;

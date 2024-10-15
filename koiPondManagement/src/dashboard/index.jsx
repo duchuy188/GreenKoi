@@ -45,7 +45,7 @@ const items = [
   ),
   getItem("Consulting", "consulting", <CommentOutlined />, [
     getItem(
-      <Link to="/dashboard/consulting">Requests</Link>,
+      <Link to="/dashboard/consulting/requests">Requests</Link>,
       "consulting-requests"
     ),
     getItem(

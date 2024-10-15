@@ -24,8 +24,11 @@ import MaintenancePage2 from "./components/elements/MaintenancePage2";
 import Blog2 from "./components/elements/Blog2";
 import PondDesign from "./components/page/admin/ponddesign/PondDesign";
 import PondDesignColumns from "./components/page/admin/PondDesignColumns/PondDesignColumns";
-import Consulting from "./components/page/admin/consulting/consulting";
+import Consulting from "./components/page/admin/consulting/request";
 import Profile2 from "./components/elements/Profile2";
+import RequestConsulting from "./components/page/admin/consulting/request";
+import ConsultingOrders from "./components/page/admin/consulting/order";
+
 function App() {
   const router = createBrowserRouter([
     {
@@ -117,8 +120,17 @@ function App() {
         },
         {
           path: "consulting",
-          element: <Consulting />,
-        },  
+          children: [
+            {
+              path: "requests",
+              element: <RequestConsulting />,
+            },
+            {
+              path: "orders",
+              element: <ConsultingOrders />,
+            },
+          ],
+        },
         // {
         //   path: "sevice",
         //   element: <Sevice />,
