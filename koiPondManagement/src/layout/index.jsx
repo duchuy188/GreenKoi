@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from '../components/header/Header';
 import Footer from '../components/footer/Footer';
-// import Icon from '../components/Icon';
+import Icon from '../components/Icon';
 
 function MainLayout() {
   return (
@@ -11,7 +11,7 @@ function MainLayout() {
       <main className="content-wrapper">
         <Outlet />
       </main>
-      {/* <Icon/> */}
+      <Icon/>
       <Footer />      
     </div>
   );

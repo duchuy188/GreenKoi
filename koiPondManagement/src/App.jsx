@@ -3,31 +3,29 @@ import Elements from "./components/elements/HomePage";
 import Introduction from "./components/elements/IntroductionPage";
 import "./App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import LoginPage2 from "./components/elements/LoginPage2";
 import RegisterPage from "./components/page/register";
 import Dashboard from "./dashboard";
 import MainLayout from "./layout";
 import LoginPage from "./components/page/login";
-import Register2 from "./components/elements/Register2";
 // Change this line to match the correct path and filename of your Profile component
 
 import Category from "./components/page/admin/category";
-import BlogPage2 from "./components/elements/BlogPage2";
-import GardenDesignFormPage from "./components/elements/GardenDesignFormPage";
-import ProjectPage2 from "./components/elements/ProjectPage2";
 import UserManagement from "./components/page/admin/manage-user";
 import ManageUser from './components/page/admin/manage-user';
-import ServicePage2 from "./components/elements/ServicePage2";
-import Detail2 from "./components/elements/Detail2";
-import ConstructionPage2 from "./components/elements/ConstructionPage2";
-import MaintenancePage2 from "./components/elements/MaintenancePage2";
-import Blog2 from "./components/elements/Blog2";
 import PondDesign from "./components/page/admin/ponddesign/PondDesign";
 import PondDesignColumns from "./components/page/admin/PondDesignColumns/PondDesignColumns";
 import Consulting from "./components/page/admin/consulting/request";
-import Profile2 from "./components/elements/Profile2";
 import RequestConsulting from "./components/page/admin/consulting/request";
 import ConsultingOrders from "./components/page/admin/consulting/order";
+import ServicePage from "./components/page/Service/ServicePage";
+import ProjectPage from "./components/Project/ProjectPage";
+import Profile from "./components/profile/Profile";
+import MaintenancePage from "./components/page/maintenance/MaintenancePage";
+import GardenDesignForm from "./components/page/GardenDesignForm/GardenDesignForm";
+import ProjectDetails from "./components/Project/Detail";
+import ConstructionPage from "./components/page/constructionquote/ConstructionPage";
+import Blog from "./components/page/Blog/Blog";
+import BlogPage from "./components/page/Blog/BlogPage";
 
 function App() {
   const router = createBrowserRouter([
@@ -45,48 +43,48 @@ function App() {
         },
         {
           path: "/profile",
-          element: <Profile2/>,
+          element: <Profile/>,
         },
         {
           path: "/login",
-          element: <LoginPage2 />,
+          element: <LoginPage />,
         },
         {
           path: "/register",
-          element: <Register2 />,
+          element: <RegisterPage />,
         },
         {
           path: "/duan",
-          element: <ProjectPage2 />,
+          element: <ProjectPage />,
         },
         {
           path: "/duan/:id",
-          element: <Detail2 />,
+          element: <ProjectDetails />,
         },
         {
           path: "/blog/:id",
-          element: <Blog2 />,
+          element: <Blog/>,
         },
         {
           path: "/blog",
-          element: <BlogPage2 />,
+          element: <BlogPage />,
         },     
         {
           path: "/thiconghocakoi",
-          element: <ServicePage2 />,
+          element: <ServicePage />,
         },
         {
           path: "/baogiathicong",
-          element: <ConstructionPage2 />,
+          element: <ConstructionPage />,
         },
         {
           path: "/lapthietketheoyeucau",
-          element: <GardenDesignFormPage />,
+          element: <GardenDesignForm />,
         },
     
         {
           path: "/baogiabaoduong",
-          element: <MaintenancePage2 />,
+          element: <MaintenancePage />,
         }      
       ],
     },
