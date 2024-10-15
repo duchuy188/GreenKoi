@@ -82,12 +82,12 @@ function RegisterPage() {
         </Form.Item>
 
         <Form.Item
-          label="Họ và tên đầy đủ"
+          label="Họ và tên "
           name="fullName"
           rules={[
             {
               required: true,
-              message: 'Vui lòng nhập tên đầy đủ của bạn!',
+              message: 'Vui lòng nhập họ và tên của bạn!',
             },
           ]}
         >
