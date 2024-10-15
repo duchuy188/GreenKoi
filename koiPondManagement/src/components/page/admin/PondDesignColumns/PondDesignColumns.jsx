@@ -7,8 +7,10 @@ function PondDesignColumns() {
   const [pondDesigns, setPondDesigns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isRejectModalVisible, setIsRejectModalVisible] = useState(false);
+  const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
   const [selectedDesignId, setSelectedDesignId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [currentDescription, setCurrentDescription] = useState(""); // State để lưu mô tả hiện tại
 
   const fetchPendingPondDesigns = async () => {
     try {
@@ -67,10 +69,27 @@ function PondDesignColumns() {
     setIsRejectModalVisible(false);
   };
 
+  const showDescriptionModal = (description) => {
+    setCurrentDescription(description);
+    setIsDescriptionModalVisible(true);
+  };
+
   const PondDesignColumns = [
     { title: "ID", dataIndex: "id", key: "id" },
     { title: "Tên Hồ", dataIndex: "name", key: "name" },
-    { title: "Miêu tả", dataIndex: "description", key: "description" },
+    {
+      title: "Mô tả",
+      dataIndex: "description",
+      key: "description",
+      render: (text) => (
+        <span>
+          {text.slice(0, 50)}...
+          <Button type="link" onClick={() => showDescriptionModal(text)}>
+            Xem thêm
+          </Button>
+        </span>
+      ),
+    },
     {
       title: "Hình ảnh",
       dataIndex: "imageUrl",
@@ -139,11 +158,11 @@ function PondDesignColumns() {
       />
       <Modal
         title="Nhập lý do từ chối"
-        open={isRejectModalVisible} // Thay visible bằng open
+        open={isRejectModalVisible}
         onOk={handleReject}
-        onCancel={() => setIsRejectModalVisible(false)}
+        closable={false} // Ẩn dấu "X"
         okText="Xác nhận"
-        cancelText="Hủy"
+        cancelButtonProps={{ style: { display: 'none' } }} // Ẩn nút Cancel
       >
         <Input.TextArea
           rows={4}
@@ -151,6 +170,16 @@ function PondDesignColumns() {
           onChange={(e) => setRejectionReason(e.target.value)}
           placeholder="Hãy nhập lý do từ chối..."
         />
+      </Modal>
+      <Modal
+        title="Mô tả chi tiết"
+        open={isDescriptionModalVisible}
+        onOk={() => setIsDescriptionModalVisible(false)}
+        closable={false} // Ẩn dấu "X"
+        okText="Đóng"
+        cancelButtonProps={{ style: { display: 'none' } }} // Ẩn nút Cancel
+      >
+        <p>{currentDescription}</p>
       </Modal>
     </div>
   );

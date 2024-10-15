@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Form, Input, Button, message, Card, Table, Tooltip, Popconfirm } from "antd";
+import { Form, Input, Button, message, Card, Table, Tooltip, Popconfirm, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 import api from "../../../config/axios";
 import { RiDeleteBin2Fill } from "react-icons/ri";
@@ -13,6 +13,8 @@ function DesignProject() {
   const [pondData, setPondData] = useState(null);
   const [searchResult, setSearchResult] = useState(null);
   const [designerPonds, setDesignerPonds] = useState([]);
+  const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
+  const [currentDescription, setCurrentDescription] = useState("");
   const navigate = useNavigate();
 
   // Fetch pond designs for the designer
@@ -61,7 +63,7 @@ function DesignProject() {
         // Nếu không có pondData, không làm gì cả
         message.error("Cannot create a new pond design. Only updates are allowed.");
       }
-  
+
       form.resetFields();
       fetchDesignerPonds();
     } catch (err) {
@@ -85,11 +87,29 @@ function DesignProject() {
     }
   };
 
+  // Handle showing description modal
+  const showDescriptionModal = (description) => {
+    setCurrentDescription(description);
+    setIsDescriptionModalVisible(true);
+  };
+
   // Updated columns definition
   const columns = [
     { title: "ID", dataIndex: "id", key: "id" },
     { title: "Tên Hồ", dataIndex: "name", key: "name" },
-    { title: "Miêu tả", dataIndex: "description", key: "description" },
+    {
+      title: "Mô tả",
+      dataIndex: "description",
+      key: "description",
+      render: (text) => (
+        <span>
+          {text.slice(0, 50)}...
+          <Button type="link" onClick={() => showDescriptionModal(text)}>
+            Xem thêm
+          </Button>
+        </span>
+      ),
+    },
     {
       title: "Hình ảnh",
       dataIndex: "imageUrl",
@@ -122,38 +142,38 @@ function DesignProject() {
     },
     { title: "Lý do", dataIndex: "rejectionReason", key: "rejectionReason" },
     {
-        key: "action",
-        width: 120,
-        render: (_, record) => (
-          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-            <Tooltip content="Edit">
+      key: "action",
+      width: 120,
+      render: (_, record) => (
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+          <Tooltip title="Edit">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => {
+                setPondData(record);
+                form.setFieldsValue(record);
+              }}
+            >
+              <FaEdit />
+            </Button>
+          </Tooltip>
+          <Popconfirm
+            title="Bạn có chắc chắn muốn xóa thiết kế này không?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Đồng ý"
+            cancelText="Hủy"
+          >
+            <Tooltip title="Delete">
               <Button 
                 variant="ghost" 
                 size="icon"
-                onClick={() => {
-                  setPondData(record);
-                  form.setFieldsValue(record);
-                }}
               >
-                <FaEdit />
+                <RiDeleteBin2Fill />
               </Button>
             </Tooltip>
-            <Popconfirm
-              title="Bạn có chắc chắn muốn xóa thiết kế này không?"
-              onConfirm={() => handleDelete(record.id)}
-              okText="Đồng ý"
-              cancelText="Hủy"
-            >
-              <Tooltip content="Delete">
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                >
-                  <RiDeleteBin2Fill />
-                </Button>
-              </Tooltip>
-            </Popconfirm>
-          </div>
+          </Popconfirm>
+        </div>
       ),
     },
   ];
@@ -176,6 +196,17 @@ function DesignProject() {
       <Card title="Dự án Hồ" bordered={false} style={{ marginTop: 24 }}>
         <Table columns={columns} dataSource={designerPonds} rowKey="id" pagination={false} />
       </Card>
+
+      <Modal
+        title="Mô tả chi tiết"
+        open={isDescriptionModalVisible}
+        onOk={() => setIsDescriptionModalVisible(false)}
+        closable={false}
+        okText="Đóng"
+        cancelButtonProps={{ style: { display: 'none' } }} // Ẩn nút Cancel
+      >
+        <p>{currentDescription}</p>
+      </Modal>
     </div>
   );
 }
