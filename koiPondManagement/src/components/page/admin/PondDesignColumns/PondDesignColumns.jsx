@@ -1,4 +1,4 @@
-import { Button, Table, Popconfirm } from "antd";
+import { Button, Table, Popconfirm, Modal, Input } from "antd";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
@@ -6,6 +6,9 @@ import api from "../../../config/axios";
 function PondDesignColumns() {
   const [pondDesigns, setPondDesigns] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isRejectModalVisible, setIsRejectModalVisible] = useState(false);
+  const [selectedDesignId, setSelectedDesignId] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const fetchPendingPondDesigns = async () => {
     try {
@@ -18,7 +21,9 @@ function PondDesignColumns() {
         setPondDesigns([]);
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Error fetching pond designs.");
+      toast.error(
+        err.response?.data?.message || "Error fetching pond designs."
+      );
       setPondDesigns([]);
     } finally {
       setLoading(false);
@@ -31,30 +36,54 @@ function PondDesignColumns() {
       toast.success("Pond design approved successfully!");
       fetchPendingPondDesigns();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Error approving pond design.");
+      toast.error(
+        err.response?.data?.message || "Error approving pond design."
+      );
     }
   };
 
   const rejectPondDesign = async (id) => {
     try {
-      await api.patch(`/api/pond-designs/${id}/reject`);
+      await api.patch(`/api/pond-designs/${id}/reject`, {
+        reason: rejectionReason,
+      });
       toast.success("Pond design rejected successfully!");
+      setRejectionReason("");
       fetchPendingPondDesigns();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Error rejecting pond design.");
+      toast.error(
+        err.response?.data?.message || "Error rejecting pond design."
+      );
     }
+  };
+
+  const showRejectModal = (id) => {
+    setSelectedDesignId(id);
+    setIsRejectModalVisible(true);
+  };
+
+  const handleReject = async () => {
+    await rejectPondDesign(selectedDesignId);
+    setIsRejectModalVisible(false);
   };
 
   const PondDesignColumns = [
     { title: "ID", dataIndex: "id", key: "id" },
-    { title: "Name", dataIndex: "name", key: "name" },
-    { title: "Description", dataIndex: "description", key: "description" },
-    { title: "Image", dataIndex: "imageUrl", key: "imageUrl", render: (url) => <img src={url} alt="Pond Design" style={{ width: 100 }} /> },
-    { title: "Shape", dataIndex: "shape", key: "shape" },
-    { title: "Dimensions", dataIndex: "dimensions", key: "dimensions" },
-    { title: "Features", dataIndex: "features", key: "features" },
-    { title: "BasePrice", dataIndex: "basePrice", key: "basePrice" },
-    { title: "Created By", dataIndex: "createdById", key: "createdById" },
+    { title: "Tên Hồ", dataIndex: "name", key: "name" },
+    { title: "Miêu tả", dataIndex: "description", key: "description" },
+    {
+      title: "Hình ảnh",
+      dataIndex: "imageUrl",
+      key: "imageUrl",
+      render: (url) => (
+        <img src={url} alt="Pond Design" style={{ width: 100 }} />
+      ),
+    },
+    { title: "Hình dáng", dataIndex: "shape", key: "shape" },
+    { title: "Kích Thước", dataIndex: "dimensions", key: "dimensions" },
+    { title: "Đặc Trưng", dataIndex: "features", key: "features" },
+    { title: "Giá", dataIndex: "basePrice", key: "basePrice" },
+    { title: "Tạo bởi", dataIndex: "createdById", key: "createdById" },
     {
       title: "Trạng thái",
       dataIndex: "status",
@@ -73,14 +102,21 @@ function PondDesignColumns() {
       },
     },
     {
-      title: "Action", dataIndex: "id", key: "id", render: (id) => (
+      dataIndex: "id",
+      key: "id",
+      render: (id) => (
         <>
-          <Popconfirm title="Approve this design?" onConfirm={() => approvePondDesign(id)}>
-            <Button type="primary" style={{ marginRight: 8 }}>Chấp nhận</Button>
+          <Popconfirm
+            title="Bạn có chấp thuận thiết kế này không?"
+            onConfirm={() => approvePondDesign(id)}
+          >
+            <Button type="primary" style={{ marginRight: 8 }}>
+              Chấp nhận
+            </Button>
           </Popconfirm>
-          <Popconfirm title="Reject this design?" onConfirm={() => rejectPondDesign(id)}>
-            <Button type="danger">Không chấp nhận</Button>
-          </Popconfirm>
+          <Button type="primary" danger onClick={() => showRejectModal(id)}>
+            Không chấp nhận
+          </Button>
         </>
       ),
     },
@@ -99,6 +135,19 @@ function PondDesignColumns() {
         loading={loading}
         locale={{ emptyText: "No pond designs pending approval." }}
       />
+      <Modal
+        title="Nhập lý do từ chối"
+        open={isRejectModalVisible} // Thay visible bằng open
+        onOk={handleReject}
+        onCancel={() => setIsRejectModalVisible(false)}
+      >
+        <Input.TextArea
+          rows={4}
+          value={rejectionReason}
+          onChange={(e) => setRejectionReason(e.target.value)}
+          placeholder="Hãy nhập lý do từ chối..."
+        />
+      </Modal>
     </div>
   );
 }
