@@ -8,6 +8,8 @@ import {
   Form,
   Select,
   Input,
+  DatePicker,
+  InputNumber,
 } from "antd";
 import { FaEdit, FaShoppingCart } from "react-icons/fa";
 import api from "../../../config/axios";
@@ -22,6 +24,9 @@ const RequestConsulting = () => {
   const [form] = Form.useForm();
   const [searchText, setSearchText] = useState("");
   const [filteredRequests, setFilteredRequests] = useState([]);
+  const [editOrderModalVisible, setEditOrderModalVisible] = useState(false);
+  const [editOrderForm] = Form.useForm();
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   useEffect(() => {
     fetchConsultationRequests();
@@ -29,6 +34,7 @@ const RequestConsulting = () => {
 
   useEffect(() => {
     const filtered = consultationRequests.filter((request) =>
+      (statusFilter === "ALL" || request.status === statusFilter) &&
       Object.values(request).some(
         (value) =>
           value &&
@@ -36,7 +42,7 @@ const RequestConsulting = () => {
       )
     );
     setFilteredRequests(filtered);
-  }, [searchText, consultationRequests]);
+  }, [searchText, consultationRequests, statusFilter]);
 
   const fetchConsultationRequests = async () => {
     try {
@@ -102,47 +108,40 @@ const RequestConsulting = () => {
       return;
     }
 
-    Modal.confirm({
-      title: "Create Order",
-      content: `Are you sure you want to create an order for ${record.customerName}?`,
-      onOk: () => createOrder(record),
+    // Set initial values for the edit order form
+    editOrderForm.setFieldsValue({
+      name: `Project for ${record.customerName}`,
+      description: record.designDescription || "Thiết kế hồ cá Koi phong cách hiện đại",
+      totalPrice: 0,
+      depositAmount: 0,
+      startDate: moment(),
+      endDate: moment().add(30, 'days'),
+      designId: record.designId,
+      address: record.customerAddress,
+      customerId: record.customerId,
+      consultantId: record.consultantId || '',
     });
+
+    setSelectedRequest(record);
+    setEditOrderModalVisible(true);
   };
 
-  const createOrder = async (record) => {
+  const handleEditOrderSubmit = async (values) => {
     try {
       setLoading(true);
 
-      // Kiểm tra chi tiết hơn và log ra các trường bị thiếu
-      const requiredFields = [
-        "customerName",
-        "customerPhone",
-        "customerAddress",
-        "designId",
-        "customerId",
-      ];
-      const missingFields = requiredFields.filter((field) => !record[field]);
-
-      if (missingFields.length > 0) {
-        console.error("Missing fields:", missingFields);
-        throw new Error(
-          `Missing required information: ${missingFields.join(", ")}`
-        );
+      if (!selectedRequest) {
+        throw new Error("No request selected");
       }
 
       const projectData = {
-        name: `Project for ${record.customerName}`,
-        description:
-          record.designDescription || "Thiết kế hồ cá Koi phong cách hiện đại",
-        totalPrice: 0, // Bạn có thể muốn đặt giá trị mặc định hoặc tính toán
-        depositAmount: 0, // Bạn có thể muốn đặt giá trị mặc định hoặc tính toán
-        startDate: moment().format("YYYY-MM-DD"),
-        endDate: moment().add(30, "days").format("YYYY-MM-DD"),
-        designId: record.designId,
-        promotionId: null, // Bạn có thể muốn xử lý khác
-        address: record.customerAddress,
-        customerId: record.customerId,
-        consultantId: record.consultantId || null,
+        ...values,
+        startDate: values.startDate.format('YYYY-MM-DD'),
+        endDate: values.endDate.format('YYYY-MM-DD'),
+        promotionId: null, // You may want to handle this differently
+        address: values.address,
+        customerId: values.customerId,
+        consultantId: values.consultantId || null,
       };
 
       console.log("Project data being sent:", projectData);
@@ -151,8 +150,9 @@ const RequestConsulting = () => {
       if (response.data) {
         message.success("Order created successfully");
         await fetchConsultationRequests();
-        // Cập nhật trạng thái yêu cầu tư vấn thành COMPLETED
-        await updateConsultationStatus(record.id, "COMPLETED");
+        // Update consultation request status to COMPLETED
+        await updateConsultationStatus(selectedRequest.id, "COMPLETED");
+        setEditOrderModalVisible(false);
       }
     } catch (error) {
       console.error("Error creating order:", error);
@@ -212,6 +212,11 @@ const RequestConsulting = () => {
       key: "designDescription",
     },
     {
+      title: "Customer Note",
+      dataIndex: "notes",
+      key: "customerNote",
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",
@@ -221,12 +226,14 @@ const RequestConsulting = () => {
       dataIndex: "createdAt",
       key: "createdAt",
       sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      sortDirections: ['ascend', 'descend'],
     },
     {
       title: "Updated At",
       dataIndex: "updatedAt",
       key: "updatedAt",
       sorter: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
+      sortDirections: ['ascend', 'descend'],
     },
     {
       title: "Actions",
@@ -245,19 +252,36 @@ const RequestConsulting = () => {
               title="Create Order"
             />
           )}
+          
         </Space>
       ),
     },
   ];
 
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+  };
+
   return (
     <div>
       <h1>Consultation Requests</h1>
-      <Input.Search
-        placeholder="Search requests"
-        onChange={(e) => setSearchText(e.target.value)}
-        style={{ marginBottom: 16 }}
-      />
+      <Space style={{ marginBottom: 16 }}>
+        <Input.Search
+          placeholder="Search requests"
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: 200 }}
+        />
+        <Select
+          defaultValue="ALL"
+          style={{ width: 120 }}
+          onChange={handleStatusFilterChange}
+        >
+          <Select.Option value="ALL">All Statuses</Select.Option>
+          <Select.Option value="PENDING">Pending</Select.Option>
+          <Select.Option value="IN_PROGRESS">In Progress</Select.Option>
+          <Select.Option value="COMPLETED">Completed</Select.Option>
+        </Select>
+      </Space>
       <Table
         columns={columns}
         dataSource={filteredRequests}
@@ -281,6 +305,50 @@ const RequestConsulting = () => {
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading}>
               Update Status
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+      <Modal
+        title="Create Order"
+        visible={editOrderModalVisible}
+        onCancel={() => setEditOrderModalVisible(false)}
+        footer={null}
+      >
+        <Form form={editOrderForm} onFinish={handleEditOrderSubmit} layout="vertical">
+          <Form.Item name="name" label="Name" rules={[{ required: true }]}>
+            <Input readOnly/>
+          </Form.Item>
+          <Form.Item name="description" label="Description" rules={[{ required: true }]}>
+            <Input.TextArea readOnly/>
+          </Form.Item>
+          <Form.Item name="totalPrice" label="Total Price" rules={[{ required: true }]}>
+            <InputNumber/>
+          </Form.Item>
+          <Form.Item name="depositAmount" label="Deposit Amount" rules={[{ required: true }]}>
+            <InputNumber/>
+          </Form.Item>
+          <Form.Item name="startDate" label="Start Date" rules={[{ required: true }]} hidden>
+            <DatePicker />
+          </Form.Item>
+          <Form.Item name="endDate" label="End Date" rules={[{ required: true }]} hidden>
+            <DatePicker />
+          </Form.Item>
+          <Form.Item name="designId" label="Design ID" rules={[{ required: true }]}>
+            <Input readOnly/>
+          </Form.Item>
+          <Form.Item name="address" label="Address" rules={[{ required: true }]}>
+            <Input readOnly/>
+          </Form.Item>
+          <Form.Item name="customerId" label="Customer ID" rules={[{ required: true }]}>
+            <Input readOnly/>
+          </Form.Item>
+          <Form.Item name="consultantId" label="Consultant ID">
+            <Input disabled />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading}>
+              Create Order
             </Button>
           </Form.Item>
         </Form>

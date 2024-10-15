@@ -46,6 +46,11 @@ const Orders = () => {
       key: 'totalPrice',
     },
     {
+      title: 'Deposit Amount',
+      dataIndex: 'depositAmount',
+      key: 'depositAmount',
+    },
+    {
       title: 'Start Date',
       dataIndex: 'startDate',
       key: 'startDate',
