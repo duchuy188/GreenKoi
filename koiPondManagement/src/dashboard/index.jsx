@@ -33,15 +33,20 @@ const items = [
     <UserOutlined />
   ),
   getItem(
-    <Link to="/dashboard/ponddesigncolumns">Pond Design Columns</Link>,
+    <Link to="/dashboard/ponddesigncolumns">Duyệt Thiết Kế</Link>,
     "ponddesigncolumns",
     <UserOutlined />
   ),
+  getItem("Nhân Viên Thiết Kế", "ponddesigns", <UserOutlined />, [
   getItem(
-    <Link to="/dashboard/ponddesign">Pond Design</Link>,
+    <Link to="/dashboard/ponddesign">Tạo Thiết Kế Hồ</Link>,
     "ponddesign",
-    <UserOutlined />
   ),
+  getItem(
+    <Link to="/dashboard/designproject">Bản Thiết Kế</Link>,
+    "designproject",
+  )
+  ]),
   getItem("Consulting", "consulting", <CommentOutlined />, [
     getItem(
       <Link to="/dashboard/consulting/requests">Requests</Link>,

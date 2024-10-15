@@ -1,54 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { Form, Input, InputNumber, Button, message, Card, Row, Col, Table } from "antd";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Form, Input, InputNumber, Button, message, Card, Row, Col } from "antd";
 import api from "../../../config/axios";
-
-const { Search } = Input;
 
 function PondDesign() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [pondData, setPondData] = useState(null);
-  const [searchResult, setSearchResult] = useState(null);
-  const [designerPonds, setDesignerPonds] = useState([]);
-  const navigate = useNavigate();
-
-  // Fetch pond designs for the designer
-  const fetchDesignerPonds = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get("/api/pond-designs/designer");
-      setDesignerPonds(response.data);
-    } catch (err) {
-      console.error("Error fetching designer's pond designs:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch pond design by ID
-  const fetchPondDesignById = async (id) => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/api/pond-designs/${id}`);
-      setSearchResult(response.data);
-    } catch (err) {
-      message.error("Failed to fetch pond design: " + (err.response?.data?.message || err.message));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDesignerPonds();
-  }, []);
 
   // Handle form submission (create or update)
   const handleSubmit = async (values) => {
     try {
-      setLoading(true);
-      console.log("Form values:", values); // Kiểm tra dữ liệu gửi đi
-
       if (pondData) {
         // Update existing pond design
         console.log("Updating pond design with ID:", pondData.id);
@@ -61,7 +22,6 @@ function PondDesign() {
         message.success("Pond design created successfully");
       }
       form.resetFields();
-      fetchDesignerPonds();
     } catch (err) {
       message.error("Failed to " + (pondData ? "update" : "create") + " pond design: " + (err.response?.data?.message || err.message));
     } finally {
@@ -69,83 +29,8 @@ function PondDesign() {
     }
   };
 
-  // Handle delete pond design
-  const handleDelete = async (id) => {
-    try {
-      setLoading(true);
-      await api.delete(`/api/pond-designs/${id}`);
-      message.success("Pond design deleted successfully");
-      fetchDesignerPonds();
-    } catch (err) {
-      message.error("Failed to delete pond design: " + (err.response?.data?.message || err.message));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Updated columns definition
-  const columns = [
-    { title: "ID", dataIndex: "id", key: "id" },
-    { title: "Name", dataIndex: "name", key: "name" },
-    { title: "Description", dataIndex: "description", key: "description" },
-    { title: "Base Price", dataIndex: "basePrice", key: "basePrice" },
-    { title: "Shape", dataIndex: "shape", key: "shape" },
-    { title: "ImageUrl", dataIndex: "imageUrl", key: "imageUrl" },
-    { title: "Features", dataIndex: "features", key: "features" },
-    { title: "CreatedById", dataIndex: "createdById", key: "createdById" },
-    { title: "Dimensions", dataIndex: "dimensions", key: "dimensions" },
-    { title: "Description", dataIndex: "description", key: "description" },
-    {
-      title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => {
-        switch (status) {
-          case "PENDING_APPROVAL":
-            return "Đang chờ xử lý";
-          case "APPROVED":
-            return "Đã chấp nhận";
-          case "REJECTED":
-            return "Đã từ chối";
-          default:
-            return status;
-        }
-      },
-    },
-    {
-      title: "Action",
-      key: "action",
-      render: (_, record) => (
-        <span>
-          <Button type="link" onClick={() => {
-            setPondData(record);
-            form.setFieldsValue(record);
-          }}>
-            Edit
-          </Button>
-          <Button type="link" danger onClick={() => handleDelete(record.id)}>
-            Delete
-          </Button>
-        </span>
-      ),
-    },
-  ];
-
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: 24, marginLeft: "8%" }}>
-      <Card title="Search Pond Design by ID" bordered={false}>
-        <Search
-          placeholder="Enter Pond Design ID"
-          enterButton="Search"
-          onSearch={fetchPondDesignById}
-          style={{ marginBottom: 24 }}
-        />
-      </Card>
-
-      {searchResult && (
-        <Table columns={columns} dataSource={[searchResult]} rowKey="id" pagination={false} style={{ marginTop: 24 }} />
-      )}
-
       <Card title={pondData ? "Edit Pond Design" : "Create Pond Design"} bordered={false}>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Row gutter={16}>
@@ -200,10 +85,6 @@ function PondDesign() {
             )}
           </Form.Item>
         </Form>
-      </Card>
-
-      <Card title="Your Pond Designs" bordered={false} style={{ marginTop: 24 }}>
-        <Table columns={columns} dataSource={designerPonds} rowKey="id" pagination={false} />
       </Card>
     </div>
   );

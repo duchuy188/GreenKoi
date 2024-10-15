@@ -12,20 +12,26 @@ import LoginPage from "./components/page/login";
 import Category from "./components/page/admin/category";
 import UserManagement from "./components/page/admin/manage-user";
 import ManageUser from './components/page/admin/manage-user';
-import PondDesign from "./components/page/admin/ponddesign/PondDesign";
-import PondDesignColumns from "./components/page/admin/PondDesignColumns/PondDesignColumns";
+
 import Consulting from "./components/page/admin/consulting/request";
 import RequestConsulting from "./components/page/admin/consulting/request";
 import ConsultingOrders from "./components/page/admin/consulting/order";
 import ServicePage from "./components/page/Service/ServicePage";
-import ProjectPage from "./components/Project/ProjectPage";
+
 import Profile from "./components/profile/Profile";
 import MaintenancePage from "./components/page/maintenance/MaintenancePage";
 import GardenDesignForm from "./components/page/GardenDesignForm/GardenDesignForm";
-import ProjectDetails from "./components/Project/Detail";
 import ConstructionPage from "./components/page/constructionquote/ConstructionPage";
 import Blog from "./components/page/Blog/Blog";
 import BlogPage from "./components/page/Blog/BlogPage";
+
+// Pond Deisgn
+import DesignProject from "./components/page/admin/ponddesign/designproject";
+import PondDesign from "./components/page/admin/ponddesign/PondDesign";
+import PondDesignColumns from "./components/page/admin/PondDesignColumns/PondDesignColumns";
+import ProjectDetails from "./components/Project/Detail";
+import ProjectPage from "./components/Project/ProjectPage";
+
 
 function App() {
   const router = createBrowserRouter([
@@ -111,6 +117,10 @@ function App() {
         {
           path: "ponddesign",
           element: <PondDesign/>,
+        },
+        {
+          path: "designproject",
+          element: <DesignProject/>,
         },
         {
           path: "ponddesigncolumns",

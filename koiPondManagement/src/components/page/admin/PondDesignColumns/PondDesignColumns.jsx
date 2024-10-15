@@ -109,6 +109,8 @@ function PondDesignColumns() {
           <Popconfirm
             title="Bạn có chấp thuận thiết kế này không?"
             onConfirm={() => approvePondDesign(id)}
+            okText="Đồng ý"
+            cancelText="Hủy"
           >
             <Button type="primary" style={{ marginRight: 8 }}>
               Chấp nhận
@@ -140,6 +142,8 @@ function PondDesignColumns() {
         open={isRejectModalVisible} // Thay visible bằng open
         onOk={handleReject}
         onCancel={() => setIsRejectModalVisible(false)}
+        okText="Xác nhận"
+        cancelText="Hủy"
       >
         <Input.TextArea
           rows={4}
