@@ -1,4 +1,5 @@
 import { Component } from "react";
+import { Link } from 'react-router-dom';
 import "./Content.css";
 export default class Content extends Component {
   render() {
@@ -12,9 +13,9 @@ export default class Content extends Component {
             <div className="col-lg-7">
               <div className="section-title mb-4">
                 <h5 className="text-primary text-uppercase mb-2">
-                  <a href="/" className="text-primary text-decoration-none">
+                  <Link to="/" className="text-primary text-decoration-none">
                     Về Green Koi
-                  </a>
+                  </Link>
                 </h5>
                 <h1 className="display-5 mb-0">
                   Green Koi - Thiết kế hồ cá Koi đẳng cấp và chuyên nghiệp
