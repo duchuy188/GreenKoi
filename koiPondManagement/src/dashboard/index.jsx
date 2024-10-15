@@ -27,16 +27,20 @@ const items = [
     "category",
     <PieChartOutlined />
   ),
-  getItem(
-    <Link to="/dashboard/usermanagement">User Management</Link>,
-    "usermanagement",
-    <UserOutlined />
-  ),
-  getItem(
-    <Link to="/dashboard/ponddesigncolumns">Duyệt Thiết Kế</Link>,
-    "ponddesigncolumns",
-    <UserOutlined />
-  ),
+  getItem("Quản lý", "management", <UserOutlined />, [
+    getItem(
+      <Link to="/dashboard/usermanagement">Quản lý tài khoản</Link>,
+      "usermanagement"
+    ),
+    getItem(
+      <Link to="/dashboard/ponddesigncolumns">Duyệt Thiết Kế</Link>,
+      "ponddesigncolumns"
+    ),
+    getItem(
+      <Link to="/dashboard/orderlist">Quản lý đơn hàng</Link>,
+      "orderlist"
+    ),
+  ]),
   getItem("Nhân Viên Thiết Kế", "ponddesigns", <UserOutlined />, [
   getItem(
     <Link to="/dashboard/ponddesign">Tạo Thiết Kế Hồ</Link>,

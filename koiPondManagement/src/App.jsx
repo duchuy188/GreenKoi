@@ -17,6 +17,7 @@ import Consulting from "./components/page/admin/consulting/request";
 import RequestConsulting from "./components/page/admin/consulting/request";
 import ConsultingOrders from "./components/page/admin/consulting/order";
 import ServicePage from "./components/page/Service/ServicePage";
+import OrdersList from "./components/page/admin/manage-product";
 
 import Profile from "./components/profile/Profile";
 import MaintenancePage from "./components/page/maintenance/MaintenancePage";
@@ -125,6 +126,10 @@ function App() {
         {
           path: "ponddesigncolumns",
           element: <PondDesignColumns/>,
+        },
+        {
+          path: "orderlist",
+          element: <OrdersList/>,
         },
         {
           path: "consulting",

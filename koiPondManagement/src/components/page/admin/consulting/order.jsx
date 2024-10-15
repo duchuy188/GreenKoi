@@ -14,7 +14,7 @@ const Orders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/projects');
+      const response = await api.get('/api/projects/consultant');
       setOrders(response.data);
     } catch (error) {
       console.error('Error fetching orders:', error);
