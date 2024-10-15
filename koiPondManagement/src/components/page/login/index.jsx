@@ -17,24 +17,18 @@ function LoginPage() {
     const auth = getAuth();
     signInWithPopup(auth, googleProvider)
       .then((result) => {
-        // This gives you a Google Access Token. You can use it to access the Google API.
         const credential = GoogleAuthProvider.credentialFromResult(result);
         const token = credential.accessToken;
-        // The signed-in user info.
         const user = result.user;
 
         console.log("Đăng nhập Google thành công", user);
         toast.success("Đăng nhập Google thành công!");
-        // TODO: Handle successful login (e.g., update Redux state, navigate to dashboard)
       }).catch((error) => {
         console.error("Lỗi đăng nhập Google", error);
         toast.error(`Đăng nhập Google không thành công: ${error.message}`);
-        // Handle Errors here.
         const errorCode = error.code;
         const errorMessage = error.message;
-        // The email of the user's account used.
         const email = error.customData?.email;
-        // The AuthCredential type that was used.
         const credential = GoogleAuthProvider.credentialFromError(error);
       });
   }
@@ -46,8 +40,6 @@ function LoginPage() {
       console.log(response);
       const { token, roleId, ...userData } = response.data;
       localStorage.setItem("token", token);
-      
-      // Dispatch only serializable data
       dispatch(login(userData));
       
       toast.success("Đăng nhập thành công!");
@@ -123,7 +115,6 @@ function LoginPage() {
           <Button
             type="default"
             block
-            // onClick={() => console.log("Google login not implemented")}
             onClick={handleLoginGoogle}
           >
             Đăng nhập bằng Google

@@ -1,19 +1,17 @@
 import React, { useState } from "react";
 import {
-  DesktopOutlined,
-  FileOutlined,
   PieChartOutlined,
-  TeamOutlined,
   UserOutlined,
   CommentOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
-import { Breadcrumb, Layout, Menu, theme, Button } from "antd";
+import { Breadcrumb, Layout, Menu, Button } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../components/redux/features/useSlice"; // Đảm bảo đường dẫn này chính xác
+import { logout } from "../components/redux/features/useSlice"; // Đảm bảo đường dẫn chính xác
 
 const { Header, Content, Footer, Sider } = Layout;
+
 function getItem(label, key, icon, children) {
   return {
     key,
@@ -22,6 +20,7 @@ function getItem(label, key, icon, children) {
     label,
   };
 }
+
 const items = [
   getItem(
     <Link to="/dashboard/category">Category</Link>,
@@ -34,7 +33,7 @@ const items = [
     <UserOutlined />
   ),
   getItem(
-    <Link to="/dashboard/ponddesigncolumns">Pond Design Columnst</Link>,
+    <Link to="/dashboard/ponddesigncolumns">Pond Design Columns</Link>,
     "ponddesigncolumns",
     <UserOutlined />
   ),
@@ -57,15 +56,11 @@ const items = [
 
 const Dashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
 
-  // Tạo items cho Breadcrumb dựa trên đường dẫn hiện tại
   const pathSnippets = location.pathname.split("/").filter((i) => i);
   const breadcrumbItems = pathSnippets.map((_, index) => {
     const url = `/${pathSnippets.slice(0, index + 1).join("/")}`;
@@ -76,9 +71,9 @@ const Dashboard = () => {
   });
 
   const handleLogout = () => {
-    dispatch(logout()); // Dispatch action logout
+    dispatch(logout());
     localStorage.removeItem("token");
-    localStorage.removeItem("user"); // Xóa thông tin user từ localStorage nếu có
+    localStorage.removeItem("user");
     navigate("/login");
   };
 
@@ -92,51 +87,89 @@ const Dashboard = () => {
         collapsible
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
+        style={{
+          backgroundColor: "#003366", 
+        }}
       >
-        <div className="demo-logo-vertical" />
+        <div
+          className="demo-logo-vertical"
+          style={{
+            height: 32,
+            margin: 16,
+            background: "rgba(255, 255, 255, 0.2)",
+            color: "#fff", 
+            textAlign: "center",
+            fontSize: "18px",
+          }}
+        >
+          GreenKoi
+        </div>
         <Menu
-          theme="dark"
-          defaultSelectedKeys={["1"]}
           mode="inline"
           items={items}
+          theme="dark"
+          style={{
+            backgroundColor: "#003366", 
+            color: "#fff", 
+          }}
         />
       </Sider>
       <Layout>
         <Header
           style={{
             padding: 0,
-            background: colorBgContainer,
+            backgroundColor: "#fff", 
             display: "flex",
-            justifyContent: "flex-end",
+            justifyContent: "space-between",
             alignItems: "center",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)", 
           }}
         >
+          <div
+            style={{
+              fontSize: 18,
+              fontWeight: "bold",
+              marginLeft: "20px",
+              color: "#003366", 
+            }}
+          >
+            Admin Dashboard
+          </div>
           <Button
             type="primary"
             icon={<LogoutOutlined />}
             onClick={handleLogout}
-            style={{ marginRight: 16 }}
+            style={{
+              marginRight: 16,
+              backgroundColor: "#003366",
+              borderColor: "#003366",
+            }}
           >
-            Đăng xuất
+            Logout
           </Button>
         </Header>
         <Content
           style={{
-            margin: "0 16px",
+            margin: "16px",
+            padding: "24px",
+            backgroundColor: "#fff", 
+            borderRadius: 8, 
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)", 
           }}
         >
           <Breadcrumb
             style={{
-              margin: "16px 0",
+              marginBottom: "16px",
+              color: "#003366", 
             }}
             items={breadcrumbItems}
           />
           <div
             style={{
-              padding: 24,
               minHeight: 360,
-              background: colorBgContainer,
-              borderRadius: borderRadiusLG,
+              padding: "24px",
+              backgroundColor: "#f0f2f5", 
+              borderRadius: 8, 
             }}
           >
             <Outlet />
@@ -145,12 +178,16 @@ const Dashboard = () => {
         <Footer
           style={{
             textAlign: "center",
+            backgroundColor: "#003366", 
+            color: "#fff", 
+            padding: "12px 0",
           }}
         >
-          Ant Design ©{new Date().getFullYear()} Created by Ant UED
+          GreenKoi ©{new Date().getFullYear()} Created by Your Company
         </Footer>
       </Layout>
     </Layout>
   );
 };
+
 export default Dashboard;
