@@ -10,7 +10,7 @@ function PondDesignColumns() {
   const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
   const [selectedDesignId, setSelectedDesignId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
-  const [currentDescription, setCurrentDescription] = useState(""); // State để lưu mô tả hiện tại
+  const [currentDescription, setCurrentDescription] = useState("");
 
   const fetchPendingPondDesigns = async () => {
     try {
@@ -47,7 +47,7 @@ function PondDesignColumns() {
   const rejectPondDesign = async (id) => {
     try {
       await api.patch(`/api/pond-designs/${id}/reject`, {
-        reason: rejectionReason,
+        rejectionReason: rejectionReason,
       });
       toast.success("Pond design rejected successfully!");
       setRejectionReason("");
@@ -65,6 +65,10 @@ function PondDesignColumns() {
   };
 
   const handleReject = async () => {
+    if (!rejectionReason.trim()) {
+      toast.error("Please provide a reason for rejection.");
+      return;
+    }
     await rejectPondDesign(selectedDesignId);
     setIsRejectModalVisible(false);
   };
@@ -160,9 +164,10 @@ function PondDesignColumns() {
         title="Nhập lý do từ chối"
         open={isRejectModalVisible}
         onOk={handleReject}
-        closable={false} // Ẩn dấu "X"
+        onCancel={() => setIsRejectModalVisible(false)}
+        closable={true}
         okText="Xác nhận"
-        cancelButtonProps={{ style: { display: 'none' } }} // Ẩn nút Cancel
+        cancelText="Hủy"
       >
         <Input.TextArea
           rows={4}
@@ -175,9 +180,9 @@ function PondDesignColumns() {
         title="Mô tả chi tiết"
         open={isDescriptionModalVisible}
         onOk={() => setIsDescriptionModalVisible(false)}
-        closable={false} // Ẩn dấu "X"
+        closable={true}
         okText="Đóng"
-        cancelButtonProps={{ style: { display: 'none' } }} // Ẩn nút Cancel
+        cancelButtonProps={{ style: { display: 'none' } }}
       >
         <p>{currentDescription}</p>
       </Modal>

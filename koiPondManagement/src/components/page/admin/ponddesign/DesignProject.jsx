@@ -1,20 +1,35 @@
 import React, { useState, useEffect } from "react";
-import { Form, Input, Button, message, Card, Table, Tooltip, Popconfirm, Modal } from "antd";
+import {
+  Form,
+  Input,
+  Button,
+  message,
+  Card,
+  Table,
+  Tooltip,
+  Popconfirm,
+  Modal,
+  Select,
+} from "antd";
 import { useNavigate } from "react-router-dom";
 import api from "../../../config/axios";
 import { RiDeleteBin2Fill } from "react-icons/ri";
 import { FaEdit } from "react-icons/fa";
 
 const { Search } = Input;
+const { Option } = Select;
 
 function DesignProject() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [pondData, setPondData] = useState(null);
-  const [searchResult, setSearchResult] = useState(null);
+  const [searchText, setSearchText] = useState("");
   const [designerPonds, setDesignerPonds] = useState([]);
-  const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [isDescriptionModalVisible, setIsDescriptionModalVisible] =
+    useState(false);
   const [currentDescription, setCurrentDescription] = useState("");
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false); // Thêm state cho modal chỉnh sửa
   const navigate = useNavigate();
 
   // Fetch pond designs for the designer
@@ -30,19 +45,6 @@ function DesignProject() {
     }
   };
 
-  // Fetch pond design by ID
-  const fetchPondDesignById = async (id) => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/api/pond-designs/${id}`);
-      setSearchResult(response.data);
-    } catch (err) {
-      message.error("Failed to fetch pond design: " + (err.response?.data?.message || err.message));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchDesignerPonds();
   }, []);
@@ -51,23 +53,24 @@ function DesignProject() {
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
-      console.log("Form values:", values); // Kiểm tra dữ liệu gửi đi
-
       if (pondData) {
-        // Update existing pond design
-        console.log("Updating pond design with ID:", pondData.id);
         await api.put(`/api/pond-designs/${pondData.id}`, values);
         message.success("Pond design updated successfully");
         setPondData(null);
+        setIsEditModalVisible(false); // Đóng modal sau khi cập nhật thành công
       } else {
-        // Nếu không có pondData, không làm gì cả
-        message.error("Cannot create a new pond design. Only updates are allowed.");
+        message.error(
+          "Cannot create a new pond design. Only updates are allowed."
+        );
       }
 
       form.resetFields();
       fetchDesignerPonds();
     } catch (err) {
-      message.error("Failed to update pond design: " + (err.response?.data?.message || err.message));
+      message.error(
+        "Failed to update pond design: " +
+          (err.response?.data?.message || err.message)
+      );
     } finally {
       setLoading(false);
     }
@@ -81,7 +84,10 @@ function DesignProject() {
       message.success("Pond design deleted successfully");
       fetchDesignerPonds();
     } catch (err) {
-      message.error("Failed to delete pond design: " + (err.response?.data?.message || err.message));
+      message.error(
+        "Failed to delete pond design: " +
+          (err.response?.data?.message || err.message)
+      );
     } finally {
       setLoading(false);
     }
@@ -92,6 +98,27 @@ function DesignProject() {
     setCurrentDescription(description);
     setIsDescriptionModalVisible(true);
   };
+
+  // Hiển thị modal chỉnh sửa
+  const showEditModal = (pond) => {
+    setPondData(pond);
+    form.setFieldsValue(pond);  // Gán giá trị hiện tại của hồ vào form để chỉnh sửa
+    setIsEditModalVisible(true);  // Hiển thị modal
+  };
+
+  // Đóng modal chỉnh sửa
+  const handleEditModalClose = () => {
+    setIsEditModalVisible(false);
+    form.resetFields();  // Reset form sau khi đóng modal
+  };
+
+  // Filter designer ponds based on status and search text
+  const filteredPonds = designerPonds.filter(
+    (pond) =>
+      (statusFilter === "ALL" || pond.status === statusFilter) &&
+      (pond.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+        pond.id?.toString().includes(searchText))
+  );
 
   // Updated columns definition
   const columns = [
@@ -145,15 +172,12 @@ function DesignProject() {
       key: "action",
       width: 120,
       render: (_, record) => (
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-          <Tooltip title="Edit">
-            <Button 
-              variant="ghost" 
+        <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+          <Tooltip title="Chỉnh sửa">
+            <Button
+              variant="ghost"
               size="icon"
-              onClick={() => {
-                setPondData(record);
-                form.setFieldsValue(record);
-              }}
+              onClick={() => showEditModal(record)}  // Mở modal và gửi dữ liệu hồ cần chỉnh sửa
             >
               <FaEdit />
             </Button>
@@ -164,11 +188,8 @@ function DesignProject() {
             okText="Đồng ý"
             cancelText="Hủy"
           >
-            <Tooltip title="Delete">
-              <Button 
-                variant="ghost" 
-                size="icon"
-              >
+            <Tooltip title="Xóa">
+              <Button variant="ghost" size="icon">
                 <RiDeleteBin2Fill />
               </Button>
             </Tooltip>
@@ -179,22 +200,30 @@ function DesignProject() {
   ];
 
   return (
-    <div style={{ maxWidth: 15500, margin: "0 auto", padding: 24 }}>
-      <Card title="Tìm kiếm Dự án bằng ID" bordered={false}>
+    <div style={{ maxWidth: 1550, margin: "0 auto", padding: 24 }}>
+      <Card>
+        <h1>CÁC DỰ ÁN HỒ</h1>
         <Search
-          placeholder="Nhập ID Hồ"
-          enterButton="Tìm Kiếm"
-          onSearch={fetchPondDesignById}
-          style={{ marginBottom: 24 }}
+          placeholder="Search requests"
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: 200, marginRight: 16 }} // Thêm khoảng cách 16px
         />
-      </Card>
-
-      {searchResult && (
-        <Table columns={columns} dataSource={[searchResult]} rowKey="id" pagination={false} style={{ marginTop: 24 }} />
-      )}
-
-      <Card title="Dự án Hồ" bordered={false} style={{ marginTop: 24 }}>
-        <Table columns={columns} dataSource={designerPonds} rowKey="id" pagination={false} />
+        <Select
+          defaultValue="ALL"
+          onChange={(value) => setStatusFilter(value)}
+          style={{ width: 200 }}
+        >
+          <Option value="ALL">Tất cả</Option>
+          <Option value="PENDING_APPROVAL">Đang chờ xử lý</Option>
+          <Option value="APPROVED">Đã chấp nhận</Option>
+          <Option value="REJECTED">Đã từ chối</Option>
+        </Select>
+        <Table
+          columns={columns}
+          dataSource={filteredPonds}
+          rowKey="id"
+          pagination={false}
+        />
       </Card>
 
       <Modal
@@ -203,9 +232,73 @@ function DesignProject() {
         onOk={() => setIsDescriptionModalVisible(false)}
         closable={false}
         okText="Đóng"
-        cancelButtonProps={{ style: { display: 'none' } }} // Ẩn nút Cancel
+        cancelButtonProps={{ style: { display: "none" } }}
       >
         <p>{currentDescription}</p>
+      </Modal>
+
+      {/* Modal chỉnh sửa */}
+      <Modal
+        title="Chỉnh sửa Thiết kế Hồ"
+        open={isEditModalVisible}
+        onOk={form.submit}  // Khi nhấn OK sẽ submit form
+        onCancel={handleEditModalClose}  // Đóng modal khi nhấn Cancel
+        okText="Lưu"
+        cancelText="Hủy"
+        confirmLoading={loading}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}  // Hàm xử lý khi submit form
+        >
+          <Form.Item
+            label="Tên Hồ"
+            name="name"
+            rules={[{ required: true, message: "Vui lòng nhập tên hồ" }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            label="Mô tả"
+            name="description"
+            rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
+          >
+            <Input.TextArea rows={4} />
+          </Form.Item>
+
+          <Form.Item
+            label="Hình dáng"
+            name="shape"
+            rules={[{ required: true, message: "Vui lòng nhập hình dáng" }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            label="Kích Thước"
+            name="dimensions"
+            rules={[{ required: true, message: "Vui lòng nhập kích thước" }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            label="Đặc Trưng"
+            name="features"
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            label="Giá"
+            name="basePrice"
+            rules={[{ required: true, message: "Vui lòng nhập giá" }]}
+          >
+            <Input />
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );
