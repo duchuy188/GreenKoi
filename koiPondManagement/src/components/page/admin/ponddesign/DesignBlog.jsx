@@ -9,6 +9,8 @@ function BlogManager() {
   const [postsLoading, setPostsLoading] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [submitModalVisible, setSubmitModalVisible] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
 
   // Handle form submission (create or update blog draft)
   const handleSubmit = async (values) => {
@@ -58,6 +60,26 @@ function BlogManager() {
     setModalVisible(true);
   };
 
+  // Open modal to confirm submitting the blog draft
+  const openSubmitModal = (post) => {
+    setSelectedPost(post);
+    setSubmitModalVisible(true);
+  };
+
+  // Handle blog draft submission
+  const handleSubmitBlog = async () => {
+    if (!selectedPost) return;
+    try {
+      await api.post(`/api/blog/drafts/${selectedPost.id}/submit`);
+      message.success("Blog submitted successfully");
+      fetchPosts(); // Refresh posts after submitting
+      setSubmitModalVisible(false);
+      setSelectedPost(null);
+    } catch (err) {
+      message.error("Failed to submit blog: " + (err.response?.data?.message || err.message));
+    }
+  };
+
   // Define table columns
   const columns = [
     {
@@ -99,9 +121,14 @@ function BlogManager() {
       title: "Actions",
       key: "actions",
       render: (text, record) => (
-        <Button type="link" onClick={() => openEditModal(record)}>
-          Edit
-        </Button>
+        <>
+          <Button type="link" onClick={() => openEditModal(record)}>
+            Edit
+          </Button>
+          <Button type="link" onClick={() => openSubmitModal(record)}>
+            Submit
+          </Button>
+        </>
       ),
     },
   ];
@@ -169,6 +196,16 @@ function BlogManager() {
             </Button>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Submit confirmation modal */}
+      <Modal
+        title="Submit Blog"
+        visible={submitModalVisible}
+        onOk={handleSubmitBlog}
+        onCancel={() => setSubmitModalVisible(false)}
+      >
+        <p>Are you sure you want to submit this blog?</p>
       </Modal>
     </div>
   );

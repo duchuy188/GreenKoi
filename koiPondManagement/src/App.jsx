@@ -33,6 +33,7 @@ import PondDesignColumns from "./components/page/admin/PondDesignColumns/PondDes
 import ProjectDetails from "./components/Project/Detail";
 import ProjectPage from "./components/Project/ProjectPage";
 import DesignBlog from "./components/page/admin/ponddesign/DesignBlog";
+import BrowsePond from "./components/page/admin/PondDesignColumns/BrowsePond";
 
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -135,6 +136,10 @@ function App() {
             {
               path: "ponddesigncolumns",
               element: <PondDesignColumns/>,
+            },
+            {
+              path: "browsepond",
+              element: <BrowsePond/>,
             },
             {
               path: "orderlist",

@@ -41,6 +41,10 @@ const items = [
       <Link to="/dashboard/orderlist">Quản lý đơn hàng</Link>,
       "orderlist"
     ),
+    getItem(
+      <Link to="/dashboard/browsepond">Quản lý Blog</Link>,
+      "browsepond"
+    ),
   ]),
   getItem("Nhân Viên Thiết Kế", "ponddesigns", <UserOutlined />, [
   getItem(
@@ -105,7 +109,7 @@ const Dashboard = () => {
       return true;
     }
 
-    if (path.includes('usermanagement') || path.includes('ponddesigncolumns') || path.includes('orderlist')) {
+    if (path.includes('usermanagement') || path.includes('ponddesigncolumns') || path.includes('orderlist') || path.includes('browsepond')) {
       console.log('Checking manager access:', roleId === 1);
       return roleId === 1; // Manager
     }
