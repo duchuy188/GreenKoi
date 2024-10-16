@@ -8,7 +8,8 @@ import {
 import { Breadcrumb, Layout, Menu, Button } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../components/redux/features/useSlice"; // Đảm bảo đường dẫn chính xác
+import { logout } from "../components/redux/features/useSlice";
+import AccessDenied from "../components/AccessDenied";
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -92,6 +93,32 @@ const Dashboard = () => {
       navigate('/');
     }
   }, [navigate]);
+
+  const isAllowed = (path) => {
+    const roleId = Number(user.roleId);
+    // Allow access to /dashboard/category for all roles
+    if (path.includes('category')) {
+      return true;
+    }
+
+    if (path.includes('usermanagement') || path.includes('ponddesigncolumns') || path.includes('orderlist')) {
+      console.log('Checking manager access:', roleId === 1);
+      return roleId === 1; // Manager
+    }
+    if (path.includes('ponddesign') || path.includes('designproject')) {
+      return roleId === 3; // Designer
+    }
+    if (path.includes('consulting')) {
+      return roleId === 2; // Consultant
+    }
+    
+   
+    return false;
+  };
+
+  useEffect(() => {
+    console.log('Is allowed:', isAllowed(location.pathname));
+  }, [location.pathname, user.roleId]);
 
   return (
     <Layout
@@ -188,7 +215,7 @@ const Dashboard = () => {
               borderRadius: 8, 
             }}
           >
-            <Outlet />
+            {isAllowed(location.pathname) ? <Outlet /> : <AccessDenied />}
           </div>
         </Content>
         <Footer
