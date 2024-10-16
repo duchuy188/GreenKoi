@@ -50,6 +50,10 @@ const items = [
   getItem(
     <Link to="/dashboard/designproject">Bản Thiết Kế</Link>,
     "designproject",
+  ),
+  getItem(
+    <Link to="/dashboard/designblog">Thiết Kế Blog</Link>,
+    "designblog",
   )
   ]),
   getItem("NHân viên tư vấn", "consulting", <CommentOutlined />, [
@@ -105,7 +109,7 @@ const Dashboard = () => {
       console.log('Checking manager access:', roleId === 1);
       return roleId === 1; // Manager
     }
-    if (path.includes('ponddesign') || path.includes('designproject')) {
+    if (path.includes('ponddesign') || path.includes('designproject') || path.includes('designblog')) {
       return roleId === 3; // Designer
     }
     if (path.includes('consulting')) {
