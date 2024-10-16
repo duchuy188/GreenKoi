@@ -89,7 +89,7 @@ const OrdersList = () => {
 
   return (
     <div>
-      <h1>All Orders</h1>
+      <h1>Orders List</h1>
       <Table
         columns={columns}
         dataSource={orders}

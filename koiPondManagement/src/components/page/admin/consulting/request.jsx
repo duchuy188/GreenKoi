@@ -264,7 +264,7 @@ const RequestConsulting = () => {
 
   return (
     <div>
-      <h1>Consultation Requests</h1>
+      <h1>Yêu cầu của khách hàng</h1>
       <Space style={{ marginBottom: 16 }}>
         <Input.Search
           placeholder="Search requests"
@@ -304,7 +304,7 @@ const RequestConsulting = () => {
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading}>
-              Update Status
+              Cập nhật trạng thái
             </Button>
           </Form.Item>
         </Form>
@@ -348,7 +348,7 @@ const RequestConsulting = () => {
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading}>
-              Create Order
+              Tạo đơn hàng
             </Button>
           </Form.Item>
         </Form>

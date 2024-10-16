@@ -51,13 +51,13 @@ const items = [
     "designproject",
   )
   ]),
-  getItem("Consulting", "consulting", <CommentOutlined />, [
+  getItem("NHân viên tư vấn", "consulting", <CommentOutlined />, [
     getItem(
-      <Link to="/dashboard/consulting/requests">Requests</Link>,
+      <Link to="/dashboard/consulting/requests">Yêu cầu</Link>,
       "consulting-requests"
     ),
     getItem(
-      <Link to="/dashboard/consulting/orders">Orders</Link>,
+      <Link to="/dashboard/consulting/orders">Đơn hàng</Link>,
       "consulting-orders"
     ),
   ]),
