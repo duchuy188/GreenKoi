@@ -69,13 +69,6 @@ public class BlogController {
         return ResponseEntity.ok(blogService.rejectBlogPost(id, reason));
     }
 
-    @Operation(summary = "Update null status to draft", description = "Updates all blog posts with null status to draft status")
-    @PostMapping("/update-null-status")
-    public ResponseEntity<String> updateNullStatus() {
-        blogService.updateNullStatusToDraft();
-        return ResponseEntity.ok("Updated all null status to DRAFT");
-    }
-
     @Operation(summary = "Get all pending posts", description = "Retrieves all blog posts pending approval")
     @GetMapping("/posts/pending")
     @PreAuthorize("hasRole('MANAGER')")
@@ -90,5 +83,11 @@ public class BlogController {
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new UserNotFoundException("User not found"));
         return ResponseEntity.ok(blogService.getAllPostsByAuthor(user.getId()));
+    }
+
+    @Operation(summary = "Get all approved posts", description = "Retrieves all approved blog posts for public viewing")
+    @GetMapping("/posts/approved")
+    public ResponseEntity<List<BlogPostDTO>> getAllApprovedPosts() {
+        return ResponseEntity.ok(blogService.getAllApprovedPosts());
     }
 }

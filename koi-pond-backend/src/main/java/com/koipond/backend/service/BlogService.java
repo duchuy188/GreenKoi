@@ -130,17 +130,7 @@ public class BlogService {
         return convertToDTO(updatedPost);
     }
 
-    @Transactional
-    public void updateNullStatusToDraft() {
-        logger.info("Updating blog posts with null status to DRAFT");
-        List<BlogPost> postsWithNullStatus = blogPostRepository.findByStatusIsNull();
-        for (BlogPost post : postsWithNullStatus) {
-            post.setStatus(BlogPost.BlogPostStatus.DRAFT);
-            post.setUpdatedAt(LocalDateTime.now());
-        }
-        blogPostRepository.saveAll(postsWithNullStatus);
-        logger.info("{} blog posts updated from null status to DRAFT", postsWithNullStatus.size());
-    }
+   
 
     // Helper methods
     private void updateBlogPostFields(BlogPost existingPost, BlogPostDTO blogPostDTO) {
@@ -176,5 +166,11 @@ public class BlogService {
         logger.info("Fetching all blog posts for author: {}", authorId);
         List<BlogPost> authorPosts = blogPostRepository.findByAuthorId(authorId);
         return authorPosts.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    public List<BlogPostDTO> getAllApprovedPosts() {
+        logger.info("Fetching all approved blog posts");
+        List<BlogPost> approvedPosts = blogPostRepository.findByStatus(BlogPost.BlogPostStatus.APPROVED);
+        return approvedPosts.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 }

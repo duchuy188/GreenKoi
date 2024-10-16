@@ -9,9 +9,7 @@ import java.util.List;
 @Repository
 public interface BlogPostRepository extends JpaRepository<BlogPost, String> {
     
-    // Phương thức để tìm tất cả các bài viết có trạng thái null
-    List<BlogPost> findByStatusIsNull();
-
+   
     // Phương thức để tìm tất cả các bài viết có trạng thái
     List<BlogPost> findByStatus(BlogPost.BlogPostStatus status);
 

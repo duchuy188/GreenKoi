@@ -126,6 +126,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/blog/drafts/*/submit").hasAnyAuthority("ROLE_3", "ROLE_1")
                         .requestMatchers(HttpMethod.POST, "/api/blog/posts/*/approve").hasAuthority("ROLE_1")
                         .requestMatchers(HttpMethod.POST, "/api/blog/posts/*/reject").hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.GET, "/api/blog/posts/approved").permitAll() 
                         // Cấu hình cho ProjectController
                         .requestMatchers(HttpMethod.GET, "/api/projects").hasAuthority("ROLE_1")
                         .requestMatchers(HttpMethod.GET, "/api/projects/consultant").hasAuthority("ROLE_2")
