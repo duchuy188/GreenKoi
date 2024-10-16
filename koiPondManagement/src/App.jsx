@@ -33,6 +33,7 @@ import PondDesignColumns from "./components/page/admin/PondDesignColumns/PondDes
 import ProjectDetails from "./components/Project/Detail";
 import ProjectPage from "./components/Project/ProjectPage";
 
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   const router = createBrowserRouter([
@@ -105,49 +106,54 @@ function App() {
     },
     {
       path: "dashboard",
-      element: <Dashboard />,
+      element: <ProtectedRoute allowedRoles={[1, 2, 3, 4]} />,
       children: [
-        {
-          path: "category",
-          element: <Category />,
-        },
-        {
-          path: "usermanagement",
-          element: <UserManagement/>,
-        },
-        {
-          path: "ponddesign",
-          element: <PondDesign/>,
-        },
-        {
-          path: "designproject",
-          element: <DesignProject/>,
-        },
-        {
-          path: "ponddesigncolumns",
-          element: <PondDesignColumns/>,
-        },
-        {
-          path: "orderlist",
-          element: <OrdersList/>,
-        },
-        {
-          path: "consulting",
+        { path: "",
+          element: <Dashboard />,
           children: [
             {
-              path: "requests",
-              element: <RequestConsulting />,
+              path: "category",
+              element: <Category />,
             },
             {
-              path: "orders",
-              element: <ConsultingOrders />,
+              path: "usermanagement",
+              element: <UserManagement/>,
             },
+            {
+              path: "ponddesign",
+              element: <PondDesign/>,
+            },
+            {
+              path: "designproject",
+              element: <DesignProject/>,
+            },
+            {
+              path: "ponddesigncolumns",
+              element: <PondDesignColumns/>,
+            },
+            {
+              path: "orderlist",
+              element: <OrdersList/>,
+            },
+            {
+              path: "consulting",
+              children: [
+                {
+                  path: "requests",
+                  element: <RequestConsulting />,
+                },
+                {
+                  path: "orders",
+                  element: <ConsultingOrders />,
+                },
+              ],
+            },
+            // {
+            //   path: "sevice",
+            //   element: <Sevice />,
+            // },
           ],
         },
-        // {
-        //   path: "sevice",
-        //   element: <Sevice />,
-        // },
       ],
     },
     {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   PieChartOutlined,
   UserOutlined,
@@ -85,6 +85,13 @@ const Dashboard = () => {
     localStorage.removeItem("user");
     navigate("/login");
   };
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.roleId === 5) {
+      navigate('/');
+    }
+  }, [navigate]);
 
   return (
     <Layout

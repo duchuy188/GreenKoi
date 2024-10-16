@@ -40,7 +40,8 @@ function LoginPage() {
       console.log(response);
       const { token, roleId, ...userData } = response.data;
       localStorage.setItem("token", token);
-      dispatch(login(userData));
+      localStorage.setItem("user", JSON.stringify({ ...userData, roleId })); // Lưu cả roleId
+      dispatch(login({ ...userData, roleId }));
       
       toast.success("Đăng nhập thành công!");
 
