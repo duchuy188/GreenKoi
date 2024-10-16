@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Card, Col, Row, Typography, Layout, Button, Modal, Form, Input, message } from "antd";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../config/axios";
 
 const { Title, Paragraph } = Typography;
 const { Content } = Layout;
 
 const ProjectDetails = () => {
-  const { id } = useParams(); // Lấy id từ URL
-  const [project, setProject] = useState(null); // State lưu thông tin dự án
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
-  const [customerInfo, setCustomerInfo] = useState(null);
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
@@ -21,68 +21,59 @@ const ProjectDetails = () => {
         setProject(response.data);
       } catch (error) {
         console.error("Error fetching project details:", error);
-        if (error.response && error.response.status === 401) {
-          message.error("Unauthorized access. Please log in again.");
-          // Redirect to login page or refresh token
-        }
+        message.error("Failed to load project details. Please try again.");
       } finally {
         setLoading(false);
       }
     };
 
-    const fetchCustomerInfo = async () => {
-      try {
-        const response = await api.get("/api/profile");
-
-        if (response.data && typeof response.data === 'object' && !response.data.toString().includes('<!DOCTYPE html>')) {
-          console.log("Customer info:", response.data);
-          
-          setCustomerInfo(response.data);
-        } else {
-          throw new Error("Unexpected API response structure");
-        }
-      } catch (error) {
-        console.error("Error fetching customer info:", error);
-        message.error("Failed to load customer information. Please log in again.");
-      }
-    };
-
     fetchProjectDetails();
-    fetchCustomerInfo();
   }, [id]);
 
-  if (loading) {
-    return <p>Loading...</p>;
-  }
+  const showModal = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      Modal.confirm({
+        title: 'Đăng nhập',
+        content: 'Bạn cần đăng nhập để gửi yêu cầu',
+        okText: 'Ok',
+        cancelText: 'Hủy',
+        onOk: () => navigate('/login'),
+      });
+    } else {
+      setIsModalVisible(true);
+    }
+  };
 
-  if (!project) {
-    return <p>Project not found</p>;
-  }
-
-  
+  const handleCancel = () => {
+    setIsModalVisible(false);
+    form.resetFields();
+  };
 
   const onFinish = async (values) => {
     try {
-
-      if (!customerInfo || !customerInfo.id) {
-        message.error('Customer information is missing. Please log in again.');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        message.error('You must be logged in to submit a request.');
+        navigate('/login');
         return;
       }
+
       const consultationRequest = {
-        customerId: customerInfo.id,
-        customerName: customerInfo.fullName,
-        customerPhone: customerInfo.phone,
-        customerAddress: customerInfo.address,
-        designId: project.id,
+        designId: id,
+        customerName: values.customerName,
+        customerPhone: values.customerPhone,
+        customerAddress: values.customerAddress,
         designName: project.name,
         designDescription: project.description,
-        status: "PENDING",
-        notes: values.notes
+        notes: values.notes,
       };
 
-      console.log('Sending consultation request:', consultationRequest);
-
-      const response = await api.post('/api/ConsultationRequests', consultationRequest);
+      const response = await api.post('/api/ConsultationRequests', consultationRequest, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
       if (response.status === 201 || response.status === 200) {
         message.success('Yêu cầu tư vấn đã được gửi thành công!');
@@ -95,25 +86,20 @@ const ProjectDetails = () => {
       console.error('Error submitting consultation request:', error);
       if (error.response && error.response.status === 401) {
         message.error('Unauthorized. Please log in again.');
-        // Redirect to login page or refresh token
+        navigate('/login');
       } else {
         message.error('Failed to submit consultation request. Please try again.');
       }
     }
   };
 
-  const handleCancel = () => {
-    setIsModalVisible(false);
-    form.resetFields();
-  };
+  if (loading) {
+    return <p>Loading...</p>;
+  }
 
-  const showModal = () => {
-    if (!customerInfo) {
-      message.error('Please log in to request a consultation.');
-      return;
-    }
-    setIsModalVisible(true);
-  };
+  if (!project) {
+    return <p>Project not found</p>;
+  }
 
   return (
     <Layout style={{ backgroundColor: "#f0f2f5" }}>
@@ -171,28 +157,26 @@ const ProjectDetails = () => {
                   <strong>Giá cả: {project.basePrice}</strong>
                 </Paragraph>
               </Typography>
-              {customerInfo && (
-                <Button type="primary" onClick={showModal} style={{ marginTop: '20px' }}>
-                  Request Consultation
-                </Button>
-              )}
+              <Button type="primary" onClick={showModal} style={{ marginTop: '20px' }}>
+                Yêu cầu tư vấn
+              </Button>
             </Card>
           </Col>
         </Row>
 
         <Modal
-          title="Request Consultation"
-          open={isModalVisible}
+          title="Yêu cầu tư vấn"
+          visible={isModalVisible}
           onCancel={handleCancel}
           footer={null}
         >
           <Form form={form} onFinish={onFinish} layout="vertical">
-            <Form.Item name="notes" label="Additional Notes">
+            <Form.Item name="notes" label="Ghi chú">
               <Input.TextArea />
             </Form.Item>
             <Form.Item>
               <Button type="primary" htmlType="submit">
-                Submit Request
+                Gửi yêu cầu
               </Button>
             </Form.Item>
           </Form>
