@@ -36,6 +36,7 @@ import DesignBlog from "./components/page/admin/ponddesign/DesignBlog";
 import BrowsePond from "./components/page/admin/PondDesignColumns/BrowsePond";
 
 import ProtectedRoute from './components/ProtectedRoute';
+import InfoProfile from "./components/profiledashboard/InfoProfile";
 
 function App() {
   const router = createBrowserRouter([
@@ -157,6 +158,10 @@ function App() {
                   element: <ConsultingOrders />,
                 },
               ],
+            },
+            {
+              path: "profile",
+              element: <InfoProfile />,
             },
             // {
             //   path: "sevice",
