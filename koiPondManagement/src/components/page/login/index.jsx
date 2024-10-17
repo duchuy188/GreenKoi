@@ -80,6 +80,7 @@ function LoginPage() {
 
   return (
     <AuthenTemplate>
+      <h1>Đăng nhập</h1>
       <Form
         name="login"
         initialValues={{ remember: true }}
@@ -87,19 +88,19 @@ function LoginPage() {
         layout="vertical"
       >
         <Form.Item
-          label="Tên Đăng Nhập"
+          // label="Tên Đăng Nhập"
           name="username"
           rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập của bạn!" }]}
         >
-          <Input/>
+          <Input placeholder='Tên đăng nhập'/>
         </Form.Item>
 
         <Form.Item
-          label="Mật Khẩu"
+          // label="Mật Khẩu"
           name="password"
           rules={[{ required: true, message: "Vui lòng nhập mật khẩu của bạn!" }]}
         >
-          <Input.Password />
+          <Input.Password placeholder='Mật khẩu'/>
         </Form.Item>
 
         <Form.Item>

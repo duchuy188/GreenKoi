@@ -23,6 +23,7 @@ function RegisterPage() {
 
   return (
     <AuthenTemplate>
+      <h1>Đăng ký</h1>
       <Form
         labelCol={{
           span: 24,
@@ -30,25 +31,25 @@ function RegisterPage() {
         onFinish={handleRegister}
       >
         <Form.Item
-          label="Tên Đăng Nhập"
+          // label="Tên Đăng Nhập"
           name="username"
           rules={[
             {
               required: true,
-              message: 'Vui lòng nhập tên đăng nhập của bạn!',
+              message: 'Vui lòng nhập tên đăng nhập!',
             },
           ]}
         >
-          <Input/>
+          <Input placeholder='Tên đăng nhập'/>
         </Form.Item>
 
         <Form.Item
-          label="Mật Khẩu"
+          // label="Mật Khẩu"
           name="password"
           rules={[
             {
               required: true,
-              message: 'Vui lòng nhập mật khẩu của bạn!',
+              message: 'Vui lòng nhập mật khẩu!',
             },
             {
               min: 6,
@@ -56,17 +57,17 @@ function RegisterPage() {
             },
           ]}
         >
-          <Input.Password />
+          <Input.Password placeholder='Nhập mật khẩu '/>
         </Form.Item>
 
         <Form.Item
-          label="Nhập lại mật khẩu"
+          // label="Nhập lại mật khẩu"
           name="confirmPassword"
           dependencies={['password']}
           rules={[
             {
               required: true,
-              message: 'Vui lòng xác nhận mật khẩu của bạn!',
+              message: 'Vui lòng xác nhận mật khẩu!',
             },
             ({ getFieldValue }) => ({
               validator(_, value) {
@@ -78,29 +79,29 @@ function RegisterPage() {
             }),
           ]}
         >
-          <Input.Password />
+          <Input.Password placeholder='Nhập lại mật khẩu '/>
         </Form.Item>
 
         <Form.Item
-          label="Họ và tên "
+          // label="Họ và tên "
           name="fullName"
           rules={[
             {
               required: true,
-              message: 'Vui lòng nhập họ và tên của bạn!',
+              message: 'Vui lòng nhập họ và tên !',
             },
           ]}
         >
-          <Input/>
+          <Input placeholder='Nhập họ và tên '/>
         </Form.Item>
 
         <Form.Item
-          label="Số điện thoại"
+          //  label="Số điện thoại"
           name="phoneNumber"
           rules={[
             {
               required: true,
-              message: 'Vui lòng nhập số điện thoại của bạn!',
+              message: 'Vui lòng nhập số điện thoại !',
             },
             {
               pattern: /^[0-9]+$/,
@@ -108,16 +109,16 @@ function RegisterPage() {
             },
           ]}
         >
-        <Input/>
+        <Input placeholder='Nhập số điện thoại '/>
         </Form.Item>
 
         <Form.Item
-          label="E-mail"
+          // label="E-mail"
           name="email"
           rules={[
             {
               required: true,
-              message: 'Vui lòng nhập email của bạn!',
+              message: 'Vui lòng nhập email!',
             },
             {
               type: 'email',
@@ -125,20 +126,20 @@ function RegisterPage() {
             },
           ]}
         >
-          <Input/>
+          <Input placeholder='Nhập email '/>
         </Form.Item>
 
         <Form.Item
-          label="Địa chỉ"
+          // label="Địa chỉ"
           name="address"
           rules={[
             {
               required: true,
-              message: 'Vui lòng nhập địa chỉ của bạn!',
+              message: 'Vui lòng nhập địa chỉ!',
             },
           ]}
         >
-          <Input/>
+          <Input placeholder='Nhập địa chỉ ' />
         </Form.Item>
 
         <Form.Item>
