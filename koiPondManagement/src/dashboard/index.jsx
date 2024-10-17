@@ -36,7 +36,7 @@ const items = [
       "usermanagement"
     ),
     getItem(
-      <Link to="/dashboard/ponddesigncolumns">Duyệt Thiết Kế</Link>,
+      <Link to="/dashboard/ponddesigncolumns">Quản lý thiết kế</Link>,
       "ponddesigncolumns"
     ),
     getItem(
@@ -54,13 +54,17 @@ const items = [
     "ponddesign",
   ),
   getItem(
-    <Link to="/dashboard/designproject">Bản Thiết Kế</Link>,
+    <Link to="/dashboard/designproject">Bảng Thiết Kế</Link>,
     "designproject",
   ),
   getItem(
-    <Link to="/dashboard/designblog">Thiết Kế Blog</Link>,
+    <Link to="/dashboard/designblog">Tạo Blog</Link>,
     "designblog",
-  )
+  ),
+  getItem(
+    <Link to="/dashboard/blogproject">Bảng Blog</Link>,
+    "blogproject",
+  ),
   ]),
   getItem("NHân viên tư vấn", "consulting", <CommentOutlined />, [
     getItem(
@@ -117,7 +121,7 @@ const Dashboard = () => {
       console.log('Checking manager access:', roleId === 1);
       return roleId === 1; // Manager
     }
-    if (path.includes('ponddesign') || path.includes('designproject') || path.includes('designblog')) {
+    if (path.includes('ponddesign') || path.includes('designproject') || path.includes('designblog') || path.includes('blogproject')) {
       return roleId === 3; // Designer
     }
     if (path.includes('consulting')) {

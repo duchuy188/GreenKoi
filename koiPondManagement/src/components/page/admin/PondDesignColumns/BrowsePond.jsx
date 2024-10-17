@@ -76,8 +76,8 @@ function BrowsePond() {
     },
     {
       title: "Image URL",
-      dataIndex: "imageUrl",
-      key: "imageUrl",
+      dataIndex: "coverImageUrl",
+      key: "coverImageUrl",
     },
     {
       title: "Status",

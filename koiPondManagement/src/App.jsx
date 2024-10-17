@@ -34,6 +34,7 @@ import ProjectDetails from "./components/Project/Detail";
 import ProjectPage from "./components/Project/ProjectPage";
 import DesignBlog from "./components/page/admin/ponddesign/DesignBlog";
 import BrowsePond from "./components/page/admin/PondDesignColumns/BrowsePond";
+import BlogProject from "./components/page/admin/ponddesign/BlogProject";
 
 import ProtectedRoute from './components/ProtectedRoute';
 import InfoProfile from "./components/profiledashboard/InfoProfile";
@@ -122,6 +123,7 @@ function App() {
               path: "usermanagement",
               element: <UserManagement/>,
             },
+           // pond design
             {
               path: "ponddesign",
               element: <PondDesign/>,
@@ -135,6 +137,10 @@ function App() {
               element: <DesignBlog/>,
             },
             {
+              path: "blogproject",
+              element: <BlogProject/>,
+            },
+            {
               path: "ponddesigncolumns",
               element: <PondDesignColumns/>,
             },
@@ -142,6 +148,7 @@ function App() {
               path: "browsepond",
               element: <BrowsePond/>,
             },
+            //
             {
               path: "orderlist",
               element: <OrdersList/>,
