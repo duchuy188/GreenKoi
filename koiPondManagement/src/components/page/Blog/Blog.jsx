@@ -1,81 +1,177 @@
-import React from "react";
-import { Card, Col, Row, Typography, Layout, List, Space } from "antd";
-import { Image } from "antd";
-import { Link, useParams } from "react-router-dom";
-import ListBlog from "../../Share/listblog";
-import "./Blog.css";
+import React, { useEffect, useState } from "react";
+import {
+  Card,
+  Col,
+  Row,
+  Typography,
+  Layout,
+  Button,
+  Modal,
+  Form,
+  Input,
+  message,
+} from "antd";
+import { useParams, useNavigate } from "react-router-dom";
+import api from "../../config/axios";
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Paragraph } = Typography;
 const { Content } = Layout;
 
 const Blog = () => {
   const { id } = useParams();
-  const blog = ListBlog.find((blog) => blog.id === parseInt(id));
+  const navigate = useNavigate();
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [form] = Form.useForm();
 
-  const recentPosts = ListBlog.slice(0, 5);
+  useEffect(() => {
+    const fetchPostDetails = async () => {
+      try {
+        const response = await api.get(`/api/blog/posts/${id}`);
+        setPost(response.data);
+      } catch (error) {
+        console.error("Error fetching post details:", error);
+        message.error("Failed to load post details. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPostDetails();
+  }, [id]);
+
+  const showModal = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      Modal.confirm({
+        title: "Đăng nhập",
+        content: "Bạn cần đăng nhập để gửi yêu cầu",
+        okText: "Ok",
+        cancelText: "Hủy",
+        onOk: () => navigate("/login"),
+      });
+    } else {
+      setIsModalVisible(true);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+    form.resetFields();
+  };
+
+  const onFinish = async (values) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        message.error("You must be logged in to submit a request.");
+        navigate("/login");
+        return;
+      }
+
+      const consultationRequest = {
+        designId: id,
+        customerName: values.customerName,
+        customerPhone: values.customerPhone,
+        customerAddress: values.customerAddress,
+        designName: post.title,
+        designDescription: post.content,
+        notes: values.notes,
+      };
+
+      const response = await api.post(
+        "/api/ConsultationRequests",
+        consultationRequest,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 201 || response.status === 200) {
+        message.success("Yêu cầu tư vấn đã được gửi thành công!");
+        setIsModalVisible(false);
+        form.resetFields();
+      } else {
+        throw new Error("Unexpected response status");
+      }
+    } catch (error) {
+      console.error("Error submitting consultation request:", error);
+      if (error.response && error.response.status === 401) {
+        message.error("Unauthorized. Please log in again.");
+        navigate("/login");
+      } else {
+        message.error(
+          "Failed to submit consultation request. Please try again."
+        );
+      }
+    }
+  };
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (!post) {
+    return <p>Post not found</p>;
+  }
 
   return (
-    <Layout className="blog-layout">
-      <Content className="blog-content">
-        <img src={blog.img} alt="Garden View" className="blog-hero-image" />
-        <div className="blog-hero-overlay">
-          <Title style={{color: "white"}} className="blog-hero-title" level={1}>
-            {blog.name}
+    <Layout style={{ backgroundColor: "#f0f2f5" }}>
+      <Content style={{ position: "relative" }}>
+        <img
+          src={post.coverImageUrl}
+          alt={post.title}
+          style={{
+            width: "100%",
+            height: "75vh",
+            objectFit: "cover",
+            marginTop: "-6%",
+          }}
+        />
+        <div
+          style={{
+            marginTop: "-15%",
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            padding: "20px",
+            borderRadius: "10px",
+          }}
+        >
+          <Title style={{ color: "#FFFFFF" }} level={1}>
+            {post.title}
           </Title>
         </div>
 
-        <Row gutter={[16, 16]} className="blog-row">
+        {/* Nội dung chi tiết bài viết */}
+        <Row gutter={[16, 16]} style={{ padding: "50px 0" }}>
           <Col span={16}>
             <Card>
               <Typography>
-                <Title level={2}>
-                  "Người chết chỉ thực sự chết khi họ bị lãng quên"
-                </Title>
+                <Title level={2}>Nội dung bài viết</Title>
+                <Paragraph>{post.content}</Paragraph>
                 <Paragraph>
-                  Một ngày hè tháng 6 năm 2023, chúng tôi có cơ hội gặp gỡ một
-                  vị khách đặc biệt, vị khách này đặc biệt không phải vì chị là
-                  người nổi tiếng, yếu nhân, chính trị gia, ... mà đặc biệt bởi
-                  câu chuyện của chị.
-                </Paragraph>
-                <Paragraph>
-                  Chị kể cho chúng tôi nghe về người ông của mình, ông sinh ra
-                  cách đây gần 100 năm tại một làng quê thuộc tỉnh Hà Tĩnh. Bằng
-                  trí thông minh, sự sáng dạ và bản tính cần cù; năm 14 tuổi ông
-                  tốt...
+                  <strong>
+                    Ngày xuất bản:{" "}
+                    {new Date(post.publishedAt).toLocaleDateString()}
+                  </strong>
                 </Paragraph>
               </Typography>
             </Card>
           </Col>
           <Col span={8}>
-            <Card title="Bài viết mới" className="recent-posts-card">
-              <List
-                itemLayout="horizontal"
-                dataSource={recentPosts}
-                renderItem={(item) => (
-                  <List.Item>
-                    <List.Item.Meta
-                      avatar={
-                        <Image
-                          src={item.img}
-                          alt={item.name}
-                          width={100}
-                          height={75}
-                          className="recent-post-image"
-                          preview={false}
-                        />
-                      }
-                      title={<Link to={`/blog/${item.id}`}>{item.name}</Link>}
-                      description={
-                        <>
-                          <Text type="secondary">{item.description}</Text>
-                          <br />
-                          <Text type="secondary">{item.date}</Text>
-                        </>
-                      }
-                    />
-                  </List.Item>
-                )}
-              />
+            <Card title={post.title}>
+              <Paragraph>
+                <strong>
+                  Ngày xuất bản:{" "}
+                  {new Date(post.publishedAt).toLocaleDateString()}
+                </strong>
+              </Paragraph>
             </Card>
           </Col>
         </Row>

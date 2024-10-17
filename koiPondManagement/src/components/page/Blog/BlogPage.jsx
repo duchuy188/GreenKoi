@@ -1,21 +1,44 @@
-import ListBlog from "../../Share/listblog";
-import { Link } from "react-router-dom";
-import "./BlogPage.css";
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import api from '../../config/axios';
+import './BlogPage.css';
 
 export default function BlogPage() {
+  const [posts, setPosts] = useState([]);
+
+  const fetchApprovedBlogPosts = async () => {
+    try {
+      const response = await api.get("/api/blog/posts/approved");
+      if (Array.isArray(response.data)) {
+        setPosts(response.data);
+      } else {
+        toast.error("Không tải được các bài viết đã phê duyệt.");
+        setPosts([]);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Có lỗi khi tải các bài viết đã được phê duyệt.");
+      setPosts([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchApprovedBlogPosts();
+  }, []);
+
   return (
-    <div className="blog-container">
-      {ListBlog.map((blog) => (
-        <div key={blog.id} className="blog-card">
-          <Link to={`/blog/${blog.id}`}>
-            <img src={blog.img} alt={blog.name} className="blog-image" />
-          </Link>
-          <div className="blog-content">
-            <h2 className="blog-title">{blog.name}</h2>
-            <p className="blog-description">{blog.description}</p>
-            <p className="blog-date">{blog.date}</p>
+    <div className="project-gallery">
+      {posts.map((post) => (
+        <Link to={`/blog/${post.id}`} key={post.id} className="project-card">
+          <div className="project-image-container">
+            <img src={post.coverImageUrl} alt={post.title} className="project-image" />
+            <div className="project-overlay">
+              <h2 className="project-title">{post.title}</h2>
+              <p className="project-content">{post.content}</p>
+              <p className="project-published-at">{new Date(post.publishedAt).toLocaleDateString()}</p>
+            </div>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );
