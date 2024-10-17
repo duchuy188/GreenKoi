@@ -93,64 +93,65 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> {
                     authorize
+                        // Public endpoints
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/logout", "/api/test/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        // Đặt các quy tắc cụ thể trước
-                        .requestMatchers(HttpMethod.GET, "/api/projects/*/tasks")
-                            .access(loggedAuthorizationManager("/api/projects/*/tasks", AuthorityAuthorizationManager.hasAnyAuthority("ROLE_1", "ROLE_4")))
-                        .requestMatchers(HttpMethod.GET, "/api/projects/*/project-tasks")
-                            .access(loggedAuthorizationManager("/api/projects/*/project-tasks", AuthorityAuthorizationManager.hasAnyAuthority("ROLE_1", "ROLE_4")))
-                        .requestMatchers(HttpMethod.PATCH, "/api/tasks/*/status")
-                            .access(loggedAuthorizationManager("/api/tasks/*/status", AuthorityAuthorizationManager.hasAuthority("ROLE_4")))
-                        .requestMatchers(HttpMethod.GET, "/api/tasks/project/*")
-                            .access(loggedAuthorizationManager("/api/tasks/project/*", AuthorityAuthorizationManager.hasAnyAuthority("ROLE_1", "ROLE_4")))
-                        // Sau đó là các quy tắc tổng quát
-                        .requestMatchers(HttpMethod.POST, "/api/projects/**").hasAuthority("ROLE_2")
-                        .requestMatchers(HttpMethod.GET, "/api/projects/**").hasAnyAuthority("ROLE_1", "ROLE_2")
-                        .requestMatchers("/api/manager/**").hasAuthority("ROLE_1")
-                        .requestMatchers("/api/consultation-requests/**").hasAuthority("ROLE_5")
-                        // Cấu hình cho Design
-                        .requestMatchers(HttpMethod.POST, "/api/pond-designs").hasAuthority("ROLE_3")
+                        .requestMatchers(HttpMethod.GET, "/api/blog/posts/approved").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/blog/posts/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/pond-designs/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/pond-designs/designer").hasAuthority("ROLE_3")
-                        .requestMatchers(HttpMethod.GET, "/api/pond-designs/pending").hasAuthority("ROLE_1")
                         .requestMatchers(HttpMethod.GET, "/api/pond-designs/approved").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/pond-designs/**").hasAuthority("ROLE_3")
+
+                        // Customer endpoints (ROLE_5)
+                        .requestMatchers(HttpMethod.GET, "/api/projects/customer").access(loggedAuthorizationManager("/api/projects/customer", AuthorityAuthorizationManager.hasAuthority("ROLE_5")))
+                        .requestMatchers(HttpMethod.GET, "/api/projects/customer/**").access(loggedAuthorizationManager("/api/projects/customer/**", AuthorityAuthorizationManager.hasAuthority("ROLE_5")))
+                        .requestMatchers(HttpMethod.POST, "/api/ConsultationRequests").hasAuthority("ROLE_5")
+                        .requestMatchers(HttpMethod.PUT, "/api/ConsultationRequests/**").hasAuthority("ROLE_5")
+                        .requestMatchers(HttpMethod.DELETE, "/api/ConsultationRequests/**").hasAuthority("ROLE_5")
+
+                        // Manager endpoints (ROLE_1)
+                        .requestMatchers("/api/manager/**").hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.GET, "/api/projects").hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/assign-constructor").hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/complete").hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.GET, "/api/pond-designs/pending").hasAuthority("ROLE_1")
                         .requestMatchers(HttpMethod.PATCH, "/api/pond-designs/*/approve").hasAuthority("ROLE_1")
                         .requestMatchers(HttpMethod.PATCH, "/api/pond-designs/*/reject").hasAuthority("ROLE_1")
+
+                        // Consultant endpoints (ROLE_2)
+                        .requestMatchers(HttpMethod.GET, "/api/projects/consultant").hasAuthority("ROLE_2")
+                        .requestMatchers(HttpMethod.POST, "/api/projects").hasAuthority("ROLE_2")
+                        .requestMatchers(HttpMethod.PUT, "/api/projects/**").hasAuthority("ROLE_2")
+                        .requestMatchers(HttpMethod.PUT, "/api/ConsultationRequests/*/status").hasAuthority("ROLE_2")
+
+                        // Designer endpoints (ROLE_3)
+                        .requestMatchers(HttpMethod.POST, "/api/pond-designs").hasAuthority("ROLE_3")
+                        .requestMatchers(HttpMethod.GET, "/api/pond-designs/designer").hasAuthority("ROLE_3")
+                        .requestMatchers(HttpMethod.PUT, "/api/pond-designs/**").hasAuthority("ROLE_3")
                         .requestMatchers(HttpMethod.DELETE, "/api/pond-designs/**").hasAuthority("ROLE_3")
-                        // Cấu hình cho BlogController
+
+                        // Constructor endpoints (ROLE_4)
+                        .requestMatchers(HttpMethod.PATCH, "/api/tasks/*/status").hasAuthority("ROLE_4")
+
+                        // Shared endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/projects/*/tasks").hasAnyAuthority("ROLE_1", "ROLE_4")
+                        .requestMatchers(HttpMethod.GET, "/api/projects/*/project-tasks").hasAnyAuthority("ROLE_1", "ROLE_4")
+                        .requestMatchers(HttpMethod.GET, "/api/tasks/project/*").hasAnyAuthority("ROLE_1", "ROLE_4")
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/status").hasAnyAuthority("ROLE_1", "ROLE_2")
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/cancel").hasAnyAuthority("ROLE_1", "ROLE_2")
+                        .requestMatchers(HttpMethod.GET, "/api/ConsultationRequests").hasAnyAuthority("ROLE_2", "ROLE_5")
+                        .requestMatchers(HttpMethod.GET, "/api/ConsultationRequests/**").hasAnyAuthority("ROLE_2", "ROLE_5")
+
+                        // Blog endpoints
                         .requestMatchers(HttpMethod.POST, "/api/blog/drafts").hasAnyAuthority("ROLE_3", "ROLE_1")
                         .requestMatchers(HttpMethod.PUT, "/api/blog/drafts/**").hasAnyAuthority("ROLE_3", "ROLE_1")
                         .requestMatchers(HttpMethod.POST, "/api/blog/drafts/*/submit").hasAnyAuthority("ROLE_3", "ROLE_1")
                         .requestMatchers(HttpMethod.POST, "/api/blog/posts/*/approve").hasAuthority("ROLE_1")
                         .requestMatchers(HttpMethod.POST, "/api/blog/posts/*/reject").hasAuthority("ROLE_1")
-                        .requestMatchers(HttpMethod.GET, "/api/blog/posts/approved").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/blog/posts/{id}").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/api/blog/drafts/**").hasAuthority("ROLE_3")
                         .requestMatchers(HttpMethod.DELETE, "/api/blog/posts/**").hasAuthority("ROLE_1")
-                        // Cấu hình cho ProjectController
-                        .requestMatchers(HttpMethod.GET, "/api/projects").hasAuthority("ROLE_1")
-                        .requestMatchers(HttpMethod.GET, "/api/projects/consultant").hasAuthority("ROLE_2")
-                        .requestMatchers(HttpMethod.POST, "/api/projects").hasAuthority("ROLE_2")
-                        .requestMatchers(HttpMethod.PUT, "/api/projects/**").hasAuthority("ROLE_2")
-                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/status").hasAnyAuthority("ROLE_1", "ROLE_2")
-                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/cancel").hasAnyAuthority("ROLE_1", "ROLE_2")
-                        // Thêm cấu hình mới cho gán và quản lý nhân viên xây dựng
-                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/assign-constructor").hasAuthority("ROLE_1")
-                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/complete").hasAuthority("ROLE_1")
-                        .requestMatchers(HttpMethod.GET, "/api/projects/*/tasks").hasAnyAuthority("ROLE_1", "ROLE_4")
-                        .requestMatchers(HttpMethod.PATCH, "/api/tasks/*/status").hasAuthority("ROLE_4")
-                        .requestMatchers(HttpMethod.GET, "/api/projects/*/project-tasks").hasAnyAuthority("ROLE_1", "ROLE_4")
-                        .requestMatchers(HttpMethod.GET, "/api/tasks/project/*").hasAnyAuthority("ROLE_1", "ROLE_4")
-                        // Thêm cấu hình mới cho ConsultationRequest
-                        .requestMatchers(HttpMethod.PUT, "/api/ConsultationRequests/*/status").hasAuthority("ROLE_2")
-                        .requestMatchers(HttpMethod.POST, "/api/ConsultationRequests").hasAuthority("ROLE_5")
-                        .requestMatchers(HttpMethod.GET, "/api/ConsultationRequests").hasAnyAuthority("ROLE_2", "ROLE_5")
-                        .requestMatchers(HttpMethod.GET, "/api/ConsultationRequests/**").hasAnyAuthority("ROLE_2", "ROLE_5")
-                        .requestMatchers(HttpMethod.PUT, "/api/ConsultationRequests/**").hasAuthority("ROLE_5")
-                        .requestMatchers(HttpMethod.DELETE, "/api/ConsultationRequests/**").hasAuthority("ROLE_5")
+
+                        // Catch-all rule
                         .anyRequest().authenticated();
                     
                     logger.info("Authorization rules configured");

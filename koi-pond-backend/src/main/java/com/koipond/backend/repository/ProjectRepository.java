@@ -38,4 +38,7 @@ public interface ProjectRepository extends JpaRepository<Project, String> {
 
     // Tìm tất cả dự án của một nhân viên tư vấn cụ thể theo ID
     List<Project> findByConsultantId(String consultantId);
+
+    // Tìm tất cả dự án của một khách hàng cụ thể theo ID
+    List<Project> findByCustomerId(String customerId);
 }

@@ -9,7 +9,6 @@ import com.koipond.backend.exception.BlogPostNotFoundException;
 import com.koipond.backend.exception.InvalidBlogPostStateException;
 import com.koipond.backend.exception.UserNotFoundException;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -46,7 +45,7 @@ public class BlogService {
         blogPost.setCreatedAt(LocalDateTime.now());
         blogPost.setUpdatedAt(LocalDateTime.now());
         blogPost.setCoverImageUrl(blogPostDTO.getCoverImageUrl());
-        blogPost.setActive(true);
+        blogPost.setActive(true); // Đảm bảo rằng draft mới luôn active
 
         BlogPost savedBlogPost = blogPostRepository.save(blogPost);
         logger.info("Draft blog post created with ID: {}", savedBlogPost.getId());
@@ -65,6 +64,7 @@ public class BlogService {
 
         updateBlogPostFields(existingPost, blogPostDTO);
         existingPost.setUpdatedAt(LocalDateTime.now());
+        // Không thay đổi trạng thái active khi cập nhật
         BlogPost updatedPost = blogPostRepository.save(existingPost);
         logger.info("Draft blog post updated successfully");
         return convertToDTO(updatedPost);
@@ -149,14 +149,14 @@ public class BlogService {
     }
 
     public List<BlogPostDTO> getAllPendingPosts() {
-        logger.info("Fetching all pending blog posts");
-        List<BlogPost> pendingPosts = blogPostRepository.findByStatus(BlogPost.BlogPostStatus.PENDING_APPROVAL);
+        logger.info("Fetching all pending and active blog posts");
+        List<BlogPost> pendingPosts = blogPostRepository.findByStatusAndIsActiveTrue(BlogPost.BlogPostStatus.PENDING_APPROVAL);
         return pendingPosts.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     public List<BlogPostDTO> getAllPostsByAuthor(String authorId) {
-        logger.info("Fetching all blog posts for author: {}", authorId);
-        List<BlogPost> authorPosts = blogPostRepository.findByAuthorId(authorId);
+        logger.info("Fetching all active blog posts for author: {}", authorId);
+        List<BlogPost> authorPosts = blogPostRepository.findByAuthorIdAndIsActiveTrue(authorId);
         return authorPosts.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
@@ -209,5 +209,44 @@ public class BlogService {
         post.setUpdatedAt(LocalDateTime.now());
         blogPostRepository.save(post);
         logger.info("Approved blog post soft deleted successfully");
+    }
+
+    public List<BlogPostDTO> getAllApprovedAndActivePosts() {
+        logger.info("Fetching all approved and active blog posts");
+        List<BlogPost> approvedPosts = blogPostRepository.findByStatusAndIsActiveTrue(BlogPost.BlogPostStatus.APPROVED);
+        return approvedPosts.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    public BlogPostDTO getActiveBlogPostById(String id) {
+        logger.info("Fetching active blog post with ID: {}", id);
+        BlogPost blogPost = blogPostRepository.findByIdAndIsActiveTrue(id)
+                .orElseThrow(() -> new BlogPostNotFoundException("Active blog post not found with ID: " + id));
+        return convertToDTO(blogPost);
+    }
+
+    public List<BlogPostDTO> getAllApprovedPostsForManager() {
+        logger.info("Fetching all approved blog posts for manager, including both active and inactive ones");
+        List<BlogPost> approvedPosts = blogPostRepository.findAllByStatus(BlogPost.BlogPostStatus.APPROVED);
+        return approvedPosts.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void restoreApprovedPost(String id) {
+        logger.info("Restoring soft-deleted approved blog post with ID: {}", id);
+        BlogPost post = blogPostRepository.findById(id)
+                .orElseThrow(() -> new BlogPostNotFoundException("Blog post not found with ID: " + id));
+
+        if (post.getStatus() != BlogPost.BlogPostStatus.APPROVED) {
+            throw new InvalidBlogPostStateException("Only approved posts can be restored");
+        }
+
+        if (post.isActive()) {
+            throw new InvalidBlogPostStateException("This post is already active");
+        }
+
+        post.setActive(true);
+        post.setUpdatedAt(LocalDateTime.now());
+        blogPostRepository.save(post);
+        logger.info("Approved blog post restored successfully");
     }
 }

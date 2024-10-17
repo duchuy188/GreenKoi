@@ -5,6 +5,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class ProjectDTO {
@@ -36,5 +37,13 @@ public class ProjectDTO {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 
-    private String constructorId;  // Thêm trường này
+    private String constructorId;
+
+    // Thêm các trường mới
+    private int progressPercentage;
+    private String paymentStatus;
+    private LocalDate estimatedCompletionDate;
+    private int totalStages;
+    private int completedStages;
+    private List<TaskDTO> tasks;  // Thêm danh sách các task
 }

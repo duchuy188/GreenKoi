@@ -25,4 +25,7 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, String> {
     // Giữ lại các phương thức cũ để tương thích ngược (nếu cần)
     List<BlogPost> findByStatus(BlogPost.BlogPostStatus status);
     List<BlogPost> findByAuthorId(String authorId);
+
+    // Phương thức mới để tìm tất cả các bài viết có trạng thái cụ thể, bao gồm cả những bài đã bị xóa mềm
+    List<BlogPost> findAllByStatus(BlogPost.BlogPostStatus status);
 }

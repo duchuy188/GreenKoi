@@ -474,4 +474,48 @@ public class ProjectService {
         dto.setNotes(task.getNotes());  // Thêm dòng này nếu bạn muốn bao gồm notes
         return dto;
     }
+
+    @Transactional(readOnly = true)
+    public List<ProjectDTO> getProjectsByCustomer(String customerUsername) {
+        log.info("Fetching projects for customer: {}", customerUsername);
+        User customer = getUserByUsername(customerUsername);
+        List<Project> projects = projectRepository.findByCustomerId(customer.getId());
+        return projects.stream()
+                .map(this::convertToCustomerProjectDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public ProjectDTO getCustomerProjectDetails(String projectId, String customerUsername) {
+        log.info("Fetching project details for customer: {}, projectId: {}", customerUsername, projectId);
+        User customer = getUserByUsername(customerUsername);
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + projectId));
+        
+        if (!project.getCustomer().getId().equals(customer.getId())) {
+            log.warn("Customer {} attempted to access project {} which they don't own", customerUsername, projectId);
+            throw new AccessDeniedException("You don't have permission to view this project");
+        }
+        
+        return convertToCustomerProjectDTO(project);
+    }
+
+    private ProjectDTO convertToCustomerProjectDTO(Project project) {
+        ProjectDTO dto = convertToDTO(project);
+        
+        // Thêm thông tin về các task
+        List<TaskDTO> taskDTOs = taskRepository.findByProjectIdOrderByOrderIndexAsc(project.getId()).stream()
+                .map(this::convertToTaskDTO)
+                .collect(Collectors.toList());
+        dto.setTasks(taskDTOs);
+        
+        // Thêm các trường mới
+        dto.setProgressPercentage(project.getProgressPercentage());
+        dto.setPaymentStatus(project.getPaymentStatus());
+        dto.setEstimatedCompletionDate(project.getEstimatedCompletionDate());
+        dto.setTotalStages(project.getTotalStages());
+        dto.setCompletedStages(project.getCompletedStages());
+        
+        return dto;
+    }
 }

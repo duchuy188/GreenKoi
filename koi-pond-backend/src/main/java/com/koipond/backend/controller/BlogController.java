@@ -38,6 +38,7 @@ public class BlogController {
             @RequestBody BlogPostDTO blogPostDTO,
             Authentication authentication) {
         String username = authentication.getName();
+        // Không cần set active ở đây, để BlogService xử lý
         return ResponseEntity.ok(blogService.createDraft(blogPostDTO, username));
     }
 
@@ -47,6 +48,7 @@ public class BlogController {
     public ResponseEntity<BlogPostDTO> updateDraft(
             @Parameter(description = "ID of the draft to update") @PathVariable String id,
             @RequestBody BlogPostDTO blogPostDTO) {
+        // Không cần set active ở đây
         return ResponseEntity.ok(blogService.updateDraft(id, blogPostDTO));
     }
 
@@ -93,17 +95,17 @@ public class BlogController {
         return ResponseEntity.ok(blogService.getAllPostsByAuthor(user.getId()));
     }
 
-    @Operation(summary = "Get all approved posts", description = "Retrieves all approved blog posts for public viewing")
+    @Operation(summary = "Get all approved posts", description = "Retrieves all approved and active blog posts for public viewing")
     @GetMapping("/posts/approved")
     public ResponseEntity<List<BlogPostDTO>> getAllApprovedPosts() {
-        return ResponseEntity.ok(blogService.getAllApprovedPosts());
+        return ResponseEntity.ok(blogService.getAllApprovedAndActivePosts());
     }
 
-    @Operation(summary = "Get blog post by ID", description = "Retrieves a blog post by its ID")
+    @Operation(summary = "Get blog post by ID", description = "Retrieves an active blog post by its ID")
     @GetMapping("/posts/{id}")
     public ResponseEntity<BlogPostDTO> getBlogPostById(
             @Parameter(description = "ID of the blog post to retrieve") @PathVariable String id) {
-        return ResponseEntity.ok(blogService.getBlogPostById(id));
+        return ResponseEntity.ok(blogService.getActiveBlogPostById(id));
     }
 
     @Operation(summary = "Soft delete a draft", description = "Marks a draft blog post as deleted (only for the author)")
@@ -125,6 +127,23 @@ public class BlogController {
             Authentication authentication) {
         String username = authentication.getName();
         blogService.softDeleteApprovedPost(id, username);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Get all approved posts for manager", 
+               description = "Retrieves all approved blog posts, including both active and inactive (soft-deleted) ones, for manager viewing")
+    @GetMapping("/posts/approved/all")
+    @PreAuthorize("hasRole('MANAGER')")
+    public ResponseEntity<List<BlogPostDTO>> getAllApprovedPostsForManager() {
+        return ResponseEntity.ok(blogService.getAllApprovedPostsForManager());
+    }
+
+    @Operation(summary = "Restore a soft-deleted approved post", description = "Restores a soft-deleted approved blog post")
+    @PostMapping("/posts/{id}/restore")
+    @PreAuthorize("hasRole('MANAGER')")
+    public ResponseEntity<Void> restoreApprovedPost(
+            @Parameter(description = "ID of the approved post to restore") @PathVariable String id) {
+        blogService.restoreApprovedPost(id);
         return ResponseEntity.noContent().build();
     }
 

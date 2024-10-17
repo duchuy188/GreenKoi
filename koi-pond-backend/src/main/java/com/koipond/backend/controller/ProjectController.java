@@ -174,6 +174,57 @@ public class ProjectController {
         }
     }
 
+    @GetMapping("/customer")
+    @PreAuthorize("hasAuthority('ROLE_5')")
+    @Operation(summary = "Get customer's projects", description = "Retrieves all projects for the authenticated customer.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved customer's projects"),
+        @ApiResponse(responseCode = "403", description = "Access denied"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> getCustomerProjects(Authentication authentication) {
+        String customerUsername = getUsernameFromAuthentication(authentication);
+        logger.info("User {} attempting to access /customer endpoint", customerUsername);
+        logger.info("User authorities: {}", authentication.getAuthorities());
+        try {
+            List<ProjectDTO> projects = projectService.getProjectsByCustomer(customerUsername);
+            return ResponseEntity.ok(projects);
+        } catch (AccessDeniedException e) {
+            logger.warn("Access denied for customer {} to view projects", customerUsername);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("Access denied: " + e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Unexpected error occurred while getting projects for customer {}", customerUsername, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+        }
+    }
+
+    @GetMapping("/customer/{projectId}")
+    @PreAuthorize("hasAuthority('ROLE_5')")
+    @Operation(summary = "Get customer's project details", description = "Retrieves details of a specific project for the authenticated customer.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved project details"),
+        @ApiResponse(responseCode = "403", description = "Access denied"),
+        @ApiResponse(responseCode = "404", description = "Project not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> getCustomerProjectDetails(@PathVariable String projectId, Authentication authentication) {
+        String customerUsername = getUsernameFromAuthentication(authentication);
+        logger.info("User {} attempting to access project details for project {}", customerUsername, projectId);
+        try {
+            ProjectDTO project = projectService.getCustomerProjectDetails(projectId, customerUsername);
+            return ResponseEntity.ok(project);
+        } catch (AccessDeniedException e) {
+            logger.warn("Customer {} attempted to access project {} which they don't own", customerUsername, projectId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("You don't have permission to view this project"));
+        } catch (ResourceNotFoundException e) {
+            logger.error("Project not found: {}", projectId, e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse("Project not found: " + e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Unexpected error occurred while getting project details for customer {}, projectId {}", customerUsername, projectId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+        }
+    }
+
     private String getUsernameFromAuthentication(Authentication authentication) {
         return authentication.getName();
     }
