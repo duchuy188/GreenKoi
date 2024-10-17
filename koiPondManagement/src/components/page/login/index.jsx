@@ -25,9 +25,9 @@ function LoginPage() {
         // Chỉ lưu trữ các giá trị có thể serialize
         const userInfo = {
           uid: user.uid,
-          displayName: user.displayName,
+          username: user.displayName, // Sử dụng displayName làm username
           email: user.email,
-          photoURL: user.photoURL, // Chỉ giữ các trường cần thiết
+          photoURL: user.photoURL,
         };
 
         console.log("Đăng nhập Google thành công", userInfo);
@@ -35,10 +35,12 @@ function LoginPage() {
 
         // Lưu thông tin người dùng vào localStorage
         localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(userInfo)); // Lưu thông tin đã serialize
-        dispatch(login(userInfo)); // Chỉ cập nhật các giá trị serializable vào Redux
+        localStorage.setItem("user", JSON.stringify(userInfo));
+        
+        // Dispatch action login với thông tin người dùng
+        dispatch(login(userInfo));
 
-        // Chuyển hướng đến trang dashboard hoặc trang chủ
+        // Chuyển hướng đến trang dashboard
         navigate("/dashboard");
       })
       .catch((error) => {

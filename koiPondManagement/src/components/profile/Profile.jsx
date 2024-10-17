@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import api from '/src/components/config/axios';
 import "./Profile.css";
 import { Button, Form, Input, Modal, Table, Tabs, message } from 'antd';
 
-// Tạo instance axios với interceptor
 function Profile() {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -12,41 +12,48 @@ function Profile() {
   const [form] = Form.useForm();
   const [consultationRequests, setConsultationRequests] = useState([]);
   const [activeTab, setActiveTab] = useState('1');
+  
+  // Get user information from Redux store
+  const user = useSelector((state) => state.user);
 
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No token found");
+        
+        let profileInfo = {};
+        
+        // Nếu có dữ liệu từ Redux, sử dụng nó
+        if (user) {
+          profileInfo = {
+            fullName: user.username || user.email,
+            email: user.email,
+            phone: user.phone || '',
+            address: user.address || '',
+            role: user.role || 'User',
+            projectCount: user.projectCount || 0
+          };
         }
-
-        const response = await api.get("/api/profile");
-
-        console.log("Full API response:", response);
-
-        if (response.data && typeof response.data === 'object' && !response.data.toString().includes('<!DOCTYPE html>')) {
-          setProfileData(response.data);
-        } else {
-          console.error("Unexpected API response structure:", response);
-          if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
-            setError("Received HTML instead of JSON. This might be due to an authentication issue or server error.");
-          } else {
-            setError("Unexpected API response structure. Please check the console for details.");
+        
+        // Luôn gọi API để lấy thông tin bổ sung hoặc cập nhật
+        const token = localStorage.getItem("token");
+        if (token) {
+          try {
+            const response = await api.get("/api/profile");
+            if (response.data && typeof response.data === 'object' && !response.data.toString().includes('<!DOCTYPE html>')) {
+              // Kết hợp dữ liệu từ API với dữ liệu từ Redux
+              profileInfo = { ...profileInfo, ...response.data };
+            }
+          } catch (apiError) {
+            console.error("Lỗi khi lấy hồ sơ từ API:", apiError);
           }
         }
+        
+        // Cập nhật state với dữ liệu kết hợp
+        setProfileData(profileInfo);
       } catch (err) {
-        console.error("Error fetching profile data:", err);
-        if (err.response) {
-          console.error("Error response:", err.response);
-          setError(`Error ${err.response.status}: ${err.response.data.message || err.response.statusText || "Unknown error"}`);
-        } else if (err.request) {
-          console.error("Error request:", err.request);
-          setError("No response received from server");
-        } else {
-          setError(err.message || "An unexpected error occurred");
-        }
+        console.error("Error in fetchProfileData:", err);
+        setError(err.message || "An unexpected error occurred");
       } finally {
         setLoading(false);
       }
@@ -73,14 +80,14 @@ function Profile() {
         console.log("Consultation requests:", response.data);
         setConsultationRequests(response.data);
       } catch (err) {
-        console.error("Error fetching consultation requests:", err);
-        message.error('Failed to load consultation requests');
+        console.error("Lỗi khi tìm kiếm yêu cầu tư vấn:", err);
+        message.error('Không tải được yêu cầu tư vấn');
       }
     };
 
     fetchProfileData();
     fetchConsultationRequests();
-  }, []);
+  }, [user]);
 
   const handleEdit = () => {
     form.setFieldsValue(profileData);
@@ -102,9 +109,9 @@ function Profile() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
-  if (!profileData) return <div>No profile data available. Please try refreshing the page.</div>;
+  if (loading) return <div>Đang tải...</div>;
+  if (error) return <div>Lỗi: {error}</div>;
+  if (!profileData) return <div>Không có dữ liệu hồ sơ nào khả dụng. Vui lòng thử làm mới trang.</div>;
 
 
   const consultationColumns = [
@@ -143,7 +150,7 @@ function Profile() {
                 <label>Họ và tên</label>
               </div>
               <div className="col-md-6">
-                <p>{profileData.fullName}</p>
+                <p>{profileData?.fullName || user?.username || user?.email || 'Chưa cập nhật'}</p>
               </div>
             </div>
             <div className="row">
@@ -151,7 +158,7 @@ function Profile() {
                 <label>Email</label>
               </div>
               <div className="col-md-6">
-                <p>{profileData.email}</p>
+                <p>{profileData?.email || user?.email || 'Chưa cập nhật'}</p>
               </div>
             </div>
             <div className="row">
@@ -159,7 +166,7 @@ function Profile() {
                 <label>Số điện thoại</label>
               </div>
               <div className="col-md-6">
-                <p>{profileData.phone}</p>
+                <p>{profileData?.phone || user?.phone || 'Chưa cập nhật'}</p>
               </div>
             </div>
             <div className="row">
@@ -167,7 +174,7 @@ function Profile() {
                 <label>Địa chỉ</label>
               </div>
               <div className="col-md-6">
-                <p>{profileData.address}</p>
+                <p>{profileData?.address || user?.address || 'Chưa cập nhật'}</p>
               </div>
             </div>
           </div>
@@ -200,10 +207,10 @@ function Profile() {
         <div className="row">
           <div className="col-md-10">
             <div className="profile-head">
-              <h5>{profileData.fullName}</h5>
-              <h6>{profileData.role}</h6>
+              <h5>{profileData?.fullName || user?.username || user?.email}</h5>
+              <h6>{profileData?.role || 'User'}</h6>
               <p className="proile-rating">
-                Số dự án đã đặt: <span>{profileData.projectCount || 0}</span>
+                Số dự án đã đặt: <span>{profileData?.projectCount || 0}</span>
               </p>
               <Tabs activeKey={activeTab} onChange={handleTabChange} items={items} />
             </div>

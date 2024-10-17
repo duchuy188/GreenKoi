@@ -45,15 +45,15 @@ function Header() {
   const userMenuItems = [
     {
       key: "1",
-      label: <Link to="/profile">Tài Khoản Của Tôi</Link>,
+      label: <Link to="/profile">Tài Khoản</Link>,
     },
     {
       key: "2",
-      label: <Link to="/orders">Đơn Mua</Link>,
+      label: <Link to="/orders">Orders</Link>,
     },
     {
       key: "3",
-      label: <span onClick={handleLogout}>Đăng Xuất</span>, // Change this line
+      label: <span onClick={handleLogout}>Đăng xuất</span>,
     },
   ];
 
@@ -140,7 +140,7 @@ function Header() {
             ) : (
               <Dropdown menu={{ items: userMenuItems }} trigger={['click']}>
                 <a onClick={(e) => e.preventDefault()} className="ant-dropdown-link" style={{ color: '#000' }}>
-                  <UserOutlined /> {user.username} <DownOutlined />
+                  <UserOutlined /> {user.username || user.email} <DownOutlined />
                 </a>
               </Dropdown>
             )}
