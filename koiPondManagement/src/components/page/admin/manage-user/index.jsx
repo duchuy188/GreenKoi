@@ -2,6 +2,7 @@ import { Button, Form, Input, Modal, Popconfirm, Table, Select, Checkbox } from 
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
+import moment from "moment";  // Import moment for date formatting
 
 function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -114,6 +115,18 @@ function UserManagement() {
     { title: "Full Name", dataIndex: "fullName", key: "fullName" },
     { title: "Role", dataIndex: "roleId", key: "roleId", render: getRoleName },
     { title: "Active", dataIndex: "active", key: "active", render: (active) => (active ? "Active" : "Inactive") },
+    {
+      title: "Created At",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (createdAt) => moment(createdAt).format("YYYY-MM-DD HH:mm"),
+    },
+    {
+      title: "Updated At",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
+      render: (updatedAt) => moment(updatedAt).format("YYYY-MM-DD HH:mm"),
+    },
     {
       title: "Action", dataIndex: "id", key: "id", render: (id, record) => (
         <>

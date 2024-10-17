@@ -25,11 +25,11 @@ function getItem(label, key, icon, children) {
 }
 
 const items = [
-  getItem(
-    <Link to="/dashboard/category">Category</Link>,
-    "category",
-    <PieChartOutlined />
-  ),
+  // getItem(
+  //   <Link to="/dashboard/category">Category</Link>,
+  //   "category",
+  //   <PieChartOutlined />
+  // ),
   getItem("Quản lý", "management", <UserOutlined />, [
     getItem(
       <Link to="/dashboard/usermanagement">Quản lý tài khoản</Link>,
