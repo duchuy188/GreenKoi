@@ -154,7 +154,8 @@ const Blog = () => {
             <Card>
               <Typography>
                 <Title level={2}>Nội dung bài viết</Title>
-                <Paragraph>{post.content}</Paragraph>
+                {/* Sử dụng dangerouslySetInnerHTML để hiển thị nội dung HTML */}
+                <div dangerouslySetInnerHTML={{ __html: post.content }} />
                 <Paragraph>
                   <strong>
                     Ngày xuất bản:{" "}

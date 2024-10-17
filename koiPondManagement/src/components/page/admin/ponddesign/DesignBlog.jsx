@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Form, Input, Button, message, Card, Modal } from "antd";
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import api from "../../../config/axios";
 
 function DesignBlog() {
@@ -8,15 +10,17 @@ function DesignBlog() {
   const [modalVisible, setModalVisible] = useState(false);
   const [submitModalVisible, setSubmitModalVisible] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [editorData, setEditorData] = useState("");
 
   // Handle form submission (create blog draft)
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
       // Create new blog draft
-      await api.post("/api/blog/drafts", values);
+      await api.post("/api/blog/drafts", { ...values, content: editorData });
       message.success("Blog draft created successfully");
       form.resetFields();
+      setEditorData("");
       setModalVisible(false);
     } catch (err) {
       message.error("Failed to create blog draft: " + (err.response?.data?.message || err.message));
@@ -52,8 +56,30 @@ function DesignBlog() {
             <Input placeholder="Enter blog title" />
           </Form.Item>
 
-          <Form.Item name="content" label="Content" rules={[{ required: true }]}>
-            <Input.TextArea placeholder="Enter blog content" />
+          <Form.Item label="Content" rules={[{ required: true }]}>
+            <CKEditor
+              editor={ClassicEditor}
+              data={editorData}
+              onChange={(event, editor) => {
+                const data = editor.getData();
+                setEditorData(data);
+              }}
+              config={{
+                // Configure the editor here
+                ckfinder: {
+                  // Upload image to server
+                  uploadUrl: '/api/upload', // Your upload URL
+                },
+                // Enable the image upload feature
+                toolbar: [
+                  'heading', '|',
+                  'bold', 'italic', 'link', '|',
+                  'imageUpload', '|',
+                  'bulletedList', 'numberedList', '|',
+                  'blockQuote', 'undo', 'redo'
+                ],
+              }}
+            />
           </Form.Item>
 
           <Form.Item name="coverImageUrl" label="Image URL" rules={[{ required: true }]}>
