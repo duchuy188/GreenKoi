@@ -9,6 +9,7 @@ import { login } from "../../redux/features/useSlice";
 import { getAuth, signInWithPopup } from "firebase/auth";
 import { googleProvider } from "../../config/firebase";
 import { GoogleAuthProvider } from "firebase/auth/web-extension";
+
 function LoginPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -21,27 +22,41 @@ function LoginPage() {
         const token = credential.accessToken;
         const user = result.user;
 
-        console.log("Đăng nhập Google thành công", user);
+        // Chỉ lưu trữ các giá trị có thể serialize
+        const userInfo = {
+          uid: user.uid,
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL, // Chỉ giữ các trường cần thiết
+        };
+
+        console.log("Đăng nhập Google thành công", userInfo);
         toast.success("Đăng nhập Google thành công!");
-      }).catch((error) => {
+
+        // Lưu thông tin người dùng vào localStorage
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(userInfo)); // Lưu thông tin đã serialize
+        dispatch(login(userInfo)); // Chỉ cập nhật các giá trị serializable vào Redux
+
+        // Chuyển hướng đến trang dashboard hoặc trang chủ
+        navigate("/dashboard");
+      })
+      .catch((error) => {
         console.error("Lỗi đăng nhập Google", error);
         toast.error(`Đăng nhập Google không thành công: ${error.message}`);
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        const email = error.customData?.email;
-        const credential = GoogleAuthProvider.credentialFromError(error);
       });
-  }
-  
+  };
 
   const handleLogin = async (values) => {
     try {
       const response = await api.post("/api/auth/login", values);
       console.log(response);
       const { token, roleId, ...userData } = response.data;
+
+      // Lưu thông tin người dùng vào localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify({ ...userData, roleId })); // Lưu cả roleId
-      dispatch(login({ ...userData, roleId }));
+      dispatch(login({ ...userData, roleId })); // Cập nhật Redux state
       
       toast.success("Đăng nhập thành công!");
 
@@ -61,13 +76,11 @@ function LoginPage() {
           err.response.status === false &&
           err.response.data.message === "Tài khoản bị chặn"
         ) {
-          toast.error(
-            "Tài khoản của bạn đã bị chặn. Vui lòng liên hệ với quản trị viên."
-          );
+          toast.error("Tài khoản của bạn đã bị chặn. Vui lòng liên hệ với quản trị viên.");
         } else {
           toast.error(
             err.response.data.message ||
-              "Đăng nhập không thành công. Vui lòng kiểm tra thông tin đăng nhập của bạn."
+            "Đăng nhập không thành công. Vui lòng kiểm tra thông tin đăng nhập của bạn."
           );
         }
       } else if (err.request) {
@@ -88,7 +101,6 @@ function LoginPage() {
         layout="vertical"
       >
         <Form.Item
-          // label="Tên Đăng Nhập"
           name="username"
           rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập của bạn!" }]}
         >
@@ -96,7 +108,6 @@ function LoginPage() {
         </Form.Item>
 
         <Form.Item
-          // label="Mật Khẩu"
           name="password"
           rules={[{ required: true, message: "Vui lòng nhập mật khẩu của bạn!" }]}
         >
