@@ -5,7 +5,6 @@ GO
 /*DROP TABLE IF EXISTS project_cancellations;
 DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS blog_posts;
-DROP TABLE IF EXISTS blog_categories;
 DROP TABLE IF EXISTS payments;
 DROP TABLE IF EXISTS project_stages;
 DROP TABLE IF EXISTS maintenance_requests;
@@ -191,23 +190,15 @@ CREATE TABLE maintenance_requests (
     FOREIGN KEY (assigned_to) REFERENCES users(id)
 );
 
--- Bảng blog_categories
-CREATE TABLE blog_categories (
-    id NVARCHAR(36) PRIMARY KEY,
-    name NVARCHAR(100) NOT NULL,
-    description NVARCHAR(MAX),
-    created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
-    updated_at DATETIME2 NOT NULL DEFAULT GETDATE()
-);
 
--- Bảng blog_posts (đã cập nhật)
+
+-- Bảng blog_posts 
 CREATE TABLE blog_posts (
     id NVARCHAR(36) PRIMARY KEY,
     title NVARCHAR(255) NOT NULL,
     content NVARCHAR(MAX),
     author_id NVARCHAR(36),
-    category_id NVARCHAR(36),
-    image_url NVARCHAR(255),
+    cover_image_url NVARCHAR(255),
     status NVARCHAR(20) NOT NULL,
     published_at DATETIME2,
     rejection_reason NVARCHAR(MAX),
@@ -215,7 +206,6 @@ CREATE TABLE blog_posts (
     created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     FOREIGN KEY (author_id) REFERENCES users(id),
-    FOREIGN KEY (category_id) REFERENCES blog_categories(id)
 );
 
 -- Bảng reviews
@@ -383,3 +373,5 @@ INSERT INTO task_templates (id, name, description, order_index) VALUES
 (NEWID(), N'Hoàn thiện cảnh quan xung quanh hồ', N'Tạo cảnh quan và trang trí xung quanh hồ cá Koi', 5),
 (NEWID(), N'Kiểm tra chất lượng nước và hệ thống lọc', N'Kiểm tra và điều chỉnh chất lượng nước cùng hệ thống lọc', 6),
 (NEWID(), N'Bàn giao và hướng dẫn sử dụng', N'Bàn giao dự án và hướng dẫn khách hàng cách sử dụng, bảo trì hồ cá Koi', 7);
+
+
