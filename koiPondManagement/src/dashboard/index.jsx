@@ -4,12 +4,14 @@ import {
   UserOutlined,
   CommentOutlined,
   LogoutOutlined,
+  DownOutlined
 } from "@ant-design/icons";
-import { Breadcrumb, Layout, Menu, Button } from "antd";
+import { Breadcrumb, Layout, Menu, Button, Dropdown, Modal, Avatar, Space } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../components/redux/features/useSlice";
 import AccessDenied from "../components/AccessDenied";
+import InfoProfile from "../components/profiledashboard/InfoProfile";
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -78,6 +80,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
+  const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
+  const [username, setUsername] = useState("");
 
   const pathSnippets = location.pathname.split("/").filter((i) => i);
   const breadcrumbItems = pathSnippets.map((_, index) => {
@@ -128,6 +132,39 @@ const Dashboard = () => {
     console.log('Is allowed:', isAllowed(location.pathname));
   }, [location.pathname, user.roleId]);
 
+  const handleViewProfile = () => {
+    setIsProfileModalVisible(true);
+  };
+
+  const handleCloseProfileModal = () => {
+    setIsProfileModalVisible(false);
+  };
+
+  const profileMenu = (
+    <Menu>
+      <Menu.Item key="1" icon={<UserOutlined />} onClick={handleViewProfile}>
+        View my profile
+      </Menu.Item>
+      <Menu.Item key="2" icon={<LogoutOutlined />} onClick={handleLogout}>
+        Sign Out
+      </Menu.Item>
+    </Menu>
+  );
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if (storedUser) {
+      setUsername(storedUser.username || storedUser.fullName || "User");
+    }
+  }, []);
+
+  const getAvatarContent = () => {
+    if (user.avatar) {
+      return <Avatar src={user.avatar} />;
+    }
+    return <Avatar style={{ backgroundColor: '#f56a00' }}>{username.charAt(0).toUpperCase()}</Avatar>;
+  };
+
   return (
     <Layout
       style={{
@@ -168,36 +205,22 @@ const Dashboard = () => {
       <Layout>
         <Header
           style={{
-            padding: 0,
-            backgroundColor: "#fff", 
+            padding: "0 16px",
+            backgroundColor: "#fff",
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "flex-end",
             alignItems: "center",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)", 
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
           }}
         >
-          <div
-            style={{
-              fontSize: 18,
-              fontWeight: "bold",
-              marginLeft: "20px",
-              color: "#003366", 
-            }}
-          >
-            Admin Dashboard
-          </div>
-          <Button
-            type="primary"
-            icon={<LogoutOutlined />}
-            onClick={handleLogout}
-            style={{
-              marginRight: 16,
-              backgroundColor: "#003366",
-              borderColor: "#003366",
-            }}
-          >
-            Logout
-          </Button>
+          <Dropdown overlay={profileMenu} trigger={['click']}>
+            <a onClick={(e) => e.preventDefault()}>
+              <Space>
+                {getAvatarContent()}
+                <DownOutlined style={{ fontSize: '12px', color: '#8c8c8c' }} />
+              </Space>
+            </a>
+          </Dropdown>
         </Header>
         <Content
           style={{
@@ -237,6 +260,15 @@ const Dashboard = () => {
           GreenKoi ©{new Date().getFullYear()} Created by Your Company
         </Footer>
       </Layout>
+      <Modal
+        title="User Profile"
+        visible={isProfileModalVisible}
+        onCancel={handleCloseProfileModal}
+        footer={null}
+        width={800}
+      >
+        <InfoProfile />
+      </Modal>
     </Layout>
   );
 };
