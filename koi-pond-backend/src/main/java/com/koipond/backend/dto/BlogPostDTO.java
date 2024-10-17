@@ -16,11 +16,11 @@ public class BlogPostDTO {
     private String title;
     private String content;
     private String authorId;
-    private String imageUrl;
+    private String coverImageUrl; 
     private String status;
     private LocalDateTime publishedAt;
     private boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private String rejectionReason; // Thêm trường này
+    private String rejectionReason; 
 }

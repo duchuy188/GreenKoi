@@ -3,13 +3,12 @@ package com.koipond.backend.service;
 import com.koipond.backend.dto.BlogPostDTO;
 import com.koipond.backend.model.BlogPost;
 import com.koipond.backend.model.User;
-import com.koipond.backend.model.BlogCategory;
 import com.koipond.backend.repository.BlogPostRepository;
 import com.koipond.backend.repository.UserRepository;
-import com.koipond.backend.repository.BlogCategoryRepository;
 import com.koipond.backend.exception.BlogPostNotFoundException;
 import com.koipond.backend.exception.InvalidBlogPostStateException;
 import com.koipond.backend.exception.UserNotFoundException;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,12 +25,10 @@ public class BlogService {
 
     private final BlogPostRepository blogPostRepository;
     private final UserRepository userRepository;
-    private final BlogCategoryRepository blogCategoryRepository;
 
-    public BlogService(BlogPostRepository blogPostRepository, UserRepository userRepository, BlogCategoryRepository blogCategoryRepository) {
+    public BlogService(BlogPostRepository blogPostRepository, UserRepository userRepository) {
         this.blogPostRepository = blogPostRepository;
         this.userRepository = userRepository;
-        this.blogCategoryRepository = blogCategoryRepository;
     }
 
     @Transactional
@@ -40,19 +37,15 @@ public class BlogService {
         
         User author = userRepository.findByUsername(username)
             .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
-        
-        // Sử dụng danh mục mặc định
-        BlogCategory defaultCategory = blogCategoryRepository.findOrCreateDefaultCategory();
 
         BlogPost blogPost = new BlogPost();
         blogPost.setTitle(blogPostDTO.getTitle());
         blogPost.setContent(blogPostDTO.getContent());
         blogPost.setAuthor(author);
-        blogPost.setCategory(defaultCategory);
         blogPost.setStatus(BlogPost.BlogPostStatus.DRAFT);
         blogPost.setCreatedAt(LocalDateTime.now());
         blogPost.setUpdatedAt(LocalDateTime.now());
-        blogPost.setImageUrl(blogPostDTO.getImageUrl());
+        blogPost.setCoverImageUrl(blogPostDTO.getCoverImageUrl());
         blogPost.setActive(true);
 
         BlogPost savedBlogPost = blogPostRepository.save(blogPost);
@@ -136,8 +129,7 @@ public class BlogService {
     private void updateBlogPostFields(BlogPost existingPost, BlogPostDTO blogPostDTO) {
         existingPost.setTitle(blogPostDTO.getTitle());
         existingPost.setContent(blogPostDTO.getContent());
-        existingPost.setImageUrl(blogPostDTO.getImageUrl());
-        // Không cần cập nhật category vì chúng ta sử dụng category mặc định
+        existingPost.setCoverImageUrl(blogPostDTO.getCoverImageUrl());
     }
 
     private BlogPostDTO convertToDTO(BlogPost entity) {
@@ -146,13 +138,13 @@ public class BlogService {
         dto.setTitle(entity.getTitle());
         dto.setContent(entity.getContent());
         dto.setAuthorId(entity.getAuthor().getId());
-        dto.setImageUrl(entity.getImageUrl());
+        dto.setCoverImageUrl(entity.getCoverImageUrl());
         dto.setStatus(entity.getStatus().name());
         dto.setPublishedAt(entity.getPublishedAt());
         dto.setActive(entity.isActive());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
-        dto.setRejectionReason(entity.getRejectionReason()); // Thêm dòng này
+        dto.setRejectionReason(entity.getRejectionReason());
         return dto;
     }
 
@@ -169,8 +161,53 @@ public class BlogService {
     }
 
     public List<BlogPostDTO> getAllApprovedPosts() {
-        logger.info("Fetching all approved blog posts");
-        List<BlogPost> approvedPosts = blogPostRepository.findByStatus(BlogPost.BlogPostStatus.APPROVED);
+        logger.info("Fetching all approved and active blog posts");
+        List<BlogPost> approvedPosts = blogPostRepository.findByStatusAndIsActiveTrue(BlogPost.BlogPostStatus.APPROVED);
         return approvedPosts.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    public BlogPostDTO getBlogPostById(String id) {
+        logger.info("Fetching active blog post with ID: {}", id);
+        BlogPost blogPost = blogPostRepository.findByIdAndIsActiveTrue(id)
+                .orElseThrow(() -> new BlogPostNotFoundException("Active blog post not found with ID: " + id));
+        return convertToDTO(blogPost);
+    }
+
+    @Transactional
+    public void softDeleteDraft(String id, String username) {
+        logger.info("Soft deleting draft blog post with ID: {} by user: {}", id, username);
+        BlogPost draft = blogPostRepository.findById(id)
+                .orElseThrow(() -> new BlogPostNotFoundException("Draft not found with ID: " + id));
+
+        if (draft.getStatus() != BlogPost.BlogPostStatus.DRAFT) {
+            throw new InvalidBlogPostStateException("This post is not a draft");
+        }
+
+        if (!draft.getAuthor().getUsername().equals(username)) {
+            throw new InvalidBlogPostStateException("You can only delete your own drafts");
+        }
+
+        draft.setActive(false);
+        draft.setUpdatedAt(LocalDateTime.now());
+        blogPostRepository.save(draft);
+        logger.info("Draft blog post soft deleted successfully");
+    }
+
+    @Transactional
+    public void softDeleteApprovedPost(String id, String username) {
+        logger.info("Soft deleting approved blog post with ID: {} by user: {}", id, username);
+        BlogPost post = blogPostRepository.findById(id)
+                .orElseThrow(() -> new BlogPostNotFoundException("Blog post not found with ID: " + id));
+
+        if (post.getStatus() != BlogPost.BlogPostStatus.APPROVED) {
+            throw new InvalidBlogPostStateException("Only approved posts can be deleted");
+        }
+
+        // Assuming only managers can delete approved posts, so no need to check the author
+
+        post.setActive(false);
+        post.setUpdatedAt(LocalDateTime.now());
+        blogPostRepository.save(post);
+        logger.info("Approved blog post soft deleted successfully");
     }
 }

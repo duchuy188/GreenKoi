@@ -51,10 +51,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 
-    @ExceptionHandler(CategoryNotFoundException.class)
-    public ResponseEntity<String> handleCategoryNotFoundException(CategoryNotFoundException e) {
-        log.error("Category not found", e);
+    @ExceptionHandler(BlogPostNotFoundException.class)
+    public ResponseEntity<String> handleBlogPostNotFoundException(BlogPostNotFoundException e) {
+        log.error("Blog post not found", e);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidBlogPostStateException.class)
+    public ResponseEntity<String> handleInvalidBlogPostStateException(InvalidBlogPostStateException e) {
+        log.error("Invalid blog post state or unauthorized action", e);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

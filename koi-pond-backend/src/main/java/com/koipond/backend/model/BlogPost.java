@@ -22,21 +22,26 @@ public class BlogPost {
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    private BlogCategory category;
-
     @Column(nullable = false)
     private String title;
+
     @Column(columnDefinition = "TEXT")
     private String content;
-    private String imageUrl;
+
+    @Column(name = "cover_image_url")
+    private String coverImageUrl;
+
     @Enumerated(EnumType.STRING)
     private BlogPostStatus status;
+
     private LocalDateTime publishedAt;
+
     private boolean isActive;
+
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
+
     private String rejectionReason;
 
     public enum BlogPostStatus {

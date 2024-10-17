@@ -86,22 +86,26 @@ public class ProjectController {
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('ROLE_1', 'ROLE_2')")
-    @Operation(summary = "Update project status", description = "Updates the status of an existing project. Managers can update any project, consultants can only update their assigned projects.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Project status updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input or invalid status transition"),
-            @ApiResponse(responseCode = "403", description = "Access denied"),
-            @ApiResponse(responseCode = "404", description = "Project not found")
-    })
-    public ResponseEntity<ProjectDTO> updateProjectStatus(
+    public ResponseEntity<?> updateProjectStatus(
             @PathVariable String id,
             @Valid @RequestBody UpdateProjectStatusRequest request,
             Authentication authentication) {
         String username = getUsernameFromAuthentication(authentication);
         boolean isManager = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_1"));
-        ProjectDTO updatedProject = projectService.updateProjectStatus(id, request.getNewStatus(), username, isManager);
-        return ResponseEntity.ok(updatedProject);
+        if ("COMPLETED".equalsIgnoreCase(request.getNewStatus())) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("To mark a project as completed, use the /complete endpoint."));
+        }
+        try {
+            ProjectDTO updatedProject = projectService.updateProjectStatus(id, request.getNewStatus(), username, isManager);
+            return ResponseEntity.ok(updatedProject);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(e.getMessage()));
+        }
     }
 
     @PatchMapping("/{id}/cancel")
@@ -132,13 +136,6 @@ public class ProjectController {
 
     @PatchMapping("/{id}/complete")
     @PreAuthorize("hasRole('ROLE_1')")
-    @Operation(summary = "Complete project", description = "Marks the project as completed. Only accessible by managers and only if all tasks are completed.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Project completed successfully"),
-        @ApiResponse(responseCode = "400", description = "Cannot complete project. Not all tasks are completed."),
-        @ApiResponse(responseCode = "403", description = "Access denied"),
-        @ApiResponse(responseCode = "404", description = "Project not found")
-    })
     public ResponseEntity<?> completeProject(@PathVariable String id, Authentication authentication) {
         String managerUsername = getUsernameFromAuthentication(authentication);
         try {

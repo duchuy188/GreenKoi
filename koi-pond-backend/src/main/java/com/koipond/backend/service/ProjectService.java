@@ -156,6 +156,10 @@ public class ProjectService {
             throw new AccessDeniedException("You don't have permission to update this project's status");
         }
 
+        if ("COMPLETED".equalsIgnoreCase(newStatus)) {
+            throw new IllegalArgumentException("To mark a project as completed, use the completeProject method.");
+        }
+
         ProjectStatus status = getProjectStatusByName(newStatus);
         
         if (!isValidStatusTransition(project.getStatus(), status)) {
@@ -365,6 +369,10 @@ public class ProjectService {
         User manager = getUserByUsername(managerUsername);
         if (!manager.getRoleId().equals("1")) {
             throw new AccessDeniedException("Only managers can complete projects");
+        }
+        
+        if ("COMPLETED".equals(project.getStatus().getName())) {
+            throw new IllegalStateException("Project is already completed.");
         }
         
         // Kiểm tra xem tất cả các task đã hoàn thành chưa
