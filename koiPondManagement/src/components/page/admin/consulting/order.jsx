@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Table, message, Modal, Form, Input, DatePicker, InputNumber, Button } from 'antd';
+import { Table, message, Modal, Form, Input, DatePicker, InputNumber, Button, Popconfirm, Dropdown, Menu } from 'antd';
 import api from "../../../config/axios";
 import moment from 'moment';
+import { EditOutlined, DownOutlined } from '@ant-design/icons';
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -18,6 +19,7 @@ const Orders = () => {
     try {
       setLoading(true);
       const response = await api.get('/api/projects/consultant');
+      console.log('Fetched orders:', response.data); // Thêm dòng này
       setOrders(response.data);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -36,10 +38,22 @@ const Orders = () => {
     });
     setIsModalVisible(true);
   };
+  const statusOptions = [
 
+    { value: 'APPROVED', label: 'Approved' },
+    { value: 'PLANNING', label: 'Planning' },
+    { value: 'IN_PROGRESS', label: 'In Progress' },
+    { value: 'ON_HOLD', label: 'On Hold' },
+    { value: 'COMPLETED', label: 'Completed' },
+    { value: 'CANCELLED', label: 'Cancelled' },
+    { value: 'MAINTENANCE', label: 'Maintenance' },
+
+    // Add more statuses as needed
+  ];
   const handleUpdate = async (values) => {
     try {
-      const response = await api.put(`/api/projects/${editingOrder.id}`, {
+      // Update general information
+      await api.put(`/api/projects/${editingOrder.id}`, {
         name: values.name,
         description: values.description,
         totalPrice: values.totalPrice,
@@ -48,16 +62,29 @@ const Orders = () => {
         endDate: values.endDate.format('YYYY-MM-DD'),
         customerId: values.customerId,
         consultantId: values.consultantId,
-        statusId: values.statusId,
-        // Không gửi createdAt vì nó thường được quản lý bởi server
       });
-      
+
+      // Update status if changed
+      if (values.statusId !== editingOrder.statusId) {
+        await updateOrderStatus(editingOrder.id, values.statusId);
+      }
+
       message.success('Order updated successfully');
       setIsModalVisible(false);
       fetchOrders(); // Refresh the orders list
     } catch (error) {
       console.error('Error updating order:', error);
-      message.error('Failed to update order');
+      message.error(`Failed to update order: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
+  const updateOrderStatus = async (id, newStatus) => {
+    try {
+      await api.patch(`/api/projects/${id}/status`, { newStatus });
+      message.success("Order status updated successfully!");
+      fetchOrders(); // Refresh the orders list
+    } catch (err) {
+      message.error(err.response?.data?.message || "Error updating order status.");
     }
   };
 
@@ -112,8 +139,8 @@ const Orders = () => {
       dataIndex: 'statusId',
       key: 'statusId',
       render: (statusId) => {
-        // You might want to map statusId to a readable status name
-        return statusId;
+        const status = statusOptions.find(s => s.value === statusId);
+        return status ? status.label : statusId;
       },
     },
     {
@@ -125,9 +152,28 @@ const Orders = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_, record) => (
-        <a onClick={() => handleEdit(record)}>Edit</a>
-      ),
+      render: (_, record) => {
+        const menu = (
+          <Menu onClick={({ key }) => updateOrderStatus(record.id, key)}>
+            {statusOptions.map(status => (
+              <Menu.Item key={status.value}>{status.label}</Menu.Item>
+            ))}
+          </Menu>
+        );
+
+        return (
+          <>
+            <Button onClick={() => handleEdit(record)} style={{ marginRight: 8 }}>
+              Edit
+            </Button>
+            <Dropdown overlay={menu}>
+              <Button>
+                Update Status <DownOutlined />
+              </Button>
+            </Dropdown>
+          </>
+        );
+      },
     },
   ];
 
@@ -169,9 +215,6 @@ const Orders = () => {
             <Input />
           </Form.Item>
           <Form.Item name="consultantId" label="Consultant ID">
-            <Input />
-          </Form.Item>
-          <Form.Item name="statusId" label="Status">
             <Input />
           </Form.Item>
           <Form.Item name="createdAt" label="Created At">
