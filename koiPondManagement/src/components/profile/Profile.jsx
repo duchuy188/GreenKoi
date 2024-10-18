@@ -170,12 +170,21 @@ function Profile() {
 
   const handleSubmit = async (values) => {
     try {
-      const response = await api.put("/api/profile", values);
-      setProfileData(response.data);
-      setIsEditing(false);
+      const token = localStorage.getItem('token');
+      const response = await api.put("/api/profile", values, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.status === 200) {
+        setProfileData(response.data);
+        setIsEditing(false);
+        message.success('Thông tin đã được cập nhật thành công');
+        fetchProfileData(); // Refresh profile data
+      }
     } catch (err) {
       console.error("Error updating profile:", err);
-      // Handle error (e.g., show error message)
+      message.error('Không thể cập nhật thông tin. Vui lòng thử lại.');
     }
   };
 
@@ -301,7 +310,7 @@ function Profile() {
           <div className="col-md-10">
             <div className="profile-head">
               <h5>{profileData?.fullName || user?.username || user?.email}</h5>
-              <h6>{profileData?.role || 'User'}</h6>
+              {/* <h6>{profileData?.role || 'User'}</h6> */}
               <p className="proile-rating">
                 Số dự án đã đặt: <span>{profileData?.projectCount || 0}</span>
               </p>
