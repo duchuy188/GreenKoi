@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../../config/axios";
 import { RiDeleteBin2Fill } from "react-icons/ri";
 import { FaEdit } from "react-icons/fa";
-import { BsUpload } from "react-icons/bs"; // Import biểu tượng upload
+import { BsUpload } from "react-icons/bs";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -26,30 +26,49 @@ function BlogProject() {
   const [blogData, setBlogData] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [pendingBlogs, setPendingBlogs] = useState([]);
+  const [draftBlogs, setDraftBlogs] = useState([]);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
   const [currentDescription, setCurrentDescription] = useState("");
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isContentModalVisible, setIsContentModalVisible] = useState(false);
+  const [currentContent, setCurrentContent] = useState("");
+  const [currentTitle, setCurrentTitle] = useState("");
   const navigate = useNavigate();
 
-  // Fetch pending blog posts
-  const fetchPendingBlogs = async () => {
+  const fetchBlogs = async () => {
     try {
       setLoading(true);
       const response = await api.get("/api/blog/posts/my");
-      setPendingBlogs(response.data);
+      setPendingBlogs(response.data.filter(blog => blog.status !== "DRAFT"));
+      setDraftBlogs(response.data.filter(blog => blog.status === "DRAFT"));
     } catch (err) {
-      console.error("Error fetching pending blog posts:", err);
+      console.error("Error fetching blog posts:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPendingBlogs();
+    fetchBlogs();
   }, []);
 
-  // Handle form submission (create or update)
+  const showContentModal = (content, title) => {
+    setCurrentContent(content);
+    setCurrentTitle(title);
+    setIsContentModalVisible(true);
+  };
+
+  const showEditModal = (blog) => {
+    setBlogData(blog);
+    form.setFieldsValue({
+      title: blog.title,
+      content: blog.content,
+      coverImageUrl: blog.coverImageUrl,
+    });
+    setIsEditModalVisible(true);
+  };
+
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
@@ -63,7 +82,7 @@ function BlogProject() {
       }
 
       form.resetFields();
-      fetchPendingBlogs();
+      fetchBlogs();
     } catch (err) {
       message.error("Failed to update blog post: " + (err.response?.data?.message || err.message));
     } finally {
@@ -71,60 +90,38 @@ function BlogProject() {
     }
   };
 
-  // Handle delete draft blog post
   const handleDeleteDraft = async (id) => {
     try {
       setLoading(true);
-      await api.delete(`/api/blog/drafts/${id}`); // Xóa bản nháp
-      message.success("Bản nháp đã được xóa thành công");
-      fetchPendingBlogs(); // Làm mới danh sách bài viết
+      await api.delete(`/api/blog/drafts/${id}`);
+      message.success("Draft has been deleted successfully");
+      fetchBlogs();
     } catch (err) {
-      message.error("Xóa bản nháp không thành công: " + (err.response?.data?.message || err.message));
+      message.error("Failed to delete draft: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
-    }
+    };
   };
 
-  // Handle delete blog post
-  const handleDelete = async (id) => {
+  const handleDeletePublished = async (id) => {
     try {
       setLoading(true);
       await api.delete(`/api/blog/posts/${id}`);
-      message.success("Blog post deleted successfully");
-      fetchPendingBlogs();
+      message.success("Published blog post deleted successfully");
+      fetchBlogs();
     } catch (err) {
-      message.error("Failed to delete blog post: " + (err.response?.data?.message || err.message));
+      message.error("Failed to delete published blog post: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle showing description modal
-  const showDescriptionModal = (description) => {
-    setCurrentDescription(description);
-    setIsDescriptionModalVisible(true);
-  };
-
-  // Show edit modal
-  const showEditModal = (blog) => {
-    setBlogData(blog);
-    form.setFieldsValue(blog);  // Set current blog data in the form for editing
-    setIsEditModalVisible(true);
-  };
-
-  // Close edit modal
-  const handleEditModalClose = () => {
-    setIsEditModalVisible(false);
-    form.resetFields();  // Reset form when modal is closed
-  };
-
-  // Handle submitting the blog draft
   const handleSubmitDraft = async (id) => {
     try {
       setLoading(true);
       await api.post(`/api/blog/drafts/${id}/submit`);
       message.success("Blog draft submitted successfully");
-      fetchPendingBlogs();
+      fetchBlogs();
     } catch (err) {
       message.error("Failed to submit blog draft: " + (err.response?.data?.message || err.message));
     } finally {
@@ -144,21 +141,55 @@ function BlogProject() {
     return `${time}\n${formattedDate}`;
   };
 
-  // Filter pending blogs based on search text and status filter
-  const filteredBlogs = pendingBlogs.filter(
+  const filteredDrafts = draftBlogs.filter(
+    (blog) =>
+      blog.title?.toLowerCase().includes(searchText.toLowerCase()) ||
+      blog.id?.toString().includes(searchText)
+  );
+
+  const filteredPendingBlogs = pendingBlogs.filter(
     (blog) =>
       (statusFilter === "ALL" || blog.status === statusFilter) &&
       (blog.title?.toLowerCase().includes(searchText.toLowerCase()) ||
         blog.id?.toString().includes(searchText))
   );
 
-  // Updated columns definition
-  const columns = [
+  const draftColumns = [
     { title: "ID", dataIndex: "id", key: "id" },
-    { title: "Tiêu đề", dataIndex: "title", key: "title" },
-    { title: "Content", dataIndex: "content", key: "content" },
-    { title: "Author Id", dataIndex: "authorId", key: "authorId" },
-    { title: "ImageUrl", dataIndex: "coverImageUrl", key: "coverImageUrl" },
+    {
+      title: "Tiêu đề",
+      dataIndex: "title",
+      key: "title",
+      render: (text) => (
+        <span>
+          {text.slice(0, 5)}...
+          <Button 
+            type="link" 
+            onClick={() => showContentModal(text)} 
+            className="text-blue-600 hover:text-blue-800"
+          >
+            Xem thêm
+          </Button>
+        </span>
+      ),
+    },
+    {
+      title: "Nội dung", 
+      dataIndex: "content",
+      key: "content",
+      render: (text) => (
+        <span>
+          {text.slice(0, 5)}...
+          <Button 
+            type="link" 
+            onClick={() => showContentModal(text)}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            Xem thêm
+          </Button>
+        </span>
+      ),
+    },
     { title: "Trạng thái", dataIndex: "status", key: "status" },
     {
       title: "Created At",
@@ -181,129 +212,179 @@ function BlogProject() {
       )
     },
     {
-      title: "Published At",
-      dataIndex: "publishedAt",
-      key: "publishedAt",
-      render: (text) => (
-        text ? (
-          <span style={{ whiteSpace: 'pre-line' }}>
-            {formatDateTime(text)}
-          </span>
-        ) : null
-      )
-    },
-    { title: "Rejection Reason", dataIndex: "rejectionReason", key: "rejectionReason" },
-    {
+      title: "Hành động",
       key: "action",
-      width: 150,
-      render: (_, record) => (
-        <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-          <Tooltip title="Chỉnh sửa">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => showEditModal(record)}  // Open modal with blog data
-            >
-              <FaEdit />
+      render: (text, record) => (
+        <>
+          <Button type="link" onClick={() => showEditModal(record)}>
+            <FaEdit />
+          </Button>
+          <Popconfirm 
+            title="Bạn có chắc chắn muốn xóa?" 
+            onConfirm={() => handleDeleteDraft(record.id)}
+          >
+            <Button type="link" danger>
+              <RiDeleteBin2Fill />
             </Button>
-          </Tooltip>
-          <Popconfirm
-            title="Bạn có chắc chắn muốn xóa bản nháp này không?"
-            onConfirm={() => handleDeleteDraft(record.id)} // Xóa bản nháp
-            okText="Đồng ý"
-            cancelText="Hủy"
-          >
-            <Tooltip title="Xóa bản nháp">
-              <Button variant="ghost" size="icon">
-                <RiDeleteBin2Fill />
-              </Button>
-            </Tooltip>
           </Popconfirm>
-          <Popconfirm
-            title="Bạn có chắc chắn muốn gửi bài viết này không?"
-            onConfirm={() => handleSubmitDraft(record.id)} // Submit draft
-            okText="Đồng ý"
-            cancelText="Hủy"
+        </>
+      )
+    }
+  ];
+
+  const pendingColumns = [
+    { title: "ID", dataIndex: "id", key: "id" },
+    {
+      title: "Tiêu đề",
+      dataIndex: "title",
+      key: "title",
+      render: (text) => (
+        <span>
+          {text.slice(0, 5)}...
+          <Button 
+            type="link" 
+            onClick={() => showContentModal(text)} 
+            className="text-blue-600 hover:text-blue-800"
           >
-            <Tooltip title="Gửi bài viết">
-              <Button variant="ghost" size="icon">
-                <BsUpload />
-              </Button>
-            </Tooltip>
-          </Popconfirm>
-        </div>
+            Xem thêm
+          </Button>
+        </span>
       ),
     },
+    {
+      title: "Nội dung", 
+      dataIndex: "content",
+      key: "content",
+      render: (text) => (
+        <span>
+          {text.slice(0, 5)}...
+          <Button 
+            type="link" 
+            onClick={() => showContentModal(text)}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            Xem thêm
+          </Button>
+        </span>
+      ),
+    },
+    { title: "Trạng thái", dataIndex: "status", key: "status" },
+    {
+      title: "Created At",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (text) => (
+        <span style={{ whiteSpace: 'pre-line' }}>
+          {formatDateTime(text)}
+        </span>
+      )
+    },
+    {
+      title: "Updated At",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
+      render: (text) => (
+        <span style={{ whiteSpace: 'pre-line' }}>
+          {formatDateTime(text)}
+        </span>
+      )
+    },
+    {
+      title: "Hành động",
+      key: "action",
+      render: (text, record) => (
+        <>
+          <Button 
+            type="link" 
+            onClick={() => handleSubmitDraft(record.id)}
+          >
+            <BsUpload />
+          </Button>
+          <Popconfirm 
+            title="Bạn có chắc chắn muốn xóa?" 
+            onConfirm={() => handleDeletePublished(record.id)}
+          >
+            <Button type="link" danger>
+              <RiDeleteBin2Fill />
+            </Button>
+          </Popconfirm>
+        </>
+      )
+    }
   ];
 
   return (
-    <div style={{ maxWidth: 1550, margin: "0 auto", padding: 24 }}>
-      <Card>
-        <h1>QUẢN LÝ BÀI VIẾT BLOG</h1>
-        <Search
-          placeholder="Tìm kiếm bài viết"
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ width: 200, marginRight: 16 }}
-        />
-        <Select
-          value={statusFilter}
-          onChange={(value) => setStatusFilter(value)}
-          style={{ width: 200, marginLeft: 16 }}
-        >
-          <Option value="ALL">Tất cả</Option>
-          <Option value="PENDING_APPROVAL">Chờ duyệt</Option>
-          <Option value="APPROVED">Đã duyệt</Option>
-          <Option value="REJECTED">Bị từ chối</Option>
-          <Option value="DRAFT">Bản nháp</Option>
-        </Select>
-        <Table
-          columns={columns}
-          dataSource={filteredBlogs}
-          loading={loading}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-        />
-      </Card>
+    <div>
+      <h1>Quản lý Blog</h1>
+      <Search 
+        placeholder="Tìm kiếm..." 
+        value={searchText} 
+        onChange={(e) => setSearchText(e.target.value)} 
+        style={{ width: 200 }} 
+      />
+      <Table 
+        dataSource={filteredDrafts} 
+        columns={draftColumns} 
+        loading={loading} 
+        pagination={false} 
+        rowKey="id" 
+      />
+      <Table 
+        dataSource={filteredPendingBlogs} 
+        columns={pendingColumns} 
+        loading={loading} 
+        pagination={false} 
+        rowKey="id" 
+      />
 
-      {/* Edit Modal */}
+      {/* Modal for viewing content */}
+      <Modal
+        title={currentTitle}
+        visible={isContentModalVisible}
+        onCancel={() => setIsContentModalVisible(false)}
+        footer={null}
+      >
+        <p>{currentContent}</p>
+      </Modal>
+
+      {/* Modal for editing draft */}
       <Modal
         title="Chỉnh sửa bài viết"
         visible={isEditModalVisible}
-        onCancel={handleEditModalClose}
-        footer={[
-          <Button key="cancel" onClick={handleEditModalClose}>
-            Hủy
-          </Button>,
-          <Button key="submit" type="primary" onClick={() => form.submit()}>
-            Lưu
-          </Button>,
-        ]}
+        onCancel={() => setIsEditModalVisible(false)}
+        footer={null}
       >
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="title" label="Tiêu đề">
+        <Form form={form} onFinish={handleSubmit}>
+          <Form.Item
+            name="title"
+            label="Tiêu đề"
+            rules={[{ required: true, message: "Vui lòng nhập tiêu đề!" }]}
+          >
             <Input />
           </Form.Item>
-          <Form.Item name="content" label="Nội dung">
+          <Form.Item
+            name="content"
+            label="Nội dung"
+            rules={[{ required: true, message: "Vui lòng nhập nội dung!" }]}
+          >
             <Input.TextArea rows={4} />
           </Form.Item>
-          <Form.Item name="coverImageUrl" label="Hình ảnh">
+          <Form.Item
+            name="coverImageUrl"
+            label="URL hình ảnh bìa"
+            rules={[{ required: true, message: "Vui lòng nhập URL hình ảnh bìa!" }]}
+          >
             <Input />
           </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit">
+              Cập nhật
+            </Button>
+            <Button onClick={() => setIsEditModalVisible(false)} style={{ marginLeft: 8 }}>
+              Hủy
+            </Button>
+          </Form.Item>
         </Form>
-      </Modal>
-
-      {/* Description Modal */}
-      <Modal
-        title="Mô tả"
-        visible={isDescriptionModalVisible}
-        onCancel={() => setIsDescriptionModalVisible(false)}
-        footer={[
-          <Button key="cancel" onClick={() => setIsDescriptionModalVisible(false)}>
-            Hủy
-          </Button>,
-        ]}
-      >
-        <p>{currentDescription}</p>
       </Modal>
     </div>
   );
