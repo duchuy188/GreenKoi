@@ -188,6 +188,10 @@ CREATE TABLE maintenance_requests (
     customer_id NVARCHAR(36),
     project_id NVARCHAR(36),
     description NVARCHAR(MAX),
+    attachments NVARCHAR(MAX),
+    internal_notes NVARCHAR(MAX),
+    customer_notes NVARCHAR(MAX),
+    maintenance_result NVARCHAR(MAX),
     cost DECIMAL(10, 2),
     scheduled_date DATE,
     completion_date DATE,
@@ -384,5 +388,3 @@ INSERT INTO task_templates (id, name, description, order_index) VALUES
 (NEWID(), N'Hoàn thiện cảnh quan xung quanh hồ', N'Tạo cảnh quan và trang trí xung quanh hồ cá Koi', 5),
 (NEWID(), N'Kiểm tra chất lượng nước và hệ thống lọc', N'Kiểm tra và điều chỉnh chất lượng nước cùng hệ thống lọc', 6),
 (NEWID(), N'Bàn giao và hướng dẫn sử dụng', N'Bàn giao dự án và hướng dẫn khách hàng cách sử dụng, bảo trì hồ cá Koi', 7);
-
-
