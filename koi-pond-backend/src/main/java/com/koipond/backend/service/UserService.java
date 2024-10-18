@@ -255,4 +255,13 @@ public class UserService {
             throw new RuntimeException("Failed to logout user", e);
         }
     }
+
+    public List<UserDTO> getUsersByRole(String roleId) {
+        log.info("Fetching users with role ID: {}", roleId);
+        List<User> users = userRepository.findByRoleId(roleId);
+        log.info("Found {} users with role ID {}", users.size(), roleId);
+        return users.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+    }
 }

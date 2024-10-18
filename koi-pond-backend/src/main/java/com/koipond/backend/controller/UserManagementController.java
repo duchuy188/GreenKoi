@@ -26,11 +26,17 @@ public class UserManagementController {
     private UserService userService;
 
     @GetMapping
-    @Operation(summary = "Get all users", description = "Retrieves a list of all users")
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
-        logger.info("Fetching all users");
-        List<UserDTO> users = userService.getAllUsers();
-        logger.info("Retrieved {} users", users.size());
+    @Operation(summary = "Get all users", description = "Retrieves a list of all users. Can be filtered by role.")
+    public ResponseEntity<List<UserDTO>> getAllUsers(@RequestParam(required = false) String role) {
+        logger.info("Fetching users with role filter: {}", role);
+        List<UserDTO> users;
+        if (role != null) {
+            users = userService.getUsersByRole(role);
+            logger.info("Retrieved {} users with role {}", users.size(), role);
+        } else {
+            users = userService.getAllUsers();
+            logger.info("Retrieved {} users", users.size());
+        }
         return ResponseEntity.ok(users);
     }
 
