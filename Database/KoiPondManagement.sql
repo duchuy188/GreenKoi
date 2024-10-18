@@ -1,8 +1,15 @@
 USE [KoiPondManagement];
 GO
+/*-- Xóa tất cả các ràng buộc khóa ngoại trước
+DECLARE @sql NVARCHAR(MAX) = N'';
+SELECT @sql += N'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id))
+    + '.' + QUOTENAME(OBJECT_NAME(parent_object_id)) + 
+    ' DROP CONSTRAINT ' + QUOTENAME(name) + ';'
+FROM sys.foreign_keys;
+EXEC sp_executesql @sql;
 
--- Xóa tất cả các bảng hiện có (nếu cần)
-/*DROP TABLE IF EXISTS project_cancellations;
+-- Xóa tất cả các bảng
+DROP TABLE IF EXISTS project_cancellations;
 DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS blog_posts;
 DROP TABLE IF EXISTS payments;
@@ -17,6 +24,10 @@ DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS cancellation_policies;
 DROP TABLE IF EXISTS project_statuses;
 DROP TABLE IF EXISTS project_stage_statuses;
+DROP TABLE IF EXISTS task_templates;
+DROP TABLE IF EXISTS tasks;
+
+PRINT 'All tables have been dropped successfully.';
 */
 
 -- Bảng project_statuses
