@@ -4,7 +4,7 @@ setHeadlessWhen(process.env.HEADLESS);
 setCommonPlugins();
 
 exports.config = {
-  tests: './src/test/java/com/koipond/backend/api/*_test.js',
+  tests: './src/test/java/com/koipond/backend/**/*_test.js',
   output: './test-results',
   helpers: {
     REST: {
@@ -17,5 +17,17 @@ exports.config = {
     JSONResponse: {}
   },
   include: {},
-  name: 'KOI-POND-BACKEND'
+  name: 'KOI-POND-BACKEND',
+  plugins: {
+    allure: {
+      enabled: true,
+      require: '@codeceptjs/allure-legacy',
+      outputDir: './allure-results'
+    }
+  },
+  mocha: {
+    reporterOptions: {
+      reportDir: './output'
+    }
+  }
 };
