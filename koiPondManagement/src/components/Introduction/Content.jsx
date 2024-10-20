@@ -97,7 +97,7 @@ const Content = () => {
         <h2>Khách hàng nói gì về chúng tôi!!</h2>
         <div className="testimonials-grid">
           <div className="testimonial-item">
-            <p>"Green Koi đã tạo ra một tuyệt tác cho sân vườn của chúng tôi!"</p>
+            <p>"Green Koi đã tạo ra một tuyệt tác cho hồ cá của chúng tôi!"</p>
             <cite>- Ninh Đức Huy</cite>
           </div>
           <div className="testimonial-item">

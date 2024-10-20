@@ -39,10 +39,10 @@ const GardenDesignForm = () => {
   };
 
   return (
-    <div style={{ maxWidth: 600, margin: '20px auto', border: '1px solid #ddd', borderRadius: '8px', padding: '20px' }}>
+    <div style={{ maxWidth: 600, margin: '20px auto', marginTop: '40px', border: '1px solid #ddd', borderRadius: '8px', padding: '20px' }}>
       {/* Header Section */}
       <div style={{ backgroundColor: '#FFA500', padding: '10px', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
-        <h1 style={{ color: '#fff', margin: '0' }}>Đăng ký báo giá thiết kế sân vườn</h1>
+        <h1 style={{ color: '#fff', margin: '0' }}>Đăng ký báo giá thiết kế hồ cá koi</h1>
       </div>
       <div style={{ padding: '10px' }}>
         <p>Quý khách hàng vui lòng điền thông tin và nhu cầu thiết kế để được báo giá chi tiết</p>

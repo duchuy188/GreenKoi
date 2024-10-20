@@ -3,6 +3,7 @@ import "./Icon.css"; // Import CSS từ tệp riêng
 
 const Icon = () => {
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [showPhonePopup, setShowPhonePopup] = useState(false);
 
   useEffect(() => {
     // Xử lý khi cuộn trang để hiển thị hoặc ẩn nút quay lại đầu trang
@@ -31,6 +32,10 @@ const Icon = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const togglePhonePopup = () => {
+    setShowPhonePopup(!showPhonePopup);
+  };
+
   return (
     <div>
       {/* Icon Zalo */}
@@ -47,13 +52,13 @@ const Icon = () => {
       </a>
 
       {/* Icon phone */}
-      <a href="" target="_blank" rel="noopener noreferrer">
+      <div className="phone-icon-container" onClick={togglePhonePopup}>
         <img
           className="phone-icon"
           src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsQ1P0KORmNh8JaQYf7QOnzwtgp_QIk5J2mA&s"
           alt="Phone Icon"
         />
-      </a>
+      </div>
 
       {/* Icon email */}
       <a href="https://mail.google.com/mail" target="_blank" rel="noopener noreferrer">
@@ -63,6 +68,23 @@ const Icon = () => {
           alt="Email Icon"
         />
       </a>
+
+      {/* Phone Popup */}
+      {showPhonePopup && (
+        <>
+          <div className="overlay" onClick={togglePhonePopup}></div>
+          <div className="phone-popup">
+            <span className="close-popup" onClick={togglePhonePopup}>×</span>
+            <div className="phone-icon-large">
+              <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsQ1P0KORmNh8JaQYf7QOnzwtgp_QIk5J2mA&s" alt="Phone" />
+            </div>
+            <h2>1234 5678 98</h2>
+            <p>Gọi ngay HOTLINE để được hỗ trợ tốt nhất</p>
+            <p>Hoặc click nút bên dưới để gửi yêu cầu</p>
+            <button className="request-button">Gửi Yêu Cầu Báo Giá</button>
+          </div>
+        </>
+      )}
 
       {/* Nút quay lại đầu trang */}
       {showBackToTop && (
