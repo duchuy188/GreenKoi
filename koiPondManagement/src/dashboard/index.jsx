@@ -76,6 +76,12 @@ const items = [
       "consulting-orders"
     ),
   ]),
+  getItem("NHân viên xây dựng", "construction", <CommentOutlined />, [
+    getItem(
+      <Link to="/dashboard/construction/tasks">Công việc</Link>,
+      "construction-tasks"
+    ),
+  ]),
 ];
 
 const Dashboard = () => {
@@ -127,7 +133,9 @@ const Dashboard = () => {
     if (path.includes('consulting')) {
       return roleId === 2; // Consultant
     }
-    
+    if (path.includes('construction')) {
+      return roleId === 4; // Constructor
+    }
    
     return false;
   };
