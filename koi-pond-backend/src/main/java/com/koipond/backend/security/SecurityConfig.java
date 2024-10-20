@@ -75,9 +75,9 @@ public class SecurityConfig {
         configuration.setAllowedMethods(List.of(allowedMethods.split(",")));
         configuration.setAllowedHeaders(List.of(allowedHeaders.split(",")));
         configuration.setExposedHeaders(List.of("Authorization"));
-        
+
         logger.info("Allowed methods for CORS: {}", allowedMethods);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -99,10 +99,10 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/blog/posts/approved").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/blog/posts/{id}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/pond-designs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/pond-designs/approved").permitAll()
 
-                        // Customer endpoints (ROLE_5)
+                        // Specific endpoints
+                        .requestMatchers(HttpMethod.PUT, "/api/ConsultationRequests/*/status").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.GET, "/api/projects/customer").access(loggedAuthorizationManager("/api/projects/customer", AuthorityAuthorizationManager.hasAuthority("ROLE_5")))
                         .requestMatchers(HttpMethod.GET, "/api/projects/customer/**").access(loggedAuthorizationManager("/api/projects/customer/**", AuthorityAuthorizationManager.hasAuthority("ROLE_5")))
                         .requestMatchers(HttpMethod.POST, "/api/ConsultationRequests").hasAuthority("ROLE_5")
@@ -122,7 +122,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/projects/consultant").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.POST, "/api/projects").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.PUT, "/api/projects/**").hasAuthority("ROLE_2")
-                        .requestMatchers(HttpMethod.PUT, "/api/ConsultationRequests/*/status").hasAuthority("ROLE_2")
 
                         // Designer endpoints (ROLE_3)
                         .requestMatchers(HttpMethod.POST, "/api/pond-designs").hasAuthority("ROLE_3")
@@ -153,7 +152,7 @@ public class SecurityConfig {
 
                         // Catch-all rule
                         .anyRequest().authenticated();
-                    
+
                     logger.info("Authorization rules configured");
                 })
                 .userDetailsService(userDetailsService)
