@@ -4,11 +4,16 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "maintenance_requests")
+@Getter
+@Setter
 public class MaintenanceRequest {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @ManyToOne
@@ -19,10 +24,23 @@ public class MaintenanceRequest {
     @JoinColumn(name = "project_id")
     private Project project;
 
+    @ManyToOne
+    @JoinColumn(name = "consultant_id")
+    private User consultant;
+
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String description;
+
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String attachments;
-    private String requestStatus;
-    private String maintenanceStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RequestStatus requestStatus = RequestStatus.PENDING;
+
+    @Enumerated(EnumType.STRING)
+    private MaintenanceStatus maintenanceStatus;
+
     private BigDecimal agreedPrice;
     private LocalDate scheduledDate;
     private LocalDate startDate;
@@ -32,53 +50,38 @@ public class MaintenanceRequest {
     @JoinColumn(name = "assigned_to")
     private User assignedTo;
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String cancellationReason;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Getters and setters for all fields
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    @Column(name = "maintenance_notes", columnDefinition = "NVARCHAR(MAX)")
+    private String maintenanceNotes;
 
-    public User getCustomer() { return customer; }
-    public void setCustomer(User customer) { this.customer = customer; }
+    @Column(name = "maintenance_images", columnDefinition = "NVARCHAR(MAX)")
+    private String maintenanceImages;
 
-    public Project getProject() { return project; }
-    public void setProject(Project project) { this.project = project; }
+    // Enum definitions
+    public enum RequestStatus {
+        PENDING, REVIEWING, CONFIRMED, CANCELLED
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public enum MaintenanceStatus {
+        ASSIGNED, SCHEDULED, IN_PROGRESS, COMPLETED
+    }
 
-    public String getAttachments() { return attachments; }
-    public void setAttachments(String attachments) { this.attachments = attachments; }
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
 
-    public String getRequestStatus() { return requestStatus; }
-    public void setRequestStatus(String requestStatus) { this.requestStatus = requestStatus; }
-
-    public String getMaintenanceStatus() { return maintenanceStatus; }
-    public void setMaintenanceStatus(String maintenanceStatus) { this.maintenanceStatus = maintenanceStatus; }
-
-    public BigDecimal getAgreedPrice() { return agreedPrice; }
-    public void setAgreedPrice(BigDecimal agreedPrice) { this.agreedPrice = agreedPrice; }
-
-    public LocalDate getScheduledDate() { return scheduledDate; }
-    public void setScheduledDate(LocalDate scheduledDate) { this.scheduledDate = scheduledDate; }
-
-    public LocalDate getStartDate() { return startDate; }
-    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
-
-    public LocalDate getCompletionDate() { return completionDate; }
-    public void setCompletionDate(LocalDate completionDate) { this.completionDate = completionDate; }
-
-    public User getAssignedTo() { return assignedTo; }
-    public void setAssignedTo(User assignedTo) { this.assignedTo = assignedTo; }
-
-    public String getCancellationReason() { return cancellationReason; }
-    public void setCancellationReason(String cancellationReason) { this.cancellationReason = cancellationReason; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

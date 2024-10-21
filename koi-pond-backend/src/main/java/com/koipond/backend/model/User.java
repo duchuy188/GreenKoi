@@ -56,5 +56,17 @@ public class User {
     @Column(name = "has_active_project")
     private boolean hasActiveProject = false;
 
+    @Column(name = "has_active_maintenance")
+    private boolean hasActiveMaintenance = false;
+
     // Các getter và setter đã được tạo bởi annotation @Data của Lombok
+    // Nhưng để rõ ràng, chúng ta có thể thêm các phương thức sau:
+
+    public boolean isHasActiveMaintenance() {
+        return hasActiveMaintenance;
+    }
+
+    public void setHasActiveMaintenance(boolean hasActiveMaintenance) {
+        this.hasActiveMaintenance = hasActiveMaintenance;
+    }
 }

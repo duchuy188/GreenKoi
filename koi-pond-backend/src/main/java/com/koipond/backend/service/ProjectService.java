@@ -518,4 +518,27 @@ public class ProjectService {
         
         return dto;
     }
+
+   
+    public List<ProjectDTO> getCompletedProjectsByCustomer(String customerId) {
+        log.info("Fetching completed projects for customer: {}", customerId);
+        return projectRepository.findByCustomerIdAndStatus_Name(customerId, "COMPLETED").stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+  
+    public boolean isProjectCompletedAndOwnedByCustomer(String projectId, String customerId) {
+        log.info("Checking if project {} is completed and owned by customer {}", projectId, customerId);
+        return projectRepository.existsByIdAndCustomerIdAndStatus_Name(projectId, customerId, "COMPLETED");
+    }
+
+    public Project getProjectById(String id) {
+        log.debug("Fetching project with id: {}", id);
+        return projectRepository.findById(id)
+            .orElseThrow(() -> {
+                log.error("Project not found with id: {}", id);
+                return new ResourceNotFoundException("Project not found with id: " + id);
+            });
+    }
 }

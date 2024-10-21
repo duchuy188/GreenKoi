@@ -41,4 +41,10 @@ public interface ProjectRepository extends JpaRepository<Project, String> {
 
     // Tìm tất cả dự án của một khách hàng cụ thể theo ID
     List<Project> findByCustomerId(String customerId);
+
+  
+    List<Project> findByCustomerIdAndStatus_Name(String customerId, String statusName);
+
+    
+    boolean existsByIdAndCustomerIdAndStatus_Name(String id, String customerId, String statusName);
 }

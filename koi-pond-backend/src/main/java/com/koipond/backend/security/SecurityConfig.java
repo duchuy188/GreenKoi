@@ -150,6 +150,20 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/blog/drafts/**").hasAuthority("ROLE_3")
                         .requestMatchers(HttpMethod.DELETE, "/api/blog/posts/**").hasAuthority("ROLE_1")
 
+                        // Maintenance Request endpoints
+                        .requestMatchers(HttpMethod.POST, "/api/maintenance-requests").hasAuthority("ROLE_5")
+                        .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/customer/*").hasAuthority("ROLE_5")
+                        .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/pending").hasAuthority("ROLE_2")
+                        .requestMatchers(HttpMethod.PATCH, "/api/maintenance-requests/*/review").hasAuthority("ROLE_2")
+                        .requestMatchers(HttpMethod.PATCH, "/api/maintenance-requests/*/confirm").hasAuthority("ROLE_2")
+                        .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/confirmed").hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.PATCH, "/api/maintenance-requests/*/assign").hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/assigned-to-me").hasAuthority("ROLE_4")
+                        .requestMatchers(HttpMethod.PATCH, "/api/maintenance-requests/*/schedule").hasAuthority("ROLE_4")
+                        .requestMatchers(HttpMethod.PATCH, "/api/maintenance-requests/*/start").hasAuthority("ROLE_4")
+                        .requestMatchers(HttpMethod.PATCH, "/api/maintenance-requests/*/complete").hasAuthority("ROLE_4")
+                        .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/cancelled").hasAnyAuthority("ROLE_1", "ROLE_2", "ROLE_5")
+
                         // Catch-all rule
                         .anyRequest().authenticated();
 
