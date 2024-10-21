@@ -10,6 +10,8 @@ import {
   Popconfirm,
   Modal,
   Select,
+  Space,
+  Typography,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import api from "../../../config/axios";
@@ -19,6 +21,7 @@ import { BsUpload } from "react-icons/bs";
 
 const { Search } = Input;
 const { Option } = Select;
+const { Title } = Typography;
 
 function BlogProject() {
   const [form] = Form.useForm();
@@ -28,7 +31,8 @@ function BlogProject() {
   const [pendingBlogs, setPendingBlogs] = useState([]);
   const [draftBlogs, setDraftBlogs] = useState([]);
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
+  const [isDescriptionModalVisible, setIsDescriptionModalVisible] =
+    useState(false);
   const [currentDescription, setCurrentDescription] = useState("");
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isContentModalVisible, setIsContentModalVisible] = useState(false);
@@ -40,8 +44,8 @@ function BlogProject() {
     try {
       setLoading(true);
       const response = await api.get("/api/blog/posts/my");
-      setPendingBlogs(response.data.filter(blog => blog.status !== "DRAFT"));
-      setDraftBlogs(response.data.filter(blog => blog.status === "DRAFT"));
+      setPendingBlogs(response.data.filter((blog) => blog.status !== "DRAFT"));
+      setDraftBlogs(response.data.filter((blog) => blog.status === "DRAFT"));
     } catch (err) {
       console.error("Error fetching blog posts:", err);
     } finally {
@@ -84,7 +88,10 @@ function BlogProject() {
       form.resetFields();
       fetchBlogs();
     } catch (err) {
-      message.error("Failed to update blog post: " + (err.response?.data?.message || err.message));
+      message.error(
+        "Failed to update blog post: " +
+          (err.response?.data?.message || err.message)
+      );
     } finally {
       setLoading(false);
     }
@@ -97,20 +104,9 @@ function BlogProject() {
       message.success("Draft has been deleted successfully");
       fetchBlogs();
     } catch (err) {
-      message.error("Failed to delete draft: " + (err.response?.data?.message || err.message));
-    } finally {
-      setLoading(false);
-    };
-  };
-
-  const handleDeletePublished = async (id) => {
-    try {
-      setLoading(true);
-      await api.delete(`/api/blog/posts/${id}`);
-      message.success("Published blog post deleted successfully");
-      fetchBlogs();
-    } catch (err) {
-      message.error("Failed to delete published blog post: " + (err.response?.data?.message || err.message));
+      message.error(
+        "Failed to delete draft: " + (err.response?.data?.message || err.message)
+      );
     } finally {
       setLoading(false);
     }
@@ -123,7 +119,10 @@ function BlogProject() {
       message.success("Blog draft submitted successfully");
       fetchBlogs();
     } catch (err) {
-      message.error("Failed to submit blog draft: " + (err.response?.data?.message || err.message));
+      message.error(
+        "Failed to submit blog draft: " +
+          (err.response?.data?.message || err.message)
+      );
     } finally {
       setLoading(false);
     }
@@ -131,13 +130,13 @@ function BlogProject() {
 
   const formatDateTime = (dateTimeStr) => {
     const date = new Date(dateTimeStr);
-    const time = date.toLocaleTimeString('en-US', { 
+    const time = date.toLocaleTimeString("en-US", {
       hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
     });
-    const formattedDate = date.toISOString().split('T')[0];
+    const formattedDate = date.toISOString().split("T")[0];
     return `${time}\n${formattedDate}`;
   };
 
@@ -163,25 +162,8 @@ function BlogProject() {
       render: (text) => (
         <span>
           {text.slice(0, 5)}...
-          <Button 
-            type="link" 
-            onClick={() => showContentModal(text)} 
-            className="text-blue-600 hover:text-blue-800"
-          >
-            Xem thêm
-          </Button>
-        </span>
-      ),
-    },
-    {
-      title: "Nội dung", 
-      dataIndex: "content",
-      key: "content",
-      render: (text) => (
-        <span>
-          {text.slice(0, 5)}...
-          <Button 
-            type="link" 
+          <Button
+            type="link"
             onClick={() => showContentModal(text)}
             className="text-blue-600 hover:text-blue-800"
           >
@@ -190,46 +172,75 @@ function BlogProject() {
         </span>
       ),
     },
-    { title: "Trạng thái", dataIndex: "status", key: "status" },
     {
-      title: "Created At",
+      title: "Nội dung",
+      dataIndex: "content",
+      key: "content",
+      render: (text) => (
+        <span>
+          {text.slice(0, 5)}...
+          <Button
+            type="link"
+            onClick={() => showContentModal(text)}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            Xem thêm
+          </Button>
+        </span>
+      ),
+    },
+    {
+      title: "Hình ảnh",
+      dataIndex: "coverImageUrl",
+      key: "coverImageUrl",
+      render: (url) => <img src={url} alt="Blog" style={{ width: 100 }} />,
+    },
+    { title: "Trạng thái", dataIndex: "status", key: "status",
+      render: (status) => {
+        switch (status) {
+          case "DRAFT":
+            return "Nháp";
+        }
+      },
+    },
+    {
+      title: "Thời gian tạo",
       dataIndex: "createdAt",
       key: "createdAt",
       render: (text) => (
-        <span style={{ whiteSpace: 'pre-line' }}>
-          {formatDateTime(text)}
-        </span>
-      )
+        <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
+      ),
     },
     {
-      title: "Updated At",
+      title: "Thời gian cập nhật",
       dataIndex: "updatedAt",
       key: "updatedAt",
       render: (text) => (
-        <span style={{ whiteSpace: 'pre-line' }}>
-          {formatDateTime(text)}
-        </span>
-      )
+        <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
+      ),
     },
     {
       title: "Hành động",
       key: "action",
       render: (text, record) => (
-        <>
+        <Space size="middle">
           <Button type="link" onClick={() => showEditModal(record)}>
             <FaEdit />
           </Button>
-          <Popconfirm 
-            title="Bạn có chắc chắn muốn xóa?" 
+          <Button type="link" onClick={() => handleSubmitDraft(record.id)}>
+            <BsUpload />
+          </Button>
+          <Popconfirm
+            title="Bạn có chắc chắn muốn xóa?"
             onConfirm={() => handleDeleteDraft(record.id)}
           >
             <Button type="link" danger>
               <RiDeleteBin2Fill />
             </Button>
           </Popconfirm>
-        </>
-      )
-    }
+        </Space>
+      ),
+    },
   ];
 
   const pendingColumns = [
@@ -241,25 +252,8 @@ function BlogProject() {
       render: (text) => (
         <span>
           {text.slice(0, 5)}...
-          <Button 
-            type="link" 
-            onClick={() => showContentModal(text)} 
-            className="text-blue-600 hover:text-blue-800"
-          >
-            Xem thêm
-          </Button>
-        </span>
-      ),
-    },
-    {
-      title: "Nội dung", 
-      dataIndex: "content",
-      key: "content",
-      render: (text) => (
-        <span>
-          {text.slice(0, 5)}...
-          <Button 
-            type="link" 
+          <Button
+            type="link"
             onClick={() => showContentModal(text)}
             className="text-blue-600 hover:text-blue-800"
           >
@@ -268,74 +262,118 @@ function BlogProject() {
         </span>
       ),
     },
-    { title: "Trạng thái", dataIndex: "status", key: "status" },
     {
-      title: "Created At",
+      title: "Nội dung",
+      dataIndex: "content",
+      key: "content",
+      render: (text) => (
+        <span>
+          {text.slice(0, 5)}...
+          <Button
+            type="link"
+            onClick={() => showContentModal(text)}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            Xem thêm
+          </Button>
+        </span>
+      ),
+    },
+    {
+      title: "Hình ảnh",
+      dataIndex: "coverImageUrl",
+      key: "coverImageUrl",
+      render: (url) => <img src={url} alt="Blog" style={{ width: 100 }} />,
+    },
+    { title: "Trạng thái", dataIndex: "status", key: "status", 
+      render: (status) => {
+        switch (status) {
+          case "PENDING_APPROVAL":
+            return "Đang chờ xử lý";
+          case "APPROVED":
+            return "Đã chấp nhận";
+          case "REJECTED":
+            return "Đã từ chối";
+          default:
+            return status;
+        }
+      },
+    },
+    {
+      title: "Thời gian tạo",
       dataIndex: "createdAt",
       key: "createdAt",
       render: (text) => (
-        <span style={{ whiteSpace: 'pre-line' }}>
-          {formatDateTime(text)}
-        </span>
-      )
+        <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
+      ),
     },
     {
-      title: "Updated At",
+      title: "Thời gian cập nhật",
       dataIndex: "updatedAt",
       key: "updatedAt",
       render: (text) => (
-        <span style={{ whiteSpace: 'pre-line' }}>
-          {formatDateTime(text)}
-        </span>
-      )
+        <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
+      ),
     },
     {
-      title: "Hành động",
-      key: "action",
-      render: (text, record) => (
-        <>
-          <Button 
-            type="link" 
-            onClick={() => handleSubmitDraft(record.id)}
-          >
-            <BsUpload />
-          </Button>
-          <Popconfirm 
-            title="Bạn có chắc chắn muốn xóa?" 
-            onConfirm={() => handleDeletePublished(record.id)}
-          >
-            <Button type="link" danger>
-              <RiDeleteBin2Fill />
-            </Button>
-          </Popconfirm>
-        </>
-      )
-    }
+      title: "Thời gian xuất bản",
+      dataIndex: "publishedAt",
+      key: "publishedAt",
+      render: (text) => (
+        <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
+      ),
+    },
+    {
+      title: "Lý do từ chối",
+      dataIndex: "rejectionReason",
+      key: "rejectionReason",
+    },
   ];
 
   return (
-    <div>
-      <h1>Quản lý Blog</h1>
-      <Search 
-        placeholder="Tìm kiếm..." 
-        value={searchText} 
-        onChange={(e) => setSearchText(e.target.value)} 
-        style={{ width: 200 }} 
-      />
-      <Table 
-        dataSource={filteredDrafts} 
-        columns={draftColumns} 
-        loading={loading} 
-        pagination={false} 
-        rowKey="id" 
-      />
-      <Table 
-        dataSource={filteredPendingBlogs} 
-        columns={pendingColumns} 
-        loading={loading} 
-        pagination={false} 
-        rowKey="id" 
-      />
+    <div className="space-y-8">
+      {/* Bảng Drafts */}
+      <div>
+        <h1>Bài viết nháp</h1>
+        <Table
+          dataSource={filteredDrafts}
+          columns={draftColumns}
+          loading={loading}
+          pagination={false}
+          rowKey="id"
+        />
+      </div>
+
+      {/* Bảng Pending có thanh search và filter */}
+      <div>
+        <h1>Bài viết đã gửi</h1>
+        <Space style={{ marginBottom: 16 }}>
+          <Search
+            placeholder="Tìm kiếm..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 200 }}
+          />
+          <Select
+            value={statusFilter}
+            onChange={setStatusFilter}
+            style={{ width: 200 }}
+            placeholder="Chờ duyệt"
+          >
+            <Option value="ALL">Tất cả</Option>
+            <Option value="PENDING_APPROVAL">Chờ duyệt</Option>
+            <Option value="APPROVED">Đã duyệt</Option>
+            <Option value="REJECTED">Từ chối</Option>
+          </Select>
+        </Space>
+        <Table
+          dataSource={filteredPendingBlogs}
+          columns={pendingColumns}
+          loading={loading}
+          pagination={false}
+          rowKey="id"
+        />
+      </div>
 
       {/* Modal for viewing content */}
       <Modal
@@ -344,7 +382,7 @@ function BlogProject() {
         onCancel={() => setIsContentModalVisible(false)}
         footer={null}
       >
-        <p>{currentContent}</p>
+        <div dangerouslySetInnerHTML={{ __html: currentContent }} />
       </Modal>
 
       {/* Modal for editing draft */}
@@ -372,7 +410,9 @@ function BlogProject() {
           <Form.Item
             name="coverImageUrl"
             label="URL hình ảnh bìa"
-            rules={[{ required: true, message: "Vui lòng nhập URL hình ảnh bìa!" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập URL hình ảnh bìa!" },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -380,7 +420,10 @@ function BlogProject() {
             <Button type="primary" htmlType="submit">
               Cập nhật
             </Button>
-            <Button onClick={() => setIsEditModalVisible(false)} style={{ marginLeft: 8 }}>
+            <Button
+              onClick={() => setIsEditModalVisible(false)}
+              style={{ marginLeft: 8 }}
+            >
               Hủy
             </Button>
           </Form.Item>
