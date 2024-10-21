@@ -1,12 +1,19 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Footer.css";
 
 const Footer = () => {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const navigate = useNavigate();
 
   const togglePhoneModal = () => {
     setShowPhoneModal(!showPhoneModal);
+  };
+
+  const handleRequestClick = (e) => {
+    e.preventDefault();
+    setShowPhoneModal(false); // Hide the modal
+    navigate("/lapthietketheoyeucau"); // Navigate to the new page
   };
 
   return (
@@ -141,7 +148,13 @@ const Footer = () => {
             <h2>1234 5678 98</h2>
             <p>Gọi ngay HOTLINE để được hỗ trợ tốt nhất</p>
             <p>Hoặc click nút bên dưới để gửi yêu cầu</p>
-            <Link to="/lapthietketheoyeucau" className="modal-button">Gửi Yêu Cầu Báo Giá</Link>
+            <Link 
+              to="/lapthietketheoyeucau" 
+              className="modal-button"
+              onClick={handleRequestClick}
+            >
+              Gửi Yêu Cầu Báo Giá
+            </Link>
           </div>
         </div>
       )}

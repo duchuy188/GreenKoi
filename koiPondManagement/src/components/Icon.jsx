@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import "./Icon.css"; // Import CSS từ tệp riêng
+import { Link, useNavigate } from "react-router-dom";
+import "./Icon.css";
 
 const Icon = () => {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [showPhonePopup, setShowPhonePopup] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Xử lý khi cuộn trang để hiển thị hoặc ẩn nút quay lại đầu trang
@@ -34,6 +36,12 @@ const Icon = () => {
 
   const togglePhonePopup = () => {
     setShowPhonePopup(!showPhonePopup);
+  };
+
+  const handleRequestClick = (e) => {
+    e.preventDefault();
+    setShowPhonePopup(false); // Hide the modal
+    navigate("/lapthietketheoyeucau"); // Navigate to the new page
   };
 
   return (
@@ -81,7 +89,13 @@ const Icon = () => {
             <h2>1234 5678 98</h2>
             <p>Gọi ngay HOTLINE để được hỗ trợ tốt nhất</p>
             <p>Hoặc click nút bên dưới để gửi yêu cầu</p>
-            <button className="request-button">Gửi Yêu Cầu Báo Giá</button>
+            <Link 
+              to="/lapthietketheoyeucau" 
+              className="request-button"
+              onClick={handleRequestClick}
+            >
+              Gửi Yêu Cầu Báo Giá
+            </Link>
           </div>
         </>
       )}
