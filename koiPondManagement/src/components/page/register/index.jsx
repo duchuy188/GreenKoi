@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Button, Form, Input } from 'antd';
+import { Button, Form, Input, Row, Col, Card } from 'antd';
 import { toast } from 'react-toastify';
 import api from '../../config/axios';
 
@@ -8,11 +8,9 @@ function RegisterPage() {
 
   const handleRegister = async (values) => {
     try {
-      // Loại bỏ confirmPassword vì backend không cần nó
       const { confirmPassword, ...registerData } = values;
       const response = await api.post("/api/auth/register", registerData);
       toast.success("Đăng ký thành công!");
-      // Chuyển hướng người dùng đến trang đăng nhập sau khi đăng ký thành công
       navigate("/login");
     } catch (err) {
       console.error("Lỗi đăng ký:", err);
@@ -21,137 +19,174 @@ function RegisterPage() {
   };
 
   return (
-    <div>
-      <h1>Đăng ký</h1>
-      <Form
-        labelCol={{
-          span: 24,
-        }}
-        onFinish={handleRegister}
-      >
-        <Form.Item
-          // label="Tên Đăng Nhập"
-          name="username"
-          rules={[
-            {
-              required: true,
-              message: 'Vui lòng nhập tên đăng nhập!',
-            },
-          ]}
-        >
-          <Input placeholder='Tên đăng nhập'/>
-        </Form.Item>
+    <Row className="min-h-screen">
+      {/* Left section - Image (2/3) */}
+      <Col xs={0} sm={0} md={16} style={{ height: '100vh' }}>
+        <img
+          src="img\images3.jpg"
+          alt="Register"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover'
+          }}
+        />
+      </Col>
 
-        <Form.Item
-          // label="Mật Khẩu"
-          name="password"
-          rules={[
-            {
-              required: true,
-              message: 'Vui lòng nhập mật khẩu!',
-            },
-            {
-              min: 6,
-              message: 'Mật khẩu phải có ít nhất 6 ký tự!',
-            },
-          ]}
-        >
-          <Input.Password placeholder='Nhập mật khẩu '/>
-        </Form.Item>
+      {/* Right section - Register Form (1/3) */}
+      <Col xs={24} sm={24} md={8} style={{ height: '100vh' }}>
+        <div style={{
+          height: '100%',
+          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <Card style={{
+            flex: 1,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            <h1 style={{ 
+              textAlign: 'center', 
+              fontSize: '24px',
+              margin: '0 0 24px 0'
+            }}>
+              Đăng ký
+            </h1>
 
-        <Form.Item
-          // label="Nhập lại mật khẩu"
-          name="confirmPassword"
-          dependencies={['password']}
-          rules={[
-            {
-              required: true,
-              message: 'Vui lòng xác nhận mật khẩu!',
-            },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || getFieldValue('password') === value) {
-                  return Promise.resolve();
-                }
-                return Promise.reject(new Error('Hai mật khẩu không khớp nhau!'));
-              },
-            }),
-          ]}
-        >
-          <Input.Password placeholder='Nhập lại mật khẩu '/>
-        </Form.Item>
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '0 4px'
+            }}>
+              <Form
+                name="register"
+                onFinish={handleRegister}
+                layout="vertical"
+                size="large"
+                style={{ paddingRight: '8px' }}
+              >
+                <Form.Item
+                  name="username"
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Vui lòng nhập tên đăng nhập!',
+                    },
+                  ]}
+                >
+                  <Input placeholder='Tên đăng nhập'/>
+                </Form.Item>
 
-        <Form.Item
-          // label="Họ và tên "
-          name="fullName"
-          rules={[
-            {
-              required: true,
-              message: 'Vui lòng nhập họ và tên !',
-            },
-          ]}
-        >
-          <Input placeholder='Nhập họ và tên '/>
-        </Form.Item>
+                <Form.Item
+                  name="password"
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Vui lòng nhập mật khẩu!',
+                    },
+                    {
+                      min: 6,
+                      message: 'Mật khẩu phải có ít nhất 6 ký tự!',
+                    },
+                  ]}
+                >
+                  <Input.Password placeholder='Nhập mật khẩu'/>
+                </Form.Item>
 
-        <Form.Item
-          //  label="Số điện thoại"
-          name="phoneNumber"
-          rules={[
-            {
-              required: true,
-              message: 'Vui lòng nhập số điện thoại !',
-            },
-            {
-              pattern: /^[0-9]+$/,
-              message: 'Số điện thoại chỉ được chứa chữ số!',
-            },
-          ]}
-        >
-        <Input placeholder='Nhập số điện thoại '/>
-        </Form.Item>
+                <Form.Item
+                  name="confirmPassword"
+                  dependencies={['password']}
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Vui lòng xác nhận mật khẩu!',
+                    },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue('password') === value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error('Hai mật khẩu không khớp nhau!'));
+                      },
+                    }),
+                  ]}
+                >
+                  <Input.Password placeholder='Nhập lại mật khẩu'/>
+                </Form.Item>
 
-        <Form.Item
-          // label="E-mail"
-          name="email"
-          rules={[
-            {
-              required: true,
-              message: 'Vui lòng nhập email!',
-            },
-            {
-              type: 'email',
-              message: 'Vui lòng nhập địa chỉ email hợp lệ!',
-            },
-          ]}
-        >
-          <Input placeholder='Nhập email '/>
-        </Form.Item>
+                <Form.Item
+                  name="fullName"
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Vui lòng nhập họ và tên!',
+                    },
+                  ]}
+                >
+                  <Input placeholder='Nhập họ và tên'/>
+                </Form.Item>
 
-        <Form.Item
-          // label="Địa chỉ"
-          name="address"
-          rules={[
-            {
-              required: true,
-              message: 'Vui lòng nhập địa chỉ!',
-            },
-          ]}
-        >
-          <Input placeholder='Nhập địa chỉ ' />
-        </Form.Item>
+                <Form.Item
+                  name="phoneNumber"
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Vui lòng nhập số điện thoại!',
+                    },
+                    {
+                      pattern: /^[0-9]+$/,
+                      message: 'Số điện thoại chỉ được chứa chữ số!',
+                    },
+                  ]}
+                >
+                  <Input placeholder='Nhập số điện thoại'/>
+                </Form.Item>
 
-        <Form.Item>
-          <Link to="/login">Bạn đã có tài khoản? Đăng nhập tại đây</Link>
-        </Form.Item>
+                <Form.Item
+                  name="email"
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Vui lòng nhập email!',
+                    },
+                    {
+                      type: 'email',
+                      message: 'Vui lòng nhập địa chỉ email hợp lệ!',
+                    },
+                  ]}
+                >
+                  <Input placeholder='Nhập email'/>
+                </Form.Item>
 
-        <Form.Item>
-          <Button type="primary" htmlType="submit" >
-            Đăng ký
-          </Button>
-        </Form.Item>
-      </Form>
-    </div>
+                <Form.Item
+                  name="address"
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Vui lòng nhập địa chỉ!',
+                    },
+                  ]}
+                >
+                  <Input placeholder='Nhập địa chỉ'/>
+                </Form.Item>
+
+                <Form.Item>
+                  <Button type="primary" htmlType="submit" block>
+                    Đăng ký
+                  </Button>
+                </Form.Item>
+
+                <Form.Item style={{ marginBottom: 0, textAlign: 'center' }}>
+                  <Link to="/login">Bạn đã có tài khoản? Đăng nhập tại đây</Link>
+                </Form.Item>
+              </Form>
+            </div>
+          </Card>
+        </div>
+      </Col>
+    </Row>
   );
 }
 

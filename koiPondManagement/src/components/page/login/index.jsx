@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button, Form, Input } from "antd";
+import { Button, Form, Input, Row, Col, Card } from "antd";
+import { GoogleOutlined } from "@ant-design/icons";
 import { toast } from "react-toastify";
 import api from "../../config/axios";
 import { useDispatch } from "react-redux";
@@ -21,10 +22,9 @@ function LoginPage() {
         const token = credential.accessToken;
         const user = result.user;
 
-        // Chỉ lưu trữ các giá trị có thể serialize
         const userInfo = {
           uid: user.uid,
-          username: user.displayName, // Sử dụng displayName làm username
+          username: user.displayName,
           email: user.email,
           photoURL: user.photoURL,
         };
@@ -32,14 +32,9 @@ function LoginPage() {
         console.log("Đăng nhập Google thành công", userInfo);
         toast.success("Đăng nhập Google thành công!");
 
-        // Lưu thông tin người dùng vào localStorage
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(userInfo));
-        
-        // Dispatch action login với thông tin người dùng
         dispatch(login(userInfo));
-
-        // Chuyển hướng đến trang dashboard
         navigate("/dashboard");
       })
       .catch((error) => {
@@ -51,24 +46,23 @@ function LoginPage() {
   const handleLogin = async (values) => {
     try {
       const response = await api.post("/api/auth/login", values);
-      console.log(response);
       const { token, roleId, ...userData } = response.data;
 
-      // Lưu thông tin người dùng vào localStorage
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify({ ...userData, roleId })); // Lưu cả roleId
-      dispatch(login({ ...userData, roleId })); // Cập nhật Redux state
-      
+      localStorage.setItem("user", JSON.stringify({ ...userData, roleId }));
+      dispatch(login({ ...userData, roleId }));
+
       toast.success("Đăng nhập thành công!");
 
-      // Phân quyền dựa trên roleId
       const role = parseInt(roleId);
       if (role >= 1 && role <= 4) {
         navigate("/dashboard");
       } else if (role === 5) {
-        navigate("/"); // Chuyển đến trang chủ
+        navigate("/");
       } else {
-        toast.error("Vai trò không hợp lệ. Vui lòng liên hệ với người quản trị.");
+        toast.error(
+          "Vai trò không hợp lệ. Vui lòng liên hệ với người quản trị."
+        );
       }
     } catch (err) {
       console.error("Lỗi đăng nhập:", err);
@@ -77,11 +71,13 @@ function LoginPage() {
           err.response.status === false &&
           err.response.data.message === "Tài khoản bị chặn"
         ) {
-          toast.error("Tài khoản của bạn đã bị chặn. Vui lòng liên hệ với quản trị viên.");
+          toast.error(
+            "Tài khoản của bạn đã bị chặn. Vui lòng liên hệ với quản trị viên."
+          );
         } else {
           toast.error(
             err.response.data.message ||
-            "Đăng nhập không thành công. Vui lòng kiểm tra thông tin đăng nhập của bạn."
+              "Đăng nhập không thành công. Vui lòng kiểm tra thông tin đăng nhập của bạn."
           );
         }
       } else if (err.request) {
@@ -93,49 +89,137 @@ function LoginPage() {
   };
 
   return (
-    <div>
-      <h1>Đăng nhập</h1>
-      <Form
-        name="login"
-        initialValues={{ remember: true }}
-        onFinish={handleLogin}
-        layout="vertical"
-      >
-        <Form.Item
-          name="username"
-          rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập của bạn!" }]}
+    <Row className="min-h-screen">
+      {/* Left section - Image (2/3) */}
+      <Col xs={0} sm={0} md={16} style={{ height: "100vh" }}>
+        <img
+          src="img\images3.jpg"
+          alt="Login"
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+      </Col>
+
+      {/* Right section - Login Form (1/3) */}
+      <Col xs={24} sm={24} md={8}>
+        <div
+          style={{
+            padding: "24px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            minHeight: "100vh",
+          }}
         >
-          <Input placeholder='Tên đăng nhập'/>
-        </Form.Item>
+          <Card>
+            <h1
+              style={{
+                textAlign: "center",
+                fontSize: "24px",
+                marginBottom: "24px",
+              }}
+            >
+              Đăng nhập
+            </h1>
 
-        <Form.Item
-          name="password"
-          rules={[{ required: true, message: "Vui lòng nhập mật khẩu của bạn!" }]}
-        >
-          <Input.Password placeholder='Mật khẩu'/>
-        </Form.Item>
+            <Form
+              name="login"
+              initialValues={{ remember: true }}
+              onFinish={handleLogin}
+              layout="vertical"
+            >
+              <Form.Item
+                name="username"
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng nhập tên đăng nhập của bạn!",
+                  },
+                ]}
+              >
+                <Input placeholder="Tên đăng nhập" size="large" />
+              </Form.Item>
 
-        <Form.Item>
-          <Button type="primary" htmlType="submit" block>
-            Đăng nhập
-          </Button>
-        </Form.Item>
+              <Form.Item
+                name="password"
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng nhập mật khẩu của bạn!",
+                  },
+                ]}
+              >
+                <Input.Password placeholder="Mật khẩu" size="large" />
+              </Form.Item>
 
-        <Form.Item>
-          <Link to="/register">Đăng ký tài khoản</Link>
-        </Form.Item>
+              <Form.Item>
+                <Button type="primary" htmlType="submit" block size="large">
+                  Đăng nhập
+                </Button>
+              </Form.Item>
 
-        <Form.Item>
-          <Button
-            type="default"
-            block
-            onClick={handleLoginGoogle}
-          >
-            Đăng nhập bằng Google
-          </Button>
-        </Form.Item>
-      </Form>
-    </div>
+              <Form.Item>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: "20px",
+                  }}
+                >
+                  <Link to="/register">Đăng ký tài khoản</Link>
+                  <Link to="/">Quay Về trang chủ</Link>
+                </div>
+              </Form.Item>
+
+              <div
+                style={{
+                  position: "relative",
+                  textAlign: "center",
+                  margin: "16px 0",
+                }}
+              >
+                <span
+                  style={{
+                    backgroundColor: "#fff",
+                    padding: "0 8px",
+                    color: "#999",
+                    position: "relative",
+                    zIndex: 1,
+                  }}
+                >
+                  Hoặc
+                </span>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: "50%",
+                    height: 1,
+                    backgroundColor: "#f0f0f0",
+                    zIndex: 0,
+                  }}
+                />
+              </div>
+
+              <Form.Item>
+                <Button
+                  block
+                  size="large"
+                  icon={<GoogleOutlined />}
+                  onClick={handleLoginGoogle}
+                >
+                  Đăng nhập bằng Google
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+        </div>
+      </Col>
+    </Row>
   );
 }
 
