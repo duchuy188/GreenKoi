@@ -9,7 +9,6 @@ import MainLayout from "./layout";
 import LoginPage from "./components/page/login";
 // Change this line to match the correct path and filename of your Profile component
 
-import Category from "./components/page/admin/category";
 import UserManagement from "./components/page/admin/manage-user";
 import ManageUser from './components/page/admin/manage-user';
 
@@ -112,10 +111,6 @@ function App() {
         { path: "",
           element: <Dashboard />,
           children: [
-            {
-              path: "category",
-              element: <Category />,
-            },
             {
               path: "usermanagement",
               element: <UserManagement/>,

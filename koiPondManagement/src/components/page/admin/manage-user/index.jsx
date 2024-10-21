@@ -34,7 +34,7 @@ function UserManagement() {
         setUsers(response.data.users);
       } else {
         setUsers([]);
-        toast.error("Failed to load users. Unexpected data structure.");
+        toast.error("Không thể tải danh sách người dùng. Cấu trúc dữ liệu không như mong đợi.");
       }
     } catch (err) {
       setUsers([]);
@@ -63,11 +63,11 @@ function UserManagement() {
       setLoading(true);
       if (values.id) {
         await api.put(`/api/manager/users/${values.id}`, values);
-        toast.success("User updated successfully");
+        toast.success("Người dùng đã cập nhật thành công");
       } else {
         const response = await api.post("/api/manager/users", values);
         if (response.status === 200) {
-          toast.success("User added successfully");
+            toast.success("Người dùng đã thêm thành công");
         } else {
           throw new Error(`Request failed with status code ${response.status}`);
         }
@@ -85,7 +85,7 @@ function UserManagement() {
   const handleBlock = async (id) => {
     try {
       await api.put(`/api/manager/users/${id}/block`, { status: "inactive" });
-      toast.success("Blocked user successfully!");
+      toast.success("Khóa người dùng thành công!");
       fetchUsers();
     } catch (err) {
       toast.error(err.response?.data || "An error occurred");
@@ -95,7 +95,7 @@ function UserManagement() {
   const handleUnblock = async (id) => {
     try {
       await api.put(`/api/manager/users/${id}/unblock`, { status: "active" });
-      toast.success("Unblocked user successfully!");
+      toast.success("Mở khóa người dùng thành công!");
       fetchUsers();
     } catch (err) {
       toast.error(err.response?.data || "An error occurred");
@@ -104,38 +104,38 @@ function UserManagement() {
 
   const getRoleName = (roleId) => {
     const role = roles.find((r) => r.id === String(roleId));
-    return role ? role.name : "Unknown";
+    return role ? role.name : "Không xác định";
   };
 
   const columns = [
     { title: "ID", dataIndex: "id", key: "id" },
-    { title: "Username", dataIndex: "username", key: "username" },
+    { title: "Tên đăng nhập", dataIndex: "username", key: "username" },
     { title: "Email", dataIndex: "email", key: "email" },
-    { title: "Phone", dataIndex: "phone", key: "phone" },
-    { title: "Full Name", dataIndex: "fullName", key: "fullName" },
-    { title: "Role", dataIndex: "roleId", key: "roleId", render: getRoleName },
-    { title: "Active", dataIndex: "active", key: "active", render: (active) => (active ? "Active" : "Inactive") },
+    { title: "Số điện thoại", dataIndex: "phone", key: "phone" },
+    { title: "Họ tên", dataIndex: "fullName", key: "fullName" },
+    { title: "Chức vụ", dataIndex: "roleId", key: "roleId", render: getRoleName },
+    { title: "Trạng thái", dataIndex: "active", key: "active", render: (active) => (active ? "Hoạt động" : "Không hoạt động") },
     {
-      title: "Created At",
+      title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",
-      render: (createdAt) => moment(createdAt).format("YYYY-MM-DD HH:mm"),
+      render: (createdAt) => moment(createdAt).format("DD/MM/YYYY HH:mm"),
     },
     {
-      title: "Updated At",
+      title: "Ngày cập nhật",
       dataIndex: "updatedAt",
       key: "updatedAt",
-      render: (updatedAt) => moment(updatedAt).format("YYYY-MM-DD HH:mm"),
+      render: (updatedAt) => moment(updatedAt).format("DD/MM/YYYY HH:mm"),
     },
     {
-      title: "Action", dataIndex: "id", key: "id", render: (id, record) => (
+      title: "Hành động", dataIndex: "id", key: "id", render: (id, record) => (
         <>
-          <Button type="primary" onClick={() => { setShowModal(true); form.setFieldsValue(record); setIsEdit(true); }} style={{ marginRight: 8 }}>Edit</Button>
-          <Popconfirm title="Do you want to block this user?" onConfirm={() => handleBlock(id)}>
-            <Button type="default" danger>Block</Button>
+          <Button type="primary" onClick={() => { setShowModal(true); form.setFieldsValue(record); setIsEdit(true); }} style={{ marginRight: 8 }}>Sửa</Button>
+          <Popconfirm title="Bạn có muốn khóa người dùng này không?" onConfirm={() => handleBlock(id)}>
+              <Button type="default" danger>Khóa</Button>
           </Popconfirm>
-          <Popconfirm title="Do you want to unblock this user?" onConfirm={() => handleUnblock(id)} style={{ marginLeft: 8 }}>
-            <Button type="default">Unblock</Button>
+          <Popconfirm title="Bạn có muốn mở khóa người dùng này không?" onConfirm={() => handleUnblock(id)} style={{ marginLeft: 8 }}>
+            <Button type="default">Mở khóa</Button>
           </Popconfirm>
         </>
       ),
@@ -146,28 +146,28 @@ function UserManagement() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 16 }}>
         <Select value={userType} onChange={setUserType}>
-          <Select.Option value="employees">Employees</Select.Option>
-          <Select.Option value="customers">Customers</Select.Option>
+          <Select.Option value="employees">Nhân viên</Select.Option>
+          <Select.Option value="customers">Khách hàng</Select.Option>
         </Select>
       </div>
-      <Button type="primary" onClick={() => { setShowModal(true); setIsEdit(false); form.resetFields(); }} style={{ marginBottom: 16 }}>Add User</Button>
-      <Table dataSource={filteredUsers} columns={columns} rowKey="id" loading={loading} locale={{ emptyText: "No users found or error loading data" }} />
-      <Modal open={showModal} onCancel={() => setShowModal(false)} title="User Management" onOk={() => form.submit()} confirmLoading={loading} width={400}>
+      <Button type="primary" onClick={() => { setShowModal(true); setIsEdit(false); form.resetFields(); }} style={{ marginBottom: 16 }}>Thêm người dùng</Button>
+      <Table dataSource={filteredUsers} columns={columns} rowKey="id" loading={loading} locale={{ emptyText: "Không tìm thấy người dùng hoặc lỗi tải dữ liệu" }} />
+      <Modal open={showModal} onCancel={() => setShowModal(false)} title="Quản lý người dùng" onOk={() => form.submit()} confirmLoading={loading} width={400}>
         <Form form={form} labelCol={{ span: 24 }} onFinish={handleSubmit} size="small">
           <Form.Item name="id" hidden><Input /></Form.Item>
-          <Form.Item name="username" label="Username" rules={[{ required: true, message: "Please input username!" }]}><Input style={{ width: '100%' }} /></Form.Item>
-          <Form.Item name="email" label="Email" rules={[{ required: true, message: "Please input email!" }]}><Input style={{ width: '100%' }} /></Form.Item>
-          <Form.Item name="phone" label="Phone" rules={[{ required: true, message: "Please input phone!" }]}><Input style={{ width: '100%' }} /></Form.Item>
-          <Form.Item name="fullName" label="Full Name" rules={[{ required: true, message: "Please input full name!" }]}><Input style={{ width: '100%' }} /></Form.Item>
+          <Form.Item name="username" label="Tên đăng nhập" rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập!" }]}><Input style={{ width: '100%' }} /></Form.Item>
+          <Form.Item name="email" label="Email" rules={[{ required: true, message: "Vui lòng nhập email!" }]}><Input style={{ width: '100%' }} /></Form.Item>
+          <Form.Item name="phone" label="Số điện thoại" rules={[{ required: true, message: "Vui lòng nhập số điện thoại!" }]}><Input style={{ width: '100%' }} /></Form.Item>
+          <Form.Item name="fullName" label="Họ tên" rules={[{ required: true, message: "Vui lòng nhập họ tên!" }]}><Input style={{ width: '100%' }} /></Form.Item>
           {!isEdit && (
-            <Form.Item name="password" label="Password" rules={[{ required: true, message: "Please input password!" }]}><Input.Password style={{ width: '100%' }} /></Form.Item>
+            <Form.Item name="password" label="Mật khẩu" rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}><Input.Password style={{ width: '100%' }} /></Form.Item>
           )}
-          <Form.Item name="roleId" label="Role" rules={[{ required: true, message: "Please select role!" }]}>
-            <Select placeholder="Select a role" style={{ width: '100%' }}>
+          <Form.Item name="roleId" label="Chức vụ" rules={[{ required: true, message: "Vui lòng chọn chức vụ!" }]}>
+            <Select placeholder="Chọn chức vụ" style={{ width: '100%' }}>
               {roles.map((role) => <Select.Option key={role.id} value={role.id}>{role.name}</Select.Option>)}
             </Select>
           </Form.Item>
-          <Form.Item name="active" label="Active" valuePropName="checked"><Checkbox /></Form.Item>
+          <Form.Item name="active" label="Trạng thái" valuePropName="checked"><Checkbox /></Form.Item>
         </Form>
       </Modal>
     </div>
