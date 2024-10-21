@@ -33,6 +33,7 @@ public class ProjectService {
     private final TaskRepository taskRepository;
     private final TaskTemplateRepository taskTemplateRepository;
     private final TaskService taskService;
+    private final ReviewRepository reviewRepository;
 
     @Autowired
     public ProjectService(ProjectRepository projectRepository,
@@ -43,7 +44,8 @@ public class ProjectService {
                          ProjectCancellationRepository projectCancellationRepository,
                          TaskRepository taskRepository,
                          TaskTemplateRepository taskTemplateRepository,
-                         TaskService taskService) {
+                         TaskService taskService,
+                         ReviewRepository reviewRepository) {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.designRepository = designRepository;
@@ -53,6 +55,7 @@ public class ProjectService {
         this.taskRepository = taskRepository;
         this.taskTemplateRepository = taskTemplateRepository;
         this.taskService = taskService;
+        this.reviewRepository = reviewRepository;
     }
 
     public List<ProjectDTO> getAllProjects() {
@@ -497,7 +500,15 @@ public class ProjectService {
             throw new AccessDeniedException("You don't have permission to view this project");
         }
         
-        return convertToCustomerProjectDTO(project);
+        ProjectDTO dto = convertToCustomerProjectDTO(project);
+        
+        // Add review information if exists
+        reviewRepository.findByProjectId(projectId).ifPresent(review -> {
+            ReviewDTO reviewDTO = convertToReviewDTO(review);
+            dto.setReview(reviewDTO);
+        });
+        
+        return dto;
     }
 
     private ProjectDTO convertToCustomerProjectDTO(Project project) {
@@ -540,5 +551,70 @@ public class ProjectService {
                 log.error("Project not found with id: {}", id);
                 return new ResourceNotFoundException("Project not found with id: " + id);
             });
+    }
+
+    @Transactional
+    public ReviewDTO createProjectReview(String projectId, ReviewDTO reviewDTO, String customerUsername) {
+        log.info("Creating review for project: {} by customer: {}", projectId, customerUsername);
+        Project project = getProjectById(projectId);
+        User customer = getUserByUsername(customerUsername);
+
+        if (!project.getCustomer().getId().equals(customer.getId())) {
+            throw new AccessDeniedException("You can only review your own projects");
+        }
+
+        if (!project.getStatus().getName().equals("COMPLETED")) {
+            throw new IllegalStateException("Cannot review a project that is not completed");
+        }
+
+        if (reviewRepository.existsByProjectId(projectId)) {
+            throw new IllegalStateException("A review already exists for this project");
+        }
+
+        Review review = new Review();
+        review.setProject(project);
+        review.setCustomer(customer);
+        review.setRating(reviewDTO.getRating());
+        review.setComment(reviewDTO.getComment());
+        review.setReviewDate(LocalDateTime.now());
+        review.setStatus("SUBMITTED");
+
+        Review savedReview = reviewRepository.save(review);
+        log.info("Review created successfully for project: {}", projectId);
+        return convertToReviewDTO(savedReview);
+    }
+
+    public ReviewDTO getProjectReview(String projectId, String username) {
+        log.info("Fetching review for project: {} requested by user: {}", projectId, username);
+        User user = getUserByUsername(username);
+        Project project = getProjectById(projectId);
+
+        // Check if user has permission to view the review
+        if (!canUserViewProjectReview(user, project)) {
+            throw new AccessDeniedException("You don't have permission to view this project's review");
+        }
+
+        return reviewRepository.findByProjectId(projectId)
+            .map(this::convertToReviewDTO)
+            .orElseThrow(() -> new ResourceNotFoundException("Review not found for project: " + projectId));
+    }
+
+    private boolean canUserViewProjectReview(User user, Project project) {
+        return user.getRoleId().equals("1") || // Manager
+               user.getRoleId().equals("2") && project.getConsultant().getId().equals(user.getId()) || // Consultant assigned to the project
+               user.getRoleId().equals("4") && project.getConstructor() != null && project.getConstructor().getId().equals(user.getId()) || // Construction staff assigned to the project
+               user.getRoleId().equals("5") && project.getCustomer().getId().equals(user.getId()); // Customer of the project
+    }
+
+    private ReviewDTO convertToReviewDTO(Review review) {
+        ReviewDTO dto = new ReviewDTO();
+        dto.setId(review.getId());
+        dto.setProjectId(review.getProject().getId());
+        dto.setCustomerId(review.getCustomer().getId());
+        dto.setRating(review.getRating());
+        dto.setComment(review.getComment());
+        dto.setReviewDate(review.getReviewDate());
+        dto.setStatus(review.getStatus());
+        return dto;
     }
 }

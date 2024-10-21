@@ -1,6 +1,7 @@
 package com.koipond.backend.controller;
 
 import com.koipond.backend.dto.MaintenanceRequestDTO;
+import com.koipond.backend.dto.ReviewDTO;
 import com.koipond.backend.service.MaintenanceRequestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -155,6 +156,27 @@ public class MaintenanceRequestController {
     public ResponseEntity<List<MaintenanceRequestDTO>> getCancelledMaintenanceRequests() {
         List<MaintenanceRequestDTO> cancelledRequests = maintenanceRequestService.getCancelledMaintenanceRequests();
         return ResponseEntity.ok(cancelledRequests);
+    }
+
+    @PostMapping("/{id}/review")
+    @PreAuthorize("hasRole('ROLE_5')")
+    @Operation(summary = "Create a review for a maintenance request", description = "Creates a new review for a completed maintenance request. Only accessible by customers.")
+    public ResponseEntity<ReviewDTO> createReview(
+            @PathVariable String id,
+            @RequestBody ReviewDTO reviewDTO,
+            Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String customerId = userDetails.getId();
+        ReviewDTO createdReview = maintenanceRequestService.createReview(id, reviewDTO, customerId);
+        return ResponseEntity.ok(createdReview);
+    }
+
+    @GetMapping("/{id}/review")
+    @PreAuthorize("hasAnyRole('ROLE_1', 'ROLE_2', 'ROLE_4', 'ROLE_5')")
+    @Operation(summary = "Get review for a maintenance request", description = "Retrieves the review for a specific maintenance request. Accessible by managers, consultants, maintenance staff, and customers.")
+    public ResponseEntity<ReviewDTO> getReviewForMaintenanceRequest(@PathVariable String id) {
+        ReviewDTO review = maintenanceRequestService.getReviewForMaintenanceRequest(id);
+        return ResponseEntity.ok(review);
     }
 
     // Add more endpoints as needed

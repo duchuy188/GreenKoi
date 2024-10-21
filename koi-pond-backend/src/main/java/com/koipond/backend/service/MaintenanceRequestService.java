@@ -20,6 +20,10 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.koipond.backend.dto.ReviewDTO;
+import com.koipond.backend.model.Review;
+import com.koipond.backend.repository.ReviewRepository;
+import java.util.Optional;
 
 @Service
 public class MaintenanceRequestService {
@@ -29,6 +33,8 @@ public class MaintenanceRequestService {
     private final UserRepository userRepository;
     private final ProjectService projectService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private ReviewRepository reviewRepository;
 
     @Autowired
     public MaintenanceRequestService(MaintenanceRequestRepository maintenanceRequestRepository, 
@@ -325,5 +331,58 @@ public class MaintenanceRequestService {
             .stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());
+    }
+
+    public ReviewDTO createReview(String maintenanceRequestId, ReviewDTO reviewDTO, String customerId) {
+        MaintenanceRequest maintenanceRequest = findMaintenanceRequestById(maintenanceRequestId);
+
+        if (maintenanceRequest.getMaintenanceStatus() != MaintenanceRequest.MaintenanceStatus.COMPLETED) {
+            throw new IllegalStateException("Cannot review a maintenance request that is not completed");
+        }
+
+        if (!maintenanceRequest.getCustomer().getId().equals(customerId)) {
+            throw new IllegalArgumentException("Customer can only review their own maintenance requests");
+        }
+
+        // Kiểm tra xem đã có đánh giá chưa
+        Optional<Review> existingReview = reviewRepository.findByMaintenanceRequestId(maintenanceRequestId);
+        if (existingReview.isPresent()) {
+            throw new IllegalStateException("A review already exists for this maintenance request");
+        }
+
+        Review review = new Review();
+        review.setMaintenanceRequest(maintenanceRequest);
+        review.setCustomer(userRepository.findById(customerId).orElseThrow(() -> new ResourceNotFoundException("Customer not found")));
+        review.setRating(reviewDTO.getRating());
+        review.setComment(reviewDTO.getComment());
+        review.setReviewDate(LocalDateTime.now());
+        review.setStatus("SUBMITTED");
+
+        Review savedReview = reviewRepository.save(review);
+        return convertToReviewDTO(savedReview);
+    }
+
+    public List<ReviewDTO> getReviewsForMaintenanceRequest(String maintenanceRequestId) {
+        return reviewRepository.findByMaintenanceRequestId(maintenanceRequestId)
+            .stream()
+            .map(this::convertToReviewDTO)
+            .collect(Collectors.toList());
+    }
+
+    private ReviewDTO convertToReviewDTO(Review review) {
+        ReviewDTO dto = new ReviewDTO();
+        dto.setId(review.getId());
+        dto.setMaintenanceRequestId(review.getMaintenanceRequest().getId());
+        dto.setRating(review.getRating());
+        dto.setComment(review.getComment());
+        dto.setReviewDate(review.getReviewDate());
+        dto.setStatus(review.getStatus());
+        return dto;
+    }
+
+    public ReviewDTO getReviewForMaintenanceRequest(String maintenanceRequestId) {
+        return reviewRepository.findByMaintenanceRequestId(maintenanceRequestId)
+            .map(this::convertToReviewDTO)
+            .orElseThrow(() -> new ResourceNotFoundException("Review not found for maintenance request: " + maintenanceRequestId));
     }
 }

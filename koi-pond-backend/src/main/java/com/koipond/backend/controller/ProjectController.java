@@ -225,6 +225,51 @@ public class ProjectController {
         }
     }
 
+    @PostMapping("/{projectId}/reviews")
+    @PreAuthorize("hasAuthority('ROLE_5')")
+    @Operation(summary = "Create a project review", description = "Creates a review for a completed project. Only accessible by customers.")
+    public ResponseEntity<?> createProjectReview(@PathVariable String projectId, @Valid @RequestBody ReviewDTO reviewDTO, Authentication authentication) {
+        String customerUsername = getUsernameFromAuthentication(authentication);
+        logger.info("Customer {} attempting to create review for project {}", customerUsername, projectId);
+        try {
+            ReviewDTO createdReview = projectService.createProjectReview(projectId, reviewDTO, customerUsername);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdReview);
+        } catch (AccessDeniedException e) {
+            logger.warn("Access denied for customer {} to create review for project {}", customerUsername, projectId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("Access denied: " + e.getMessage()));
+        } catch (IllegalStateException e) {
+            logger.warn("Invalid state for creating review: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            logger.error("Project not found: {}", projectId, e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse("Project not found: " + e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Unexpected error occurred while creating review for project {}", projectId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+        }
+    }
+
+    @GetMapping("/{projectId}/reviews")
+    @PreAuthorize("hasAnyAuthority('ROLE_1', 'ROLE_2', 'ROLE_4', 'ROLE_5')")
+    @Operation(summary = "Get project review", description = "Retrieves the review for a specific project. Accessible by managers, consultants, construction staff assigned to the project, and the project's customer.")
+    public ResponseEntity<?> getProjectReview(@PathVariable String projectId, Authentication authentication) {
+        String username = getUsernameFromAuthentication(authentication);
+        logger.info("User {} attempting to get review for project {}", username, projectId);
+        try {
+            ReviewDTO review = projectService.getProjectReview(projectId, username);
+            return ResponseEntity.ok(review);
+        } catch (AccessDeniedException e) {
+            logger.warn("Access denied for user {} to view review for project {}", username, projectId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("Access denied: " + e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            logger.error("Review not found for project: {}", projectId, e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse("Review not found: " + e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Unexpected error occurred while getting review for project {}", projectId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+        }
+    }
+
     private String getUsernameFromAuthentication(Authentication authentication) {
         return authentication.getName();
     }

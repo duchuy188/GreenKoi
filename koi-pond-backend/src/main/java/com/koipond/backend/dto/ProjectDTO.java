@@ -46,4 +46,5 @@ public class ProjectDTO {
     private int totalStages;
     private int completedStages;
     private List<TaskDTO> tasks;  // Thêm danh sách các task
+    private ReviewDTO review;  // Thêm trường này
 }

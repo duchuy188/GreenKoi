@@ -163,6 +163,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/maintenance-requests/*/start").hasAuthority("ROLE_4")
                         .requestMatchers(HttpMethod.PATCH, "/api/maintenance-requests/*/complete").hasAuthority("ROLE_4")
                         .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/cancelled").hasAnyAuthority("ROLE_1", "ROLE_2", "ROLE_5")
+                        .requestMatchers(HttpMethod.POST, "/api/maintenance-requests/*/review").hasAuthority("ROLE_5")
+                        .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/*/review").hasAnyAuthority("ROLE_1", "ROLE_2", "ROLE_4", "ROLE_5")
+
+                        // Project review endpoints
+                        .requestMatchers(HttpMethod.POST, "/api/projects/*/reviews").hasAnyAuthority("ROLE_1", "ROLE_2", "ROLE_4", "ROLE_5")
+                        .requestMatchers(HttpMethod.GET, "/api/projects/*/reviews").hasAnyAuthority("ROLE_1", "ROLE_2", "ROLE_4", "ROLE_5")
 
                         // Catch-all rule
                         .anyRequest().authenticated();
