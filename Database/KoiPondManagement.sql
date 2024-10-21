@@ -197,12 +197,15 @@ CREATE TABLE maintenance_requests (
     completion_date DATE,
     assigned_to NVARCHAR(36),
     cancellation_reason NVARCHAR(MAX),
+    maintenance_notes NVARCHAR(MAX),  
+    maintenance_images NVARCHAR(MAX),
     created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     FOREIGN KEY (customer_id) REFERENCES users(id),
     FOREIGN KEY (project_id) REFERENCES projects(id),
     FOREIGN KEY (assigned_to) REFERENCES users(id)
 );
+
 
 
 
@@ -351,6 +354,9 @@ ALTER TABLE designs ADD rejection_reason NVARCHAR(MAX);
 -- Thêm cột has_active_project vào bảng users
 ALTER TABLE users ADD has_active_project BIT NOT NULL DEFAULT 0;
 
+-- Thêm cột has_active_maintenance vào bảng users
+ALTER TABLE users ADD has_active_maintenance BIT NOT NULL DEFAULT 0;
+
 -- Thêm cột constructor_id vào bảng projects
 ALTER TABLE projects ADD constructor_id NVARCHAR(36);
 
@@ -387,3 +393,5 @@ INSERT INTO task_templates (id, name, description, order_index) VALUES
 (NEWID(), N'Hoàn thiện cảnh quan xung quanh hồ', N'Tạo cảnh quan và trang trí xung quanh hồ cá Koi', 5),
 (NEWID(), N'Kiểm tra chất lượng nước và hệ thống lọc', N'Kiểm tra và điều chỉnh chất lượng nước cùng hệ thống lọc', 6),
 (NEWID(), N'Bàn giao và hướng dẫn sử dụng', N'Bàn giao dự án và hướng dẫn khách hàng cách sử dụng, bảo trì hồ cá Koi', 7);
+
+
