@@ -63,14 +63,6 @@ function App() {
           element: <OrdersCustomer/>,
         },
         {
-          path: "/login",
-          element: <LoginPage />,
-        },
-        {
-          path: "/register",
-          element: <RegisterPage />,
-        },
-        {
           path: "/duan",
           element: <ProjectPage />,
         },

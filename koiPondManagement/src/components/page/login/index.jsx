@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button, Form, Input } from "antd";
 import { toast } from "react-toastify";
 import api from "../../config/axios";
-import AuthenTemplate from "../../authen-templated";
 import { useDispatch } from "react-redux";
 import { login } from "../../redux/features/useSlice";
 import { getAuth, signInWithPopup } from "firebase/auth";
@@ -94,7 +93,7 @@ function LoginPage() {
   };
 
   return (
-    <AuthenTemplate>
+    <div>
       <h1>Đăng nhập</h1>
       <Form
         name="login"
@@ -136,7 +135,7 @@ function LoginPage() {
           </Button>
         </Form.Item>
       </Form>
-    </AuthenTemplate>
+    </div>
   );
 }
 

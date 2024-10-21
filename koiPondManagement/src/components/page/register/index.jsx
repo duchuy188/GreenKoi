@@ -1,5 +1,4 @@
 import { Link, useNavigate } from 'react-router-dom';
-import AuthenTemplate from '../../authen-templated';
 import { Button, Form, Input } from 'antd';
 import { toast } from 'react-toastify';
 import api from '../../config/axios';
@@ -22,7 +21,7 @@ function RegisterPage() {
   };
 
   return (
-    <AuthenTemplate>
+    <div>
       <h1>Đăng ký</h1>
       <Form
         labelCol={{
@@ -152,7 +151,7 @@ function RegisterPage() {
           </Button>
         </Form.Item>
       </Form>
-    </AuthenTemplate>
+    </div>
   );
 }
 
