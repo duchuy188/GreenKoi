@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Dropdown } from "antd";
 import { DownOutlined, UserOutlined } from "@ant-design/icons"; // Thay đổi import này
@@ -16,6 +16,7 @@ function Header() {
   const isActive = (path) => {
     return location.pathname === path ? "active" : "";
   };
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const activeItem = document.querySelector(".nav-item.active");
@@ -57,6 +58,10 @@ function Header() {
     },
   ];
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
     <nav className="navbar navbar-expand-lg bg-white navbar-light shadow-sm px-5 py-3 py-lg-0">
       <div className="container-fluid">
@@ -73,12 +78,11 @@ function Header() {
         <button
           className="navbar-toggler"
           type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarCollapse"
+          onClick={toggleMenu}
         >
           <span className="navbar-toggler-icon"></span>
         </button>
-        <div className="collapse navbar-collapse" id="navbarCollapse">
+        <div className={`collapse navbar-collapse ${isMenuOpen ? 'show' : ''}`} id="navbarCollapse">
           <div className="navbar-nav ms-auto py-0">
             <div className="nav-indicator" ref={indicatorRef}></div>
             <Link style={{color: '#FFDAB9'}} to="/" className={`nav-item nav-link ${isActive("/")}`}>
