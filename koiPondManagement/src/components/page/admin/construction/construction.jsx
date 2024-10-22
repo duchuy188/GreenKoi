@@ -1,24 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { Table, message, Card, Row, Col, Switch, Button } from 'antd';
-import api from '../../../config/axios';
+import { Table, message, Card, Typography, Tag, Space, Progress, Alert } from 'antd';
+import api from "../../../config/axios";
+
+const { Text, Title } = Typography;
 
 const Construction = ({ projectId }) => {
+  if (!projectId) {
+    return <div>Error: No project ID provided</div>;
+  }
+
+  console.log('Construction component received projectId:', projectId);
+
   const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'card'
+  const [loading, setLoading] = useState(true);
+  const [projectDetails, setProjectDetails] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchProjectTasks();
+    if (!projectId) {
+      setError('No project ID provided. Please select a valid project.');
+      setLoading(false);
+      return;
+    }
+
+    fetchProjectTasks(projectId);
   }, [projectId]);
 
-  const fetchProjectTasks = async () => {
-    setLoading(true);
+  const fetchProjectTasks = async (id) => {
     try {
-      const response = await api.get(`/api/projects/${projectId}/project-tasks`);
+      setLoading(true);
+      setError(null);
+      const response = await api.get(`/api/projects/${id}/project-tasks`);
       setTasks(response.data);
-    } catch (error) {
-      console.error('Error fetching project tasks:', error);
-      message.error('Failed to fetch project tasks');
+      setProjectDetails(response.data.length > 0 ? response.data[0].project : null);
+    } catch (err) {
+      console.error('Error fetching tasks:', err);
+      setError('Failed to fetch tasks. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -26,58 +43,52 @@ const Construction = ({ projectId }) => {
 
   const columns = [
     {
-      title: 'Task ID',
+      title: 'ID',
       dataIndex: 'id',
       key: 'id',
     },
     {
-      title: 'Task Name',
+      title: 'Name',
       dataIndex: 'name',
       key: 'name',
     },
-    // Thêm các cột khác tùy theo cấu trúc dữ liệu task của bạn
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => (
+        <Tag color={status === 'completed' ? 'green' : 'blue'}>
+          {status}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Completion Percentage',
+      dataIndex: 'completionPercentage',
+      key: 'completionPercentage',
+      render: (percentage) => (
+        <Progress percent={percentage} size="small" />
+      ),
+    },
   ];
-
-  const renderCardView = () => (
-    <Row gutter={[16, 16]}>
-      {tasks.map(task => (
-        <Col xs={24} sm={12} md={8} lg={6} key={task.id}>
-          <Card
-            title={`Task ${task.id}`}
-            extra={<Button type="primary" size="small">Assign</Button>}
-          >
-            <p><strong>Name:</strong> {task.name}</p>
-            <p><strong>Status:</strong> {task.status}</p>
-            <p><strong>Priority:</strong> {task.priority}</p>
-            <p><strong>Deadline:</strong> {task.deadline}</p>
-          </Card>
-        </Col>
-      ))} 
-    </Row>
-  );
 
   return (
     <div>
-      <h2>Project Tasks</h2>
-      <div style={{ marginBottom: 16 }}>
-        <span style={{ marginRight: 8 }}>View mode:</span>
-        <Switch
-          checkedChildren="Card"
-          unCheckedChildren="List"
-          checked={viewMode === 'card'}
-          onChange={(checked) => setViewMode(checked ? 'card' : 'list')}
-        />
-      </div>
-      {viewMode === 'list' ? (
+      <Card>
+        <Title level={3}>Construction Tasks</Title>
+        {projectDetails && (
+          <Space direction="vertical" style={{ marginBottom: 16 }}>
+            <Text strong>Project: {projectDetails.name}</Text>
+            <Text>Description: {projectDetails.description}</Text>
+          </Space>
+        )}
         <Table
           columns={columns}
           dataSource={tasks}
           loading={loading}
           rowKey="id"
         />
-      ) : (
-        renderCardView()
-      )}
+      </Card>
     </div>
   );
 };

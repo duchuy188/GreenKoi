@@ -35,7 +35,7 @@ import DesignBlog from "./components/page/admin/ponddesign/DesignBlog";
 import BrowsePond from "./components/page/admin/PondDesignColumns/BrowsePond";
 import BlogProject from "./components/page/admin/ponddesign/BlogProject";
 
-import ConstructionTasks from "./components/page/admin/construction/construction";
+import Construction from "./components/page/admin/construction/construction";
 import ProtectedRoute from './components/ProtectedRoute';
 import InfoProfile from "./components/profiledashboard/InfoProfile";
 import OrdersCustomer from "./components/ordersCustomer/OrdersCustomer";
@@ -60,6 +60,14 @@ function App() {
         {
           path: "/orders",
           element: <OrdersCustomer/>,
+        },
+        {
+          path: "/login",
+          element: <LoginPage />,
+        },
+        {
+          path: "/register",
+          element: <RegisterPage />,
         },
         {
           path: "/duan",
@@ -110,7 +118,7 @@ function App() {
       children: [
         { path: "",
           element: <Dashboard />,
-          children: [
+          children: [         
             {
               path: "usermanagement",
               element: <UserManagement/>,
@@ -140,6 +148,7 @@ function App() {
               path: "browsepond",
               element: <BrowsePond/>,
             },
+          
             //
             {
               path: "orderlist",
@@ -163,7 +172,7 @@ function App() {
               children: [
                 {
                   path: "tasks",
-                  element: <ConstructionTasks />,
+                  element: <Construction />,
                 },
               ],
             },
