@@ -1,31 +1,92 @@
 import React, { useState } from "react";
 import { Form, Input, InputNumber, Button, message, Card, Row, Col } from "antd";
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { storage } from "../../../config/firebase";  // Đường dẫn đến file firebase.js
 import api from "../../../config/axios";
 
 function PondDesign() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [pondData, setPondData] = useState(null);
+  const [descriptionData, setDescriptionData] = useState(""); // State cho CKEditor
+
+  // Custom Upload Adapter để tải ảnh lên Firebase
+  class MyUploadAdapter {
+    constructor(loader) {
+      this.loader = loader;
+    }
+
+    upload() {
+      return this.loader.file
+        .then((file) => {
+          return new Promise((resolve, reject) => {
+            const storageRef = ref(storage, `pond-images/${file.name}`);
+            const uploadTask = uploadBytesResumable(storageRef, file);
+
+            uploadTask.on(
+              "state_changed",
+              (snapshot) => {
+                // Có thể thêm phần xử lý progress nếu cần
+              },
+              (error) => {
+                reject(error);
+              },
+              () => {
+                getDownloadURL(uploadTask.snapshot.ref)
+                  .then((downloadURL) => {
+                    resolve({
+                      default: downloadURL,  // CKEditor sẽ sử dụng URL này để hiển thị ảnh
+                    });
+                  })
+                  .catch((error) => {
+                    reject(error);
+                  });
+              }
+            );
+          });
+        });
+    }
+
+    abort() {
+      // Optional: xử lý abort nếu cần
+    }
+  }
+
+  // Plugin để tích hợp upload adapter vào CKEditor
+  function MyCustomUploadAdapterPlugin(editor) {
+    editor.plugins.get("FileRepository").createUploadAdapter = (loader) => {
+      return new MyUploadAdapter(loader);
+    };
+  }
 
   // Handle form submission (create or update)
   const handleSubmit = async (values) => {
+    setLoading(true); // Set loading khi bắt đầu submit
     try {
+      const pondValues = {
+        ...values,
+        description: descriptionData, // Gán giá trị mô tả từ CKEditor
+      };
+
       if (pondData) {
         // Update existing pond design
         console.log("Updating pond design with ID:", pondData.id);
-        await api.put(`/api/pond-designs/${pondData.id}`, values);
+        await api.put(`/api/pond-designs/${pondData.id}`, pondValues);
         message.success("Pond design updated successfully");
         setPondData(null);
       } else {
         // Create new pond design
-        await api.post("/api/pond-designs", values);
+        await api.post("/api/pond-designs", pondValues);
         message.success("Pond design created successfully");
       }
       form.resetFields();
+      setDescriptionData(""); // Reset CKEditor
     } catch (err) {
       message.error("Failed to " + (pondData ? "update" : "create") + " pond design: " + (err.response?.data?.message || err.message));
     } finally {
-      setLoading(false);
+      setLoading(false); // Set loading về false sau khi hoàn tất
     }
   };
 
@@ -59,12 +120,30 @@ function PondDesign() {
             </Col>
           </Row>
 
-          <Form.Item name="description" label="Description" rules={[{ required: true }]}>
-            <Input.TextArea placeholder="Enter pond description" />
+          {/* CKEditor cho mô tả */}
+          <Form.Item label="Description" rules={[{ required: true }]}>
+            <CKEditor
+              editor={ClassicEditor}
+              data={descriptionData}
+              onChange={(event, editor) => {
+                const data = editor.getData();
+                setDescriptionData(data);
+              }}
+              config={{
+                extraPlugins: [MyCustomUploadAdapterPlugin], // Thêm plugin upload adapter
+                toolbar: [
+                  "heading", "|",
+                  "bold", "italic", "link", "|",
+                  "imageUpload", "|",
+                  "bulletedList", "numberedList", "|",
+                  "blockQuote", "undo", "redo",
+                ],
+              }}
+            />
           </Form.Item>
 
-          <Form.Item name="imageUrl" label="ImageUrl" rules={[{ required: true }]}>
-            <Input.TextArea placeholder="Enter pond imageUrl" />
+          <Form.Item name="imageUrl" label="Image URL" rules={[{ required: true }]}>
+            <Input.TextArea placeholder="Enter pond image URL" />
           </Form.Item>
 
           <Form.Item name="features" label="Features" rules={[{ required: true }]}>
@@ -79,6 +158,7 @@ function PondDesign() {
               <Button style={{ marginLeft: 8 }} onClick={() => {
                 setPondData(null);
                 form.resetFields();
+                setDescriptionData(""); // Reset CKEditor
               }}>
                 Cancel Edit
               </Button>

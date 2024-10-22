@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Form, Input, Button, message, Card, Modal } from "antd";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { storage } from "../../../config/firebase";  // Đường dẫn đến file firebase.js
 import api from "../../../config/axios";
 
 function DesignBlog() {
@@ -12,18 +14,72 @@ function DesignBlog() {
   const [selectedPost, setSelectedPost] = useState(null);
   const [editorData, setEditorData] = useState("");
 
+  // Custom Upload Adapter to handle image upload to Firebase
+  class MyUploadAdapter {
+    constructor(loader) {
+      this.loader = loader;
+    }
+
+    upload() {
+      return this.loader.file
+        .then((file) => {
+          return new Promise((resolve, reject) => {
+            const storageRef = ref(storage, `images/${file.name}`); // Tạo ref tới file trong Firebase Storage
+            const uploadTask = uploadBytesResumable(storageRef, file);
+
+            uploadTask.on(
+              "state_changed",
+              (snapshot) => {
+                // Có thể thêm phần xử lý progress nếu cần
+              },
+              (error) => {
+                reject(error); // Xử lý lỗi upload
+              },
+              () => {
+                // Upload thành công, lấy URL từ Firebase Storage
+                getDownloadURL(uploadTask.snapshot.ref)
+                  .then((downloadURL) => {
+                    console.log("File available at:", downloadURL); // Kiểm tra URL của file
+                    resolve({
+                      default: downloadURL,  // CKEditor sẽ sử dụng URL này để hiển thị ảnh
+                    });
+                  })
+                  .catch((error) => {
+                    reject(error); // Xử lý lỗi nếu không lấy được URL
+                  });
+              }
+            );
+          });
+        });
+    }
+
+    abort() {
+      // Optional: xử lý abort nếu cần
+    }
+  }
+
+  // Plugin to integrate the custom upload adapter
+  function MyCustomUploadAdapterPlugin(editor) {
+    editor.plugins.get("FileRepository").createUploadAdapter = (loader) => {
+      return new MyUploadAdapter(loader);
+    };
+  }
+
   // Handle form submission (create blog draft)
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      // Create new blog draft
+      // Gửi dữ liệu blog draft lên server
       await api.post("/api/blog/drafts", { ...values, content: editorData });
       message.success("Blog draft created successfully");
       form.resetFields();
       setEditorData("");
       setModalVisible(false);
     } catch (err) {
-      message.error("Failed to create blog draft: " + (err.response?.data?.message || err.message));
+      message.error(
+        "Failed to create blog draft: " +
+          (err.response?.data?.message || err.message)
+      );
     } finally {
       setLoading(false);
     }
@@ -44,7 +100,10 @@ function DesignBlog() {
       setSubmitModalVisible(false);
       setSelectedPost(null);
     } catch (err) {
-      message.error("Failed to submit blog: " + (err.response?.data?.message || err.message));
+      message.error(
+        "Failed to submit blog: " +
+          (err.response?.data?.message || err.message)
+      );
     }
   };
 
@@ -65,18 +124,13 @@ function DesignBlog() {
                 setEditorData(data);
               }}
               config={{
-                // Configure the editor here
-                ckfinder: {
-                  // Upload image to server
-                  uploadUrl: '/api/upload', // Your upload URL
-                },
-                // Enable the image upload feature
+                extraPlugins: [MyCustomUploadAdapterPlugin], // Thêm plugin tùy chỉnh để upload ảnh
                 toolbar: [
-                  'heading', '|',
-                  'bold', 'italic', 'link', '|',
-                  'imageUpload', '|',
-                  'bulletedList', 'numberedList', '|',
-                  'blockQuote', 'undo', 'redo'
+                  "heading", "|",
+                  "bold", "italic", "link", "|",
+                  "imageUpload", "|",
+                  "bulletedList", "numberedList", "|",
+                  "blockQuote", "undo", "redo",
                 ],
               }}
             />
