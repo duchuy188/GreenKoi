@@ -28,4 +28,8 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, String> {
 
     // Phương thức mới để tìm tất cả các bài viết có trạng thái cụ thể, bao gồm cả những bài đã bị xóa mềm
     List<BlogPost> findAllByStatus(BlogPost.BlogPostStatus status);
+
+    // Thêm các phương thức mới để đếm số lượng bài viết
+    long countByStatusAndIsActiveTrue(BlogPost.BlogPostStatus status);
+    long countByIsActiveTrue();
 }

@@ -171,6 +171,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/projects/*/reviews").hasAnyAuthority("ROLE_1", "ROLE_2", "ROLE_4", "ROLE_5")
                         .requestMatchers(HttpMethod.GET, "/api/projects/*/reviews").hasAnyAuthority("ROLE_1", "ROLE_2", "ROLE_4", "ROLE_5")
 
+                        // Dashboard endpoints
+                        .requestMatchers("/api/dashboard/**").hasAuthority("ROLE_1")
+
                         // Catch-all rule
                         .anyRequest().authenticated();
 

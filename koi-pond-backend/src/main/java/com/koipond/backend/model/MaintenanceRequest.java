@@ -1,6 +1,7 @@
 package com.koipond.backend.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.GenericGenerator;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,19 +14,21 @@ import lombok.Setter;
 @Setter
 public class MaintenanceRequest {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(generator = "uuid2")
+    @GenericGenerator(name = "uuid2", strategy = "uuid2")
+    @Column(columnDefinition = "NVARCHAR(36)")
     private String id;
 
     @ManyToOne
-    @JoinColumn(name = "customer_id")
+    @JoinColumn(name = "customer_id", columnDefinition = "NVARCHAR(36)")
     private User customer;
 
     @ManyToOne
-    @JoinColumn(name = "project_id")
+    @JoinColumn(name = "project_id", columnDefinition = "NVARCHAR(36)")
     private Project project;
 
     @ManyToOne
-    @JoinColumn(name = "consultant_id")
+    @JoinColumn(name = "consultant_id", columnDefinition = "NVARCHAR(36)")
     private User consultant;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
@@ -47,7 +50,7 @@ public class MaintenanceRequest {
     private LocalDate completionDate;
 
     @ManyToOne
-    @JoinColumn(name = "assigned_to")
+    @JoinColumn(name = "assigned_to", columnDefinition = "NVARCHAR(36)")
     private User assignedTo;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")

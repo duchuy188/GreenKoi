@@ -14,4 +14,8 @@ public interface DesignRepository extends JpaRepository<Design, String> {
     Optional<Design> findByIdAndActiveTrue(String id);
     List<Design> findByCreatedBy_IdAndActiveTrue(String createdById);
     List<Design> findByNameContainingIgnoreCaseAndActiveTrue(String name);
+
+    // Thêm các phương thức mới để đếm số lượng thiết kế
+    long countByActiveTrue();
+    long countByStatusAndActiveTrue(Design.DesignStatus status);
 }

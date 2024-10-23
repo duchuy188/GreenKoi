@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,4 +52,19 @@ public interface ProjectRepository extends JpaRepository<Project, String> {
 
    
     List<Project> findByConstructorId(String constructorId);
+
+    // Đếm số lượng dự án theo trạng thái
+    long countByStatusId(String statusId);
+
+    // Tính tổng doanh thu của các dự án đã hoàn thành
+    @Query("SELECT COALESCE(SUM(p.totalPrice), 0) FROM Project p WHERE p.status.id = :statusId")
+    BigDecimal sumTotalPriceByStatusId(@Param("statusId") String statusId);
+
+    // Lấy doanh thu theo tháng cho biểu đồ
+    @Query("SELECT FORMAT(p.endDate, 'yyyy-MM') as date, COALESCE(SUM(p.totalPrice), 0) as revenue " +
+           "FROM Project p " +
+           "WHERE p.status.id = 'PS6' AND p.endDate >= :startDate " +
+           "GROUP BY FORMAT(p.endDate, 'yyyy-MM') " +
+           "ORDER BY FORMAT(p.endDate, 'yyyy-MM')")
+    List<Object[]> getRevenueByMonth(@Param("startDate") LocalDate startDate);
 }

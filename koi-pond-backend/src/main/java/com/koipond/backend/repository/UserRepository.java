@@ -20,4 +20,8 @@ public interface UserRepository extends JpaRepository<User, String> {
     // Thêm phương thức mới để tìm người dùng theo roleId
     @Query("SELECT u FROM User u WHERE u.roleId = :roleId")
     List<User> findByRoleId(@Param("roleId") String roleId);
+
+    // Thêm phương thức mới để đếm số lượng người dùng theo roleId
+    @Query("SELECT COUNT(u) FROM User u WHERE u.roleId = :roleId")
+    long countByRoleId(@Param("roleId") String roleId);
 }
