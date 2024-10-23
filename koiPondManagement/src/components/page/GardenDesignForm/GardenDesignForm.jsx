@@ -1,17 +1,63 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Sử dụng hook điều hướng
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom'; // Sử dụng hook điều hướng
+import { message } from 'antd';
+import api from '../../config/axios'; // Đảm bảo đường dẫn này chính xác
+import './GardenDesignForm.css'; // Tạo file CSS riêng cho component này
 
 const GardenDesignForm = () => {
   const navigate = useNavigate(); // Hook điều hướng trang
+  const location = useLocation();
   const [formData, setFormData] = useState({
-    designName: '',
-    gardenStyle: '',
-    gardenArea: '',
-    pondType: '',
-    contactMethod: '',
-    additionalRequests: '',
-    upload: null,
+    name: '', // for pond design
+    description: '', // for pond design
+    shape: '', // for pond design
+    dimensions: '', // for pond design
+    features: '', // for pond design
+    customerName: '', // for consultation request
+    customerPhone: '', // for consultation request
+    customerAddress: '', // for consultation request
+    notes: '', // for consultation request
   });
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem('token'); // Giả sử token được lưu trong localStorage
+        const response = await api.get('/api/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const profileData = response.data;
+        
+        setFormData(prevData => ({
+          ...prevData,
+          customerName: profileData.fullName || '',
+          customerPhone: profileData.phone || '',
+          customerAddress: profileData.address || '',
+        }));
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        // Xử lý lỗi ở đây, ví dụ hiển thị thông báo cho người dùng
+      }
+    };
+
+    fetchUserProfile();
+
+    // Điền thông tin từ location state nếu có
+    if (location.state) {
+      const { id, name, description, shape, dimensions, features, basePrice } = location.state;
+      setFormData(prevData => ({
+        ...prevData,
+        name,
+        description,
+        shape,
+        dimensions,
+        features,
+        basePrice,
+        designName: name,
+        designDescription: description,
+      }));
+    }
+  }, [location.state]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,142 +68,102 @@ const GardenDesignForm = () => {
     setFormData({ ...formData, upload: e.target.files[0] });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault(); // Ngăn chặn hành vi mặc định của form
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      alert('Bạn cần đăng nhập để gửi yêu cầu');
+      navigate('/login');
+      return;
+    }
 
-    // Kiểm tra trạng thái đăng nhập
-    const isLoggedIn = localStorage.getItem('isLoggedIn'); // Giả sử bạn lưu trạng thái đăng nhập trong localStorage
+    try {
+      const consultationRequest = {
+        designId: location.state?.projectId, // Use projectId from location state
+        customerName: formData.customerName,
+        customerPhone: formData.customerPhone,
+        customerAddress: formData.customerAddress,
+        designName: formData.designName,
+        designDescription: formData.designDescription,
+        notes: formData.notes || ''
+      };
 
-    if (!isLoggedIn) {
-      alert('Bạn cần đăng nhập để gửi yêu cầu'); // Hiển thị thông báo
-      navigate('/login'); // Chuyển hướng tới trang đăng nhập nếu chưa đăng nhập
-    } else {
-      console.log('Received values:', formData);
-      // Thực hiện gửi yêu cầu ở đây
-      alert('Yêu cầu của bạn đã được gửi thành công!');
+      console.log('Sending request:', consultationRequest);
+
+      const response = await api.post('/api/ConsultationRequests', consultationRequest, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status === 201 || response.status === 200) {
+        alert('Yêu cầu tư vấn đã được gửi thành công!');
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Error submitting consultation request:', error);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+      }
+      alert('Có lỗi xảy ra khi gửi yêu cầu tư vấn. Vui lòng thử lại sau.');
     }
   };
 
+  // Hàm tạo ID duy nhất (có thể sử dụng thư viện như uuid nếu cần)
+  const generateUniqueId = () => {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  };
+
   return (
-    <div style={{ maxWidth: 600, margin: '20px auto', marginTop: '40px', border: '1px solid #ddd', borderRadius: '8px', padding: '20px' }}>
-      {/* Header Section */}
-      <div style={{ backgroundColor: '#FFA500', padding: '10px', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
-        <h1 style={{ color: '#fff', margin: '0' }}>Đăng ký báo giá thiết kế hồ cá koi</h1>
-      </div>
-      <div style={{ padding: '10px' }}>
+    <div className="formrequestpond-container">
+      <div className="formrequestpond-header">
+        <h1>Đăng ký báo giá thiết kế hồ cá koi</h1>
         <p>Quý khách hàng vui lòng điền thông tin và nhu cầu thiết kế để được báo giá chi tiết</p>
         <p><strong>Hotline/Zalo:</strong> 0933 606 119</p>
         <p><strong>Email:</strong> info@sgl.com.vn</p>
       </div>
-      
-      {/* Form Section */}
-      <form onSubmit={handleSubmit} style={{ padding: '10px' }}>
-        <div>
-          <label>Tên mẫu thiết kế:</label>
-          <input type="text" name="designName" placeholder="Nhập tên mẫu thiết kế" onChange={handleChange} required />
+      <form onSubmit={handleSubmit} className="formrequestpond">
+        <div className="formrequestpond-group">
+          <label htmlFor="name">Tên thiết kế hồ cá:</label>
+          <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required />
         </div>
-
-        <div>
-          <label>Bạn muốn thiết kế sân vườn theo phong cách nào?</label>
-          <div>
-            <input type="radio" name="gardenStyle" value="japanese" onChange={handleChange} required />
-            <label>Nhật Bản - Á Đông</label>
-          </div>
-          <div>
-            <input type="radio" name="gardenStyle" value="modern" onChange={handleChange} required />
-            <label>Hiện đại - Tropical</label>
-          </div>
-          <div>
-            <input type="radio" name="gardenStyle" value="european" onChange={handleChange} required />
-            <label>Châu Âu cổ điển</label>
-          </div>
+        <div className="formrequestpond-group">
+          <label htmlFor="description">Mô tả thiết kế:</label>
+          <textarea id="description" name="description" value={formData.description} onChange={handleChange} required />
         </div>
-
-        <div>
-          <label>Diện tích sân vườn:</label>
-          <div>
-            <input type="radio" name="gardenArea" value="100-200" onChange={handleChange} required />
-            <label>Từ 100m² đến dưới 200m²</label>
-          </div>
-          <div>
-            <input type="radio" name="gardenArea" value="200-500" onChange={handleChange} required />
-            <label>Từ 200m² đến dưới 500m²</label>
-          </div>
-          <div>
-            <input type="radio" name="gardenArea" value="500-1000" onChange={handleChange} required />
-            <label>Từ 500m² đến dưới 1.000m²</label>
-          </div>
-          <div>
-            <input type="radio" name="gardenArea" value="1000-3000" onChange={handleChange} required />
-            <label>Từ 1.000m² đến dưới 3.000m²</label>
-          </div>
-          <div>
-            <input type="radio" name="gardenArea" value="3000-5000" onChange={handleChange} required />
-            <label>Từ 3.000m² đến dưới 5.000m²</label>
-          </div>
-          <div>
-            <input type="radio" name="gardenArea" value="5000+" onChange={handleChange} required />
-            <label>Trên 5.000m²</label>
-          </div>
+        <div className="formrequestpond-group">
+          <label htmlFor="shape">Hình dạng hồ:</label>
+          <input type="text" id="shape" name="shape" value={formData.shape} onChange={handleChange} required />
         </div>
-
-        <div>
-          <label>Loại Hồ:</label>
-          <div>
-            <input type="radio" name="pondType" value="round" onChange={handleChange} required />
-            <label>Hình Tròn</label>
-          </div>
-          <div>
-            <input type="radio" name="pondType" value="ellipse" onChange={handleChange} required />
-            <label>Hình Elip</label>
-          </div>
-          <div>
-            <input type="radio" name="pondType" value="rectangle" onChange={handleChange} required />
-            <label>Hình Chữ Nhật</label>
-          </div>
-          <div>
-            <input type="radio" name="pondType" value="semi-circle" onChange={handleChange} required />
-            <label>Hình Bán Nguyệt</label>
-          </div>
-          <div>
-            <input type="radio" name="pondType" value="u-shape" onChange={handleChange} required />
-            <label>Hình Chữ U</label>
-          </div>
-          <div>
-            <input type="radio" name="pondType" value="free-shape" onChange={handleChange} required />
-            <label>Hình Tự Do</label>
-          </div>
+        <div className="formrequestpond-group">
+          <label htmlFor="dimensions">Kích thước:</label>
+          <input type="text" id="dimensions" name="dimensions" value={formData.dimensions} onChange={handleChange} required />
         </div>
-
-        <div>
-          <label>Cách liên hệ:</label>
-          <div>
-            <input type="radio" name="contactMethod" value="zalo" onChange={handleChange} required />
-            <label>Zalo</label>
-          </div>
-          <div>
-            <input type="radio" name="contactMethod" value="phone" onChange={handleChange} required />
-            <label>Gọi điện thoại</label>
-          </div>
-          <div>
-            <input type="radio" name="contactMethod" value="sms" onChange={handleChange} required />
-            <label>Tin nhắn</label>
-          </div>
+        <div className="formrequestpond-group">
+          <label htmlFor="features">Tính năng đặc biệt:</label>
+          <input type="text" id="features" name="features" value={formData.features} onChange={handleChange} />
         </div>
-
-        <div>
-          <label>Tải hình yêu cầu của khách hàng:</label>
-          <input type="file" onChange={handleFileChange} accept="image/jpeg,image/png" />
+        <div className="formrequestpond-group">
+          <label htmlFor="customerName">Tên khách hàng:</label>
+          <input type="text" id="customerName" name="customerName" value={formData.customerName} onChange={handleChange} required />
         </div>
-
-        <div>
-          <label>Yêu cầu khác (nếu có):</label>
-          <textarea name="additionalRequests" placeholder="Nhập yêu cầu khác" onChange={handleChange} />
+        <div className="formrequestpond-group">
+          <label htmlFor="customerPhone">Số điện thoại:</label>
+          <input type="tel" id="customerPhone" name="customerPhone" value={formData.customerPhone} onChange={handleChange} required />
         </div>
-
-        <div>
-          <button type="submit">Gửi yêu cầu</button>
+        <div className="formrequestpond-group">
+          <label htmlFor="customerAddress">Địa chỉ:</label>
+          <input type="text" id="customerAddress" name="customerAddress" value={formData.customerAddress} onChange={handleChange} required />
         </div>
+        <div className="formrequestpond-group">
+          <label htmlFor="notes">Ghi chú bổ sung:</label>
+          <textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} />
+        </div>
+        <button type="submit" className="formrequestpond-submit">Gửi yêu cầu</button>
       </form>
     </div>
   );

@@ -93,6 +93,31 @@ const ProjectDetails = () => {
     }
   };
 
+  const handleConsultationRequest = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      Modal.confirm({
+        title: 'Đăng nhập',
+        content: 'Bạn cần đăng nhập để gửi yêu cầu',
+        okText: 'Ok',
+        cancelText: 'Hủy',
+        onOk: () => navigate('/login'),
+      });
+    } else {
+      navigate('/lapthietketheoyeucau', { 
+        state: { 
+          projectId: id,
+          name: project.name,
+          description: project.description,
+          shape: project.shape,
+          dimensions: project.dimensions,
+          features: project.features,
+          basePrice: project.basePrice
+        } 
+      });
+    }
+  };
+
   if (loading) {
     return <p>Loading...</p>;
   }
@@ -157,7 +182,7 @@ const ProjectDetails = () => {
                   <strong>Giá cả: {project.basePrice}</strong>
                 </Paragraph>
               </Typography>
-              <Button type="primary" onClick={showModal} style={{ marginTop: '20px' }}>
+              <Button type="primary" onClick={handleConsultationRequest} style={{ marginTop: '20px' }}>
                 Yêu cầu tư vấn
               </Button>
             </Card>

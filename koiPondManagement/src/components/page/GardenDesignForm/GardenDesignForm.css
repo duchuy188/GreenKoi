@@ -1,0 +1,68 @@
+.formrequestpond-container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.formrequestpond-header {
+  background-color: #FFA500;
+  margin: -30px -30px 30px;
+  padding: 20px 30px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  color: white;
+}
+
+.formrequestpond-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.formrequestpond-header p {
+  margin: 10px 0 0;
+  font-size: 14px;
+}
+
+.formrequestpond-group {
+  margin-bottom: 20px;
+}
+
+.formrequestpond label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.formrequestpond input[type="text"],
+.formrequestpond input[type="tel"],
+.formrequestpond textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.formrequestpond textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+.formrequestpond-submit {
+  background-color: #4CAF50;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  width: 100%;
+}
+
+.formrequestpond-submit:hover {
+  background-color: #45a049;
+}
