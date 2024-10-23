@@ -29,7 +29,7 @@ const OrdersList = () => {
       setOrders(response.data);
       // Fetch tasks for each project
       for (const order of response.data) {
-        fetchProjectTasks(order.id);
+        fetchProjectTasks(order.id, order.constructorId);
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -39,15 +39,16 @@ const OrdersList = () => {
     }
   };
   
-  const fetchProjectTasks = async (projectId) => {
+  const fetchProjectTasks = async (projectId, constructorId) => {
     try {
-      const response = await api.get(`/api/projects/${projectId}/project-tasks`);
+      const response = await api.get(`/api/projects/${projectId}/project-tasks?constructorId=${constructorId}`);
       setProjectTasks(prevTasks => ({
         ...prevTasks,
         [projectId]: response.data
       }));
     } catch (error) {
       console.error(`Error fetching tasks for project ${projectId}:`, error);
+      message.error(`Failed to load tasks for project ${projectId}`);
     }
   };
 
@@ -118,6 +119,10 @@ const OrdersList = () => {
         setOrders(prevOrders => prevOrders.map(order => 
           order.id === selectedProjectId ? {...order, ...response.data} : order
         ));
+        
+        // Fetch the newly created tasks for this project
+        await fetchProjectTasks(selectedProjectId, selectedConstructorId);
+        
         fetchOrders();
       }
     } catch (error) {
