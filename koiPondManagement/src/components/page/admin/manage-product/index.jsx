@@ -42,6 +42,7 @@ const OrdersList = () => {
   const fetchProjectTasks = async (projectId, constructorId) => {
     try {
       const response = await api.get(`/api/projects/${projectId}/project-tasks?constructorId=${constructorId}`);
+      console.log(`Tasks for project ${projectId}:`, response.data); // Log để kiểm tra
       setProjectTasks(prevTasks => ({
         ...prevTasks,
         [projectId]: response.data
@@ -223,11 +224,12 @@ const OrdersList = () => {
       key: 'tasksProgress',
       render: (_, record) => {
         const tasks = projectTasks[record.id] || [];
-        const completedTasks = tasks.filter(task => task.status === 'completed').length;
-        const progress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
+        console.log(`Tasks for project ${record.id}:`, tasks); // Log để kiểm tra
+        const completedTasks = tasks.filter(task => task.completionPercentage === 100).length;
+        const totalProgress = tasks.reduce((sum, task) => sum + (task.completionPercentage || 0), 0) / tasks.length;
         return (
           <Space direction="vertical">
-            <Progress percent={Math.round(progress)} size="small" />
+            <Progress percent={Math.round(totalProgress)} size="small" />
             <Text>{`${completedTasks}/${tasks.length} tasks completed`}</Text>
           </Space>
         );

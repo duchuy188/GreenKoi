@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, message, Card, Typography, Tag, Space, Progress, Spin } from 'antd';
+import { Table, message, Card, Typography, Tag, Space, Progress, Spin, Button } from 'antd';
 import api from "../../../config/axios";
 import moment from 'moment';
 
@@ -50,6 +50,38 @@ const ProjectTasks = () => {
     }
   };
 
+  const updateTaskStatus = async (taskId, newPercentage) => {
+    try {
+      let newStatus;
+      if (newPercentage === 0) {
+        newStatus = 'pending';
+      } else if (newPercentage < 100) {
+        newStatus = 'in process';
+      } else {
+        newStatus = 'complete';
+      }
+
+      // Kiểm tra nếu task đã hoàn thành
+      if (tasks.find(task => task.id === taskId)?.status === 'complete') {
+        message.warning('Cannot update a completed task');
+        return;
+      }
+
+      console.log('Sending data:', { newStatus, completionPercentage: newPercentage });
+      await api.patch(`/api/tasks/${taskId}/status?newStatus=${newStatus}&completionPercentage=${newPercentage}`);
+
+      // Refresh tasks after update
+      if (projectInfo && projectInfo.id) {
+        await fetchProjectTasks(projectInfo.id);
+      }
+
+      message.success('Task updated successfully');
+    } catch (error) {
+      console.error('Error details:', error.response?.data);
+      message.error(`Update failed: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
   const columns = [
     {
       title: 'Task ID',
@@ -85,7 +117,16 @@ const ProjectTasks = () => {
       title: 'Completion Percentage',
       dataIndex: 'completionPercentage',
       key: 'completionPercentage',
-      render: (percentage) => <Progress percent={percentage || 0} size="small" />,
+      render: (percentage, record) => (
+        <Space>
+          <Progress percent={percentage || 0} size="small" />
+          {record.status !== 'complete' && (
+            <Button onClick={() => updateTaskStatus(record.id, Math.min((percentage || 0) + 10, 100))}>
+              Update
+            </Button>
+          )}
+        </Space>
+      ),
     },
     {
       title: 'Created At',
