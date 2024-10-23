@@ -11,13 +11,15 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "koi-pond-backend": "file:"
+    "@cucumber/cucumber": "^11.0.1",
+    "codeceptjs": "^3.6.7",
+    "koi-pond-backend": "file:",
+    "regexp-tree": "^0.1.24"
   },
   "devDependencies": {
     "@codeceptjs/allure-legacy": "^1.0.2",
     "@codeceptjs/configure": "^1.0.1",
     "@codeceptjs/ui": "^1.2.0",
-    "codeceptjs": "^3.6.7",
     "playwright": "^1.48.1"
   }
 }

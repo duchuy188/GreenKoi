@@ -617,4 +617,17 @@ public class ProjectService {
         dto.setStatus(review.getStatus());
         return dto;
     }
+
+    @Transactional(readOnly = true)
+    public List<ProjectDTO> getProjectsAssignedToConstructor(String constructorUsername) {
+        log.info("Fetching projects assigned to constructor: {}", constructorUsername);
+        User constructor = getUserByUsername(constructorUsername);
+        if (!constructor.getRoleId().equals("4")) {
+            throw new AccessDeniedException("Only construction staff can access this endpoint");
+        }
+        List<Project> projects = projectRepository.findByConstructorId(constructor.getId());
+        return projects.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 }

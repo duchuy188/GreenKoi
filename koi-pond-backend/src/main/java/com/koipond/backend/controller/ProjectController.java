@@ -270,6 +270,24 @@ public class ProjectController {
         }
     }
 
+    @GetMapping("/constructor")
+    @PreAuthorize("hasRole('ROLE_4')")
+    @Operation(summary = "Get constructor's assigned projects", description = "Retrieves a list of projects assigned to the authenticated construction staff.")
+    public ResponseEntity<?> getConstructorProjects(Authentication authentication) {
+        String constructorUsername = getUsernameFromAuthentication(authentication);
+        logger.info("Construction staff {} attempting to access assigned projects", constructorUsername);
+        try {
+            List<ProjectDTO> projects = projectService.getProjectsAssignedToConstructor(constructorUsername);
+            return ResponseEntity.ok(projects);
+        } catch (AccessDeniedException e) {
+            logger.warn("Access denied for user {} to view assigned projects", constructorUsername);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("Access denied: " + e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Unexpected error occurred while getting projects for constructor {}", constructorUsername, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+        }
+    }
+
     private String getUsernameFromAuthentication(Authentication authentication) {
         return authentication.getName();
     }

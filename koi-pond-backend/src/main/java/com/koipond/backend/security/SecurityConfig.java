@@ -131,6 +131,7 @@ public class SecurityConfig {
 
                         // Constructor endpoints (ROLE_4)
                         .requestMatchers(HttpMethod.PATCH, "/api/tasks/*/status").hasAuthority("ROLE_4")
+                        .requestMatchers(HttpMethod.GET, "/api/projects/constructor").hasAuthority("ROLE_4")
 
                         // Shared endpoints
                         .requestMatchers(HttpMethod.GET, "/api/projects/*/tasks").hasAnyAuthority("ROLE_1", "ROLE_4")

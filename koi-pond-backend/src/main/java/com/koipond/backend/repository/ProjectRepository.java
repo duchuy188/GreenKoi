@@ -47,4 +47,7 @@ public interface ProjectRepository extends JpaRepository<Project, String> {
 
     
     boolean existsByIdAndCustomerIdAndStatus_Name(String id, String customerId, String statusName);
+
+   
+    List<Project> findByConstructorId(String constructorId);
 }
