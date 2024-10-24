@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Button, Modal, message, Rate, Input, Form } from 'antd';
+import { Card, Row, Col, Button, Modal, message, Rate, Input, Form, DatePicker } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import api from '/src/components/config/axios';
 import moment from 'moment';
@@ -12,6 +12,9 @@ const OrdersCustomer = () => {
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const [isMaintenanceModalVisible, setIsMaintenanceModalVisible] = useState(false);
+  const [maintenanceForm] = Form.useForm();
+  const [maintenanceLoading, setMaintenanceLoading] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -74,7 +77,34 @@ const OrdersCustomer = () => {
   };
 
   const handleRequestMaintenance = (order) => {
-    navigate('/customer-maintenance', { state: { projectId: order.id } });
+    setSelectedOrder(order);
+    maintenanceForm.setFieldsValue({
+      projectId: order.id,
+    });
+    setIsMaintenanceModalVisible(true);
+  };
+
+  const submitMaintenanceRequest = async (values) => {
+    try {
+      setMaintenanceLoading(true);
+      const maintenanceData = {
+        projectId: values.projectId,
+        description: values.description,
+        attachments: values.attachments
+      };
+
+      const response = await api.post(`/api/maintenance-requests`, maintenanceData);
+      console.log('Maintenance request submission response:', response);
+      message.success('Maintenance request submitted successfully');
+      setIsMaintenanceModalVisible(false);
+      maintenanceForm.resetFields();
+      fetchOrders(); // Refresh the orders list
+    } catch (error) {
+      console.error("Error submitting maintenance request:", error);
+      message.error(`Failed to submit maintenance request: ${error.message}`);
+    } finally {
+      setMaintenanceLoading(false);
+    }
   };
 
   return (
@@ -150,6 +180,40 @@ const OrdersCustomer = () => {
           <Form.Item>
             <Button type="primary" htmlType="submit">
               Submit Review
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+      <Modal
+        title="Maintenance Request"
+        visible={isMaintenanceModalVisible}
+        onCancel={() => {
+          setIsMaintenanceModalVisible(false);
+          maintenanceForm.resetFields();
+        }}
+        footer={null}
+      >
+        <Form
+          form={maintenanceForm}
+          onFinish={submitMaintenanceRequest}
+          layout="vertical"
+        >
+          <Form.Item name="projectId" hidden>
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="description"
+            label="Description"
+            rules={[{ required: true, message: "Please input description" }]}
+          >
+            <Input.TextArea rows={4} />
+          </Form.Item>
+          <Form.Item name="attachments" label="Attachments">
+            <Input />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={maintenanceLoading}>
+              Submit Request
             </Button>
           </Form.Item>
         </Form>
