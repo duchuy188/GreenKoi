@@ -149,7 +149,7 @@ function App() {
               element: <OrdersList/>,
             },
             {
-              path: "maintenance",
+              path: "maintenance-manager",
               element: <Maintenance/>,
             },
             {

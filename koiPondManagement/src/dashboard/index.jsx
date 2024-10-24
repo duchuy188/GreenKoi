@@ -48,7 +48,7 @@ const items = [
       "browsepond"
     ),
     getItem(
-      <Link to="/dashboard/maintenance">Quản lý bảo trì</Link>,
+      <Link to="/dashboard/maintenance-manager">Quản lý bảo trì</Link>,
       "maintenance"
     ),
   ]),
@@ -131,7 +131,7 @@ const Dashboard = () => {
       return true;
     }
 
-    if (path.includes('usermanagement') || path.includes('ponddesigncolumns') || path.includes('orderlist') || path.includes('browsepond') || path.includes('maintenance')) {
+    if (path.includes('usermanagement') || path.includes('ponddesigncolumns') || path.includes('orderlist') || path.includes('browsepond') || path.includes('maintenance-manager')) {
       console.log('Checking manager access:', roleId === 1);
       return roleId === 1; // Manager
     }
