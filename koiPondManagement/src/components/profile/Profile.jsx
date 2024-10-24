@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import api from '/src/components/config/axios';
 import "./Profile.css";
 import { Button, Form, Input, Modal, Table, Tabs, message, Popconfirm } from 'antd';
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, UserOutlined, ShoppingOutlined } from '@ant-design/icons';
 
 function Profile() {
   const [profileData, setProfileData] = useState(null);
@@ -35,11 +35,11 @@ function Profile() {
       
       let profileInfo = {};
       
-      // Nếu có dữ liệu từ Redux, sử dụng nó
+      // Use data from Redux store if available
       if (user) {
         profileInfo = {
           id: user.id,
-          fullName: user.username || user.email,
+          fullName: user.name || user.username || user.email, // Add 'name' field for Google login
           email: user.email,
           phone: user.phone || '',
           address: user.address || '',
@@ -76,6 +76,9 @@ function Profile() {
       
       console.log("Final profile info:", profileInfo);
       setProfileData(profileInfo);
+      
+      // Set form fields with profile data
+      form.setFieldsValue(profileInfo);
     } catch (err) {
       console.error("Error in fetchProfileData:", err);
       setError(err.message || "An unexpected error occurred");
@@ -188,6 +191,11 @@ function Profile() {
     }
   };
 
+  const handlePhoneChange = (e) => {
+    const value = e.target.value.replace(/[^\d]/g, '');
+    form.setFieldsValue({ phone: value });
+  };
+
   if (loading) return <div>Đang tải...</div>;
   if (error) return <div>Lỗi: {error}</div>;
   if (!profileData) return <div>Không có dữ liệu hồ sơ nào khả dụng. Vui lòng thử làm mới trang.</div>;
@@ -240,152 +248,79 @@ function Profile() {
     },
   ];
 
-  const items = [
-    {
-      key: '1',
-      label: 'Thông tin',
-      children: (
-        <div className="row">
-          <div className="col-md-8">
-            <div className="row">
-              <div className="col-md-6">
-                <label>Họ và tên</label>
-              </div>
-              <div className="col-md-6">
-                <p>{profileData?.fullName || user?.username || user?.email || 'Chưa cập nhật'}</p>
-              </div>
-            </div>
-            <div className="row">
-              <div className="col-md-6">
-                <label>Email</label>
-              </div>
-              <div className="col-md-6">
-                <p>{profileData?.email || user?.email || 'Chưa cập nhật'}</p>
-              </div>
-            </div>
-            <div className="row">
-              <div className="col-md-6">
-                <label>Số điện thoại</label>
-              </div>
-              <div className="col-md-6">
-                <p>{profileData?.phone || user?.phone || 'Chưa cập nhật'}</p>
-              </div>
-            </div>
-            <div className="row">
-              <div className="col-md-6">
-                <label>Địa chỉ</label>
-              </div>
-              <div className="col-md-6">
-                <p>{profileData?.address || user?.address || 'Chưa cập nhật'}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: '2',
-      label: 'Yêu cầu của tôi',
-      children: (
-        <div>
-          <h3>Yêu cầu tư vấn của tôi</h3>
-          <Table 
-            dataSource={consultationRequests} 
-            columns={consultationColumns} 
-            rowKey="id"
-          />
-        </div>
-      ),
-    },
-  ];
-
-  const handleTabChange = (key) => {
-    setActiveTab(key);
-  };
-
   return (
     <div className="profile-background">
       <div className="container emp-profile">
         <div className="row">
-          <div className="col-md-10">
-            <div className="profile-head">
-              <h5>{profileData?.fullName || user?.username || user?.email}</h5>
-              {/* <h6>{profileData?.role || 'User'}</h6> */}
-              <p className="proile-rating">
-                Số dự án đã đặt: <span>{profileData?.projectCount || 0}</span>
-              </p>
-              <Tabs activeKey={activeTab} onChange={handleTabChange} items={items} />
+          <div className="col-lg-4 pb-5">
+            <div className="author-card pb-3">
+              <div className="author-card-cover"></div>
+              <div className="author-card-profile">
+                <div className="author-card-avatar">
+                  <img src={user?.picture || "https://bootdey.com/img/Content/avatar/avatar1.png"} alt={profileData?.fullName} />
+                </div>
+                <div className="author-card-details">
+                  <h5 className="author-card-name">{profileData?.fullName || user?.name || user?.username || user?.email}</h5>
+                  <span className="author-card-position">Joined {new Date(profileData?.createdAt || user?.createdAt || Date.now()).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+            <div className="wizard">
+              <nav className="list-group list-group-flush">
+                <a className={`list-group-item ${activeTab === '1' ? 'active' : ''}`} onClick={() => setActiveTab('1')}>
+                  <UserOutlined className="mr-1" />
+                  <div className="d-inline-block font-weight-medium text-uppercase">Cài đặt hồ sơ</div>
+                </a>
+                <a className={`list-group-item ${activeTab === '2' ? 'active' : ''}`} onClick={() => setActiveTab('2')}>
+                  <ShoppingOutlined className="mr-1" />
+                  <div className="d-inline-block font-weight-medium text-uppercase">Yêu cầu của tôi</div>
+                </a>
+              </nav>
             </div>
           </div>
-          <div className="col-md-2">
-            <Button onClick={handleEditInfo} className="profile-edit-btn">
-              Chỉnh sửa
-            </Button>
+          <div className="col-lg-8 pb-5">
+            {activeTab === '1' && (
+              <Form form={form} onFinish={handleSubmit} layout="vertical">
+                <Form.Item name="fullName" label="Họ và Tên" rules={[{ required: true }]}>
+                  <Input />
+                </Form.Item>
+                <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
+                  <Input disabled />
+                </Form.Item>
+                <Form.Item 
+                  name="phone" 
+                  label="Phone Number" 
+                  rules={[
+                    { required: true, message: 'Please input your phone number!' },
+                    { max: 10, message: 'Phone number cannot be longer than 10 digits' },
+                    { pattern: /^[0-9]*$/, message: 'Phone number can only contain digits' }
+                  ]}
+                >
+                  <Input maxLength={10} onChange={handlePhoneChange} />
+                </Form.Item>
+                <Form.Item name="address" label="Địa chỉ" rules={[{ required: true }]}>
+                  <Input />
+                </Form.Item>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit">
+                    Cập nhật hồ sơ
+                  </Button>
+                </Form.Item>
+              </Form>
+            )}
+            
+            {activeTab === '2' && (
+              <div>
+                <h3>Yêu cầu tư vấn của tôi</h3>
+                <Table 
+                  dataSource={consultationRequests} 
+                  columns={consultationColumns} 
+                  rowKey="id"
+                />
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Modal for editing profile */}
-        <Modal
-          visible={isEditing}
-          title="Chỉnh sửa thông tin"
-          onCancel={handleCancel}
-          footer={[
-            <Button key="cancel" onClick={handleCancel}>
-              Hủy
-            </Button>,
-            <Button key="submit" type="primary" onClick={() => form.submit()}>
-              Lưu
-            </Button>,
-          ]}
-        >
-          <Form form={form} onFinish={handleSubmit} layout="vertical">
-            <Form.Item name="fullName" label="Họ và tên" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="phone" label="Số điện thoại" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="address" label="Địa chỉ" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-          </Form>
-        </Modal>
-        
-        {/* Modal for editing consultation request */}
-        <Modal
-          visible={!!editingRequest}
-          title="Chỉnh sửa yêu cầu tư vấn"
-          onCancel={() => setEditingRequest(null)}
-          footer={[
-            <Button key="cancel" onClick={() => setEditingRequest(null)}>
-              Hủy
-            </Button>,
-            <Button key="submit" type="primary" onClick={() => editForm.submit()}>
-              Cập nhật
-            </Button>,
-          ]}
-        >
-          <Form form={editForm} onFinish={handleEditSubmit} layout="vertical">
-            <Form.Item name="designName" label="Tên dự án" rules={[{ required: true }]}>
-              <Input readOnly/>
-            </Form.Item>
-            <Form.Item name="notes" label="Ghi chú">
-              <Input.TextArea />
-            </Form.Item>
-            <Form.Item name="customerName" label="Tên khách hàng" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="customerPhone" label="Số điện thoại khách hàng" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="customerAddress" label="Địa chỉ khách hàng" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-          </Form>
-        </Modal>
       </div>
     </div>
   );
