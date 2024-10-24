@@ -61,22 +61,45 @@ function UserManagement() {
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
+
+      // Check for duplicate username and email
+      const isDuplicateUsername = users.some(
+        (user) => user.username === values.username && user.id !== values.id
+      );
+      const isDuplicateEmail = users.some(
+        (user) => user.email === values.email && user.id !== values.id
+      );
+
+      if (isDuplicateUsername) {
+        toast.error("Tên đăng nhập đã tồn tại! Vui lòng chọn tên khác.");
+        return; // Stop further execution
+      }
+
+      if (isDuplicateEmail) {
+        toast.error("Email đã tồn tại! Vui lòng chọn email khác.");
+        return; // Stop further execution
+      }
+
+      // Proceed with API call if no duplicates
       if (values.id) {
         await api.put(`/api/manager/users/${values.id}`, values);
         toast.success("Người dùng đã cập nhật thành công");
       } else {
         const response = await api.post("/api/manager/users", values);
         if (response.status === 200) {
-            toast.success("Người dùng đã thêm thành công");
+          toast.success("Người dùng đã thêm thành công");
         } else {
           throw new Error(`Request failed with status code ${response.status}`);
         }
       }
+
       fetchUsers();
       form.resetFields();
       setShowModal(false);
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || "An error occurred");
+      toast.error(
+        err.response?.data?.message || err.message || "An error occurred"
+      );
     } finally {
       setLoading(false);
     }
@@ -132,7 +155,7 @@ function UserManagement() {
         <>
           <Button type="primary" onClick={() => { setShowModal(true); form.setFieldsValue(record); setIsEdit(true); }} style={{ marginRight: 8 }}>Sửa</Button>
           <Popconfirm title="Bạn có muốn khóa người dùng này không?" onConfirm={() => handleBlock(id)}>
-              <Button type="default" danger>Khóa</Button>
+            <Button type="default" danger>Khóa</Button>
           </Popconfirm>
           <Popconfirm title="Bạn có muốn mở khóa người dùng này không?" onConfirm={() => handleUnblock(id)} style={{ marginLeft: 8 }}>
             <Button type="default">Mở khóa</Button>
@@ -164,10 +187,14 @@ function UserManagement() {
           )}
           <Form.Item name="roleId" label="Chức vụ" rules={[{ required: true, message: "Vui lòng chọn chức vụ!" }]}>
             <Select placeholder="Chọn chức vụ" style={{ width: '100%' }}>
-              {roles.map((role) => <Select.Option key={role.id} value={role.id}>{role.name}</Select.Option>)}
+            {roles.map((role) => (
+                <Select.Option key={role.id} value={role.id}>{role.name}</Select.Option>
+              ))}
             </Select>
           </Form.Item>
-          <Form.Item name="active" label="Trạng thái" valuePropName="checked"><Checkbox /></Form.Item>
+          <Form.Item name="active" label="Trạng thái" valuePropName="checked">
+            <Checkbox />
+          </Form.Item>
         </Form>
       </Modal>
     </div>
@@ -175,3 +202,4 @@ function UserManagement() {
 }
 
 export default UserManagement;
+             
