@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Row, Typography, Layout, Button, Modal, Form, Input, message } from "antd";
+import {
+  Card,
+  Col,
+  Row,
+  Typography,
+  Layout,
+  Button,
+  Modal,
+  Form,
+  Input,
+  message,
+} from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../config/axios";
 
@@ -31,14 +42,14 @@ const ProjectDetails = () => {
   }, [id]);
 
   const showModal = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
       Modal.confirm({
-        title: 'Đăng nhập',
-        content: 'Bạn cần đăng nhập để gửi yêu cầu',
-        okText: 'Ok',
-        cancelText: 'Hủy',
-        onOk: () => navigate('/login'),
+        title: "Đăng nhập",
+        content: "Bạn cần đăng nhập để gửi yêu cầu",
+        okText: "Ok",
+        cancelText: "Hủy",
+        onOk: () => navigate("/login"),
       });
     } else {
       setIsModalVisible(true);
@@ -52,10 +63,10 @@ const ProjectDetails = () => {
 
   const onFinish = async (values) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
-        message.error('You must be logged in to submit a request.');
-        navigate('/login');
+        message.error("You must be logged in to submit a request.");
+        navigate("/login");
         return;
       }
 
@@ -69,51 +80,57 @@ const ProjectDetails = () => {
         notes: values.notes,
       };
 
-      const response = await api.post('/api/ConsultationRequests', consultationRequest, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const response = await api.post(
+        "/api/ConsultationRequests",
+        consultationRequest,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       if (response.status === 201 || response.status === 200) {
-        message.success('Yêu cầu tư vấn đã được gửi thành công!');
+        message.success("Yêu cầu tư vấn đã được gửi thành công!");
         setIsModalVisible(false);
         form.resetFields();
       } else {
-        throw new Error('Unexpected response status');
+        throw new Error("Unexpected response status");
       }
     } catch (error) {
-      console.error('Error submitting consultation request:', error);
+      console.error("Error submitting consultation request:", error);
       if (error.response && error.response.status === 401) {
-        message.error('Unauthorized. Please log in again.');
-        navigate('/login');
+        message.error("Unauthorized. Please log in again.");
+        navigate("/login");
       } else {
-        message.error('Failed to submit consultation request. Please try again.');
+        message.error(
+          "Failed to submit consultation request. Please try again."
+        );
       }
     }
   };
 
   const handleConsultationRequest = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
       Modal.confirm({
-        title: 'Đăng nhập',
-        content: 'Bạn cần đăng nhập để gửi yêu cầu',
-        okText: 'Ok',
-        cancelText: 'Hủy',
-        onOk: () => navigate('/login'),
+        title: "Đăng nhập",
+        content: "Bạn cần đăng nhập để gửi yêu cầu",
+        okText: "Ok",
+        cancelText: "Hủy",
+        onOk: () => navigate("/login"),
       });
     } else {
-      navigate('/lapthietketheoyeucau', { 
-        state: { 
+      navigate("/lapthietketheoyeucau", {
+        state: {
           projectId: id,
           name: project.name,
           description: project.description,
           shape: project.shape,
           dimensions: project.dimensions,
           features: project.features,
-          basePrice: project.basePrice
-        } 
+          basePrice: project.basePrice,
+        },
       });
     }
   };
@@ -162,7 +179,9 @@ const ProjectDetails = () => {
             <Card>
               <Typography>
                 <Title level={2}>Chi tiết dự án</Title>
-                <Paragraph>{project.description}</Paragraph>
+                <div
+                  dangerouslySetInnerHTML={{ __html: project.description }}
+                />
               </Typography>
             </Card>
           </Col>
@@ -178,11 +197,12 @@ const ProjectDetails = () => {
                 <Paragraph>
                   <strong>Đặc điểm: {project.features}</strong>
                 </Paragraph>
-                <Paragraph>
-                  <strong>Giá cả: {project.basePrice}</strong>
-                </Paragraph>
               </Typography>
-              <Button type="primary" onClick={handleConsultationRequest} style={{ marginTop: '20px' }}>
+              <Button
+                type="primary"
+                onClick={handleConsultationRequest}
+                style={{ marginTop: "20px" }}
+              >
                 Yêu cầu tư vấn
               </Button>
             </Card>
@@ -191,7 +211,7 @@ const ProjectDetails = () => {
 
         <Modal
           title="Yêu cầu tư vấn"
-          visible={isModalVisible}
+          open={isModalVisible}
           onCancel={handleCancel}
           footer={null}
         >
