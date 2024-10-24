@@ -74,17 +74,17 @@ function PondDesign() {
         // Update existing pond design
         console.log("Updating pond design with ID:", pondData.id);
         await api.put(`/api/pond-designs/${pondData.id}`, pondValues);
-        message.success("Pond design updated successfully");
+        message.success("Cập nhật thiết kế hồ thành công");
         setPondData(null);
       } else {
         // Create new pond design
         await api.post("/api/pond-designs", pondValues);
-        message.success("Pond design created successfully");
+        message.success("Tạo thiết kế hồ thành công");
       }
       form.resetFields();
       setDescriptionData(""); // Reset CKEditor
     } catch (err) {
-      message.error("Failed to " + (pondData ? "update" : "create") + " pond design: " + (err.response?.data?.message || err.message));
+      message.error("Không thể " + (pondData ? "cập nhật" : "tạo") + " thiết kế hồ: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false); // Set loading về false sau khi hoàn tất
     }

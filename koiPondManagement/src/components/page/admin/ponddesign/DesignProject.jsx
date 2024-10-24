@@ -55,22 +55,17 @@ function DesignProject() {
       setLoading(true);
       if (pondData) {
         await api.put(`/api/pond-designs/${pondData.id}`, values);
-        message.success("Pond design updated successfully");
+        message.success("Cập nhật thiết kế hồ thành công");
         setPondData(null);
         setIsEditModalVisible(false); // Đóng modal sau khi cập nhật thành công
       } else {
-        message.error(
-          "Cannot create a new pond design. Only updates are allowed."
-        );
+        message.error("Không thể tạo thiết kế hồ mới. Chỉ cho phép cập nhật.");
       }
 
       form.resetFields();
       fetchDesignerPonds();
     } catch (err) {
-      message.error(
-        "Failed to update pond design: " +
-          (err.response?.data?.message || err.message)
-      );
+      message.error("Cập nhật thiết kế hồ thất bại: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -81,13 +76,10 @@ function DesignProject() {
     try {
       setLoading(true);
       await api.delete(`/api/pond-designs/${id}`);
-      message.success("Pond design deleted successfully");
+      message.success("Xóa thiết kế hồ thành công");
       fetchDesignerPonds();
     } catch (err) {
-      message.error(
-        "Failed to delete pond design: " +
-          (err.response?.data?.message || err.message)
-      );
+      message.error("Xóa thiết kế hồ thất bại: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -295,6 +287,13 @@ function DesignProject() {
             label="Giá"
             name="basePrice"
             rules={[{ required: true, message: "Vui lòng nhập giá" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label="Link ảnh"
+            name="imageUrl"
+            rules={[{ required: true, message: "Vui lòng nhập link ảnh " }]}
           >
             <Input />
           </Form.Item>

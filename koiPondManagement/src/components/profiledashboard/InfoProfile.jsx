@@ -49,10 +49,10 @@ function InfoProfile() {
       const response = await api.put("/api/profile", values);
       setProfileData(response.data);
       setIsEditing(false);
-      message.success('Profile updated successfully');
+      message.success('Cập nhật hồ sơ thành công');
     } catch (err) {
       console.error("Error updating profile:", err);
-      message.error('Failed to update profile');
+      message.error('Cập nhật hồ sơ thất bại');
     }
   };
 

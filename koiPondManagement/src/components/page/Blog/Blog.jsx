@@ -32,7 +32,7 @@ const Blog = () => {
         setPost(response.data);
       } catch (error) {
         console.error("Error fetching post details:", error);
-        message.error("Failed to load post details. Please try again.");
+        message.error("Không thể tải chi tiết bài viết. Vui lòng thử lại.");
       } finally {
         setLoading(false);
       }
@@ -65,7 +65,7 @@ const Blog = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        message.error("You must be logged in to submit a request.");
+        message.error("Bạn phải đăng nhập để gửi yêu cầu.");
         navigate("/login");
         return;
       }
@@ -100,12 +100,10 @@ const Blog = () => {
     } catch (error) {
       console.error("Error submitting consultation request:", error);
       if (error.response && error.response.status === 401) {
-        message.error("Unauthorized. Please log in again.");
+        message.error("Không có quyền. Vui lòng đăng nhập lại.");
         navigate("/login");
       } else {
-        message.error(
-          "Failed to submit consultation request. Please try again."
-        );
+        message.error("Gửi yêu cầu tư vấn thất bại. Vui lòng thử lại.");
       }
     }
   };

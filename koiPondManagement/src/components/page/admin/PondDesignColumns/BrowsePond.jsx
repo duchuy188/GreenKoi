@@ -22,7 +22,7 @@ function BrowsePond() {
       const response = await api.get("/api/blog/posts/pending");
       setPosts(response.data);
     } catch (err) {
-      message.error("Failed to fetch pending blog posts: " + (err.response?.data?.message || err.message));
+      message.error("Không thể lấy bài viết blog đang chờ: " + (err.response?.data?.message || err.message));
     } finally {
       setPostsLoading(false);
     }
@@ -34,7 +34,7 @@ function BrowsePond() {
       const response = await api.get("/api/blog/posts/approved/all");
       setApprovedPosts(response.data);
     } catch (err) {
-      message.error("Failed to fetch approved blog posts: " + (err.response?.data?.message || err.message));
+      message.error("Không thể lấy bài viết blog đã duyệt: " + (err.response?.data?.message || err.message));
     } finally {
       setPostsLoading(false);
     }
@@ -62,38 +62,38 @@ function BrowsePond() {
     try {
       if (actionType === "approve") {
         await api.post(`/api/blog/posts/${selectedPost.id}/approve`);
-        message.success("Blog approved successfully");
+        message.success("Duyệt blog thành công");
       } else if (actionType === "reject") {
         await api.post(`/api/blog/posts/${selectedPost.id}/reject`, {
           additionalProp1: rejectReason,
         });
-        message.success("Blog rejected successfully");
+        message.success("Từ chối blog thành công");
       }
       await fetchPosts();
       setSubmitModalVisible(false);
       setSelectedPost(null);
     } catch (err) {
-      message.error(`Failed to ${actionType} blog: ` + (err.response?.data?.message || err.message));
+      message.error(`Không thể ${actionType} blog: ` + (err.response?.data?.message || err.message));
     }
   };
 
   const handleDeletePost = async (postId) => {
     try {
       await api.delete(`/api/blog/posts/${postId}`);
-      message.success("Blog deleted successfully");
+      message.success("Xóa blog thành công");
       await fetchApprovedPosts();
     } catch (err) {
-      message.error("Failed to delete blog post: " + (err.response?.data?.message || err.message));
+      message.error("Không thể xóa bài viết blog: " + (err.response?.data?.message || err.message));
     }
   };
 
   const handleRestorePost = async (postId) => {
     try {
       await api.post(`/api/blog/posts/${postId}/restore`);
-      message.success("Blog restored successfully");
+      message.success("Khôi phục blog thành công");
       await fetchApprovedPosts();
     } catch (err) {
-      message.error("Failed to restore blog post: " + (err.response?.data?.message || err.message));
+      message.error("Không thể khôi phục bài viết blog: " + (err.response?.data?.message || err.message));
     }
   };
 

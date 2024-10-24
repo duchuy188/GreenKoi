@@ -71,15 +71,12 @@ function DesignBlog() {
     try {
       // Gửi dữ liệu blog draft lên server
       await api.post("/api/blog/drafts", { ...values, content: editorData });
-      message.success("Blog draft created successfully");
+      message.success("Tạo bản nháp blog thành công");
       form.resetFields();
       setEditorData("");
       setModalVisible(false);
     } catch (err) {
-      message.error(
-        "Failed to create blog draft: " +
-          (err.response?.data?.message || err.message)
-      );
+      message.error("Tạo bản nháp blog thất bại: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -96,14 +93,11 @@ function DesignBlog() {
     if (!selectedPost) return;
     try {
       await api.post(`/api/blog/drafts/${selectedPost.id}/submit`);
-      message.success("Blog submitted successfully");
+      message.success("Gửi blog thành công");
       setSubmitModalVisible(false);
       setSelectedPost(null);
     } catch (err) {
-      message.error(
-        "Failed to submit blog: " +
-          (err.response?.data?.message || err.message)
-      );
+      message.error("Gửi blog thất bại: " + (err.response?.data?.message || err.message));
     }
   };
 

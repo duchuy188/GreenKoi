@@ -78,12 +78,12 @@ function BlogProject() {
       setLoading(true);
       if (blogData) {
         await api.put(`/api/blog/drafts/${blogData.id}`, values);
-        message.success("Blog post updated successfully");
+        message.success("Cập nhật bài viết thành công");
         setBlogData(null);
         setIsEditModalVisible(false);
       } else {
         message.error(
-          "Cannot create a new blog post. Only updates are allowed."
+          "Không thể tạo bài viết mới. Chỉ cho phép cập nhật."
         );
       }
 
@@ -91,7 +91,7 @@ function BlogProject() {
       fetchBlogs();
     } catch (err) {
       message.error(
-        "Failed to update blog post: " +
+        "Cập nhật bài viết thất bại: " +
           (err.response?.data?.message || err.message)
       );
     } finally {
@@ -103,11 +103,11 @@ function BlogProject() {
     try {
       setLoading(true);
       await api.delete(`/api/blog/drafts/${id}`);
-      message.success("Draft has been deleted successfully");
+      message.success("Xóa nháp thành công");
       fetchBlogs();
     } catch (err) {
       message.error(
-        "Failed to delete draft: " +
+        "Xóa nháp thất bại: " +
           (err.response?.data?.message || err.message)
       );
     } finally {
@@ -119,11 +119,11 @@ function BlogProject() {
     try {
       setLoading(true);
       await api.post(`/api/blog/drafts/${id}/submit`);
-      message.success("Blog draft submitted successfully");
+      message.success("Gửi nháp thành công");
       fetchBlogs();
     } catch (err) {
       message.error(
-        "Failed to submit blog draft: " +
+        "Gửi nháp thất bại: " +
           (err.response?.data?.message || err.message)
       );
     } finally {

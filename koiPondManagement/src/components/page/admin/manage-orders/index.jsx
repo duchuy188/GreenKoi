@@ -35,7 +35,7 @@ const OrdersList = () => {
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
-      message.error("Failed to load orders");
+      message.error("Không thể tải đơn hàng");
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ const OrdersList = () => {
       }));
     } catch (error) {
       console.error(`Error fetching tasks for project ${projectId}:`, error);
-      message.error(`Failed to load tasks for project ${projectId}`);
+      message.error(`Không thể tải công việc cho dự án ${projectId}`);
     }
   };
 
@@ -85,10 +85,10 @@ const OrdersList = () => {
       }
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        message.error("Invalid input for project cancellation");
+        message.error("Dữ liệu không hợp lệ để hủy dự án");
       } else {
         console.error('Error cancelling project:', error);
-        message.error("Failed to cancel project");
+        message.error("Không thể hủy dự án");
       }
     }
   };
@@ -113,7 +113,7 @@ const OrdersList = () => {
       }
     } catch (error) {
       console.error('Error fetching constructors:', error);
-      message.error("Failed to load constructors");
+      message.error("Không thể tải danh sách nhà thầu");
     }
   };
 
@@ -131,7 +131,7 @@ const OrdersList = () => {
       console.log('Response received:', response);
 
       if (response.status === 200) {
-        message.success("Constructor assigned successfully");
+        message.success("Gán nhà thầu thành công");
         setIsAssignModalVisible(false);
         setOrders(prevOrders => prevOrders.map(order => 
           order.id === selectedProjectId ? {...order, ...response.data} : order
@@ -148,11 +148,11 @@ const OrdersList = () => {
       console.error('Error request:', error.request);
 
       if (error.response) {
-        message.error(`Server error: ${error.response.status}. ${error.response.data?.message || 'Unknown error'}`);
+        message.error(`Lỗi máy chủ: ${error.response.status}. ${error.response.data?.message || 'Lỗi không xác định'}`);
       } else if (error.request) {
-        message.error("Network error. Please check your connection and try again.");
+        message.error("Lỗi mạng. Vui lòng kiểm tra kết nối và thử lại.");
       } else {
-        message.error("An unexpected error occurred. Please try again.");
+        message.error("Đã xảy ra lỗi không mong đợi. Vui lòng thử lại.");
       }
     }
   };
@@ -161,14 +161,14 @@ const OrdersList = () => {
     try {
       const response = await api.patch(`/api/projects/${id}/complete`);
       if (response.status === 200) {
-        message.success("Project completed successfully");
+        message.success("Hoàn thành dự án thành công");
         setOrders(prevOrders => prevOrders.map(order => 
           order.id === id ? {...order, statusId: 'PS6', statusName: 'COMPLETED'} : order
         ));
       }
     } catch (error) {
       console.error('Error completing project:', error);
-      message.error("Failed to complete project");
+      message.error("Không thể hoàn thành dự án");
     }
   };
 

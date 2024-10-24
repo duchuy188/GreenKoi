@@ -19,13 +19,11 @@ function PondDesignColumns() {
       if (Array.isArray(response.data)) {
         setPondDesigns(response.data);
       } else {
-        toast.error("Failed to load pond designs. Unexpected data structure.");
+        toast.error("Không thể tải thiết kế hồ. Cấu trúc dữ liệu không mong đợi.");
         setPondDesigns([]);
       }
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Error fetching pond designs."
-      );
+      toast.error(err.response?.data?.message || "Lỗi khi lấy thiết kế hồ.");
       setPondDesigns([]);
     } finally {
       setLoading(false);
@@ -35,12 +33,10 @@ function PondDesignColumns() {
   const approvePondDesign = async (id) => {
     try {
       await api.patch(`/api/pond-designs/${id}/approve`);
-      toast.success("Pond design approved successfully!");
+      toast.success("Chấp thuận thiết kế hồ thành công!");
       fetchPendingPondDesigns();
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Error approving pond design."
-      );
+      toast.error(err.response?.data?.message || "Lỗi khi chấp thuận thiết kế hồ.");
     }
   };
 
@@ -49,13 +45,11 @@ function PondDesignColumns() {
       await api.patch(`/api/pond-designs/${id}/reject`, {
         rejectionReason: rejectionReason,
       });
-      toast.success("Pond design rejected successfully!");
+      toast.success("Từ chối thiết kế hồ thành công!");
       setRejectionReason("");
       fetchPendingPondDesigns();
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Error rejecting pond design."
-      );
+      toast.error(err.response?.data?.message || "Lỗi khi từ chối thiết kế hồ.");
     }
   };
 
@@ -66,7 +60,7 @@ function PondDesignColumns() {
 
   const handleReject = async () => {
     if (!rejectionReason.trim()) {
-      toast.error("Please provide a reason for rejection.");
+      toast.error("Vui lòng cung cấp lý do từ chối.");
       return;
     }
     await rejectPondDesign(selectedDesignId);
