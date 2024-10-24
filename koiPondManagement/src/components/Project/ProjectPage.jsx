@@ -33,7 +33,7 @@ export default function ProjectPage() {
           <div className="project-image-container">
             <img src={project.imageUrl} alt={project.name} className="project-image" />
             <div className="project-overlay">
-              <h2 className="project-title">{project.name}</h2>
+              <h2 className="project-title" style={{ color: "white" }}>{project.name}</h2>
             </div>
           </div>
         </Link>

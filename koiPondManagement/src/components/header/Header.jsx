@@ -50,7 +50,7 @@ function Header() {
     },
     {
       key: "2",
-      label: <Link to="/orders">Orders</Link>,
+      label: <Link to="/orders">Đơn hàng</Link>,
     },
     {
       key: "3",

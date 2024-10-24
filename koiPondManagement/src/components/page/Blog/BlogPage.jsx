@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import api from '../../config/axios';
-import './BlogPage.css';
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import api from "../../config/axios";
+import "./BlogPage.css";
 
 export default function BlogPage() {
   const [posts, setPosts] = useState([]);
@@ -17,7 +17,10 @@ export default function BlogPage() {
         setPosts([]);
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Có lỗi khi tải các bài viết đã được phê duyệt.");
+      toast.error(
+        err.response?.data?.message ||
+          "Có lỗi khi tải các bài viết đã được phê duyệt."
+      );
       setPosts([]);
     }
   };
@@ -31,11 +34,18 @@ export default function BlogPage() {
       {posts.map((post) => (
         <Link to={`/blog/${post.id}`} key={post.id} className="project-card">
           <div className="project-image-container">
-            <img src={post.coverImageUrl} alt={post.title} className="project-image" />
+            <img
+              src={post.coverImageUrl}
+              alt={post.title}
+              className="project-image"
+            />
             <div className="project-overlay">
-              <h2 className="project-title">{post.title}</h2>
-              <p className="project-content">{post.content}</p>
-              <p className="project-published-at">{new Date(post.publishedAt).toLocaleDateString()}</p>
+              <h2 className="project-title" style={{ color: "white" }}>
+                {post.title}
+              </h2>
+              <p className="project-published-at">
+                {new Date(post.publishedAt).toLocaleDateString()}
+              </p>
             </div>
           </div>
         </Link>

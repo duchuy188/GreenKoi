@@ -82,7 +82,9 @@ function BlogProject() {
         setBlogData(null);
         setIsEditModalVisible(false);
       } else {
-        message.error("Cannot create a new blog post. Only updates are allowed.");
+        message.error(
+          "Cannot create a new blog post. Only updates are allowed."
+        );
       }
 
       form.resetFields();
@@ -105,7 +107,8 @@ function BlogProject() {
       fetchBlogs();
     } catch (err) {
       message.error(
-        "Failed to delete draft: " + (err.response?.data?.message || err.message)
+        "Failed to delete draft: " +
+          (err.response?.data?.message || err.message)
       );
     } finally {
       setLoading(false);
@@ -195,7 +198,10 @@ function BlogProject() {
       key: "coverImageUrl",
       render: (url) => <img src={url} alt="Blog" style={{ width: 100 }} />,
     },
-    { title: "Trạng thái", dataIndex: "status", key: "status",
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
       render: (status) => {
         switch (status) {
           case "DRAFT":
@@ -207,6 +213,8 @@ function BlogProject() {
       title: "Thời gian tạo",
       dataIndex: "createdAt",
       key: "createdAt",
+      sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      showSorterTooltip: false,
       render: (text) => (
         <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
       ),
@@ -215,21 +223,29 @@ function BlogProject() {
       title: "Thời gian cập nhật",
       dataIndex: "updatedAt",
       key: "updatedAt",
+      sorter: (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
+      showSorterTooltip: false,
       render: (text) => (
         <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
       ),
     },
     {
-      title: "Hành động",
       key: "action",
       render: (text, record) => (
         <Space size="middle">
           <Button type="link" onClick={() => showEditModal(record)}>
             <FaEdit />
           </Button>
-          <Button type="link" onClick={() => handleSubmitDraft(record.id)}>
-            <BsUpload />
-          </Button>
+          <Popconfirm
+            title="Bạn có chắc chắn muốn đưa dự án lên không?"
+            onConfirm={() => handleSubmitDraft(record.id)}
+            okText="Đồng ý"
+            cancelText="Hủy"
+          >
+            <Button type="link">
+              <BsUpload />
+            </Button>
+          </Popconfirm>
           <Popconfirm
             title="Bạn có chắc chắn muốn xóa?"
             onConfirm={() => handleDeleteDraft(record.id)}
@@ -285,7 +301,10 @@ function BlogProject() {
       key: "coverImageUrl",
       render: (url) => <img src={url} alt="Blog" style={{ width: 100 }} />,
     },
-    { title: "Trạng thái", dataIndex: "status", key: "status", 
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
       render: (status) => {
         switch (status) {
           case "PENDING_APPROVAL":
@@ -303,6 +322,8 @@ function BlogProject() {
       title: "Thời gian tạo",
       dataIndex: "createdAt",
       key: "createdAt",
+      sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      showSorterTooltip: false,
       render: (text) => (
         <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
       ),
@@ -311,6 +332,8 @@ function BlogProject() {
       title: "Thời gian cập nhật",
       dataIndex: "updatedAt",
       key: "updatedAt",
+      sorter: (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
+      showSorterTooltip: false,
       render: (text) => (
         <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
       ),
@@ -319,6 +342,8 @@ function BlogProject() {
       title: "Thời gian xuất bản",
       dataIndex: "publishedAt",
       key: "publishedAt",
+      sorter: (a, b) => new Date(b.publishedAt) - new Date(a.publishedAt),
+      showSorterTooltip: false,
       render: (text) => (
         <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
       ),

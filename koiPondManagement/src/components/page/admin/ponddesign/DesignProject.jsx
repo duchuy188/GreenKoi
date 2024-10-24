@@ -204,7 +204,7 @@ function DesignProject() {
       <Card>
         <h1>CÁC DỰ ÁN HỒ</h1>
         <Search
-          placeholder="Search requests"
+          placeholder="Tìm kiếm"
           onChange={(e) => setSearchText(e.target.value)}
           style={{ width: 200, marginRight: 16 }} // Thêm khoảng cách 16px
         />

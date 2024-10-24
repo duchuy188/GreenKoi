@@ -109,13 +109,14 @@ function DesignBlog() {
 
   return (
     <div style={{ maxWidth: 1000, margin: "0 auto", padding: 24 }}>
-      <Card title="Create Blog Draft" bordered={false} style={{ marginBottom: 24 }}>
+      <h1>Tạo bản nháp Blog</h1>
+      <Card>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="title" label="Title" rules={[{ required: true }]}>
-            <Input placeholder="Enter blog title" />
+          <Form.Item name="title" label="Tiêu đề" rules={[{ required: true, message: "Vui lòng nhập tiêu đề!" }]}>
+            <Input placeholder="Nhập tiêu đề" />
           </Form.Item>
 
-          <Form.Item label="Content" rules={[{ required: true }]}>
+          <Form.Item name="content" label="Nội dung" rules={[{ required: true, message: "Vui lòng nhập nội dung!"}]}>
             <CKEditor
               editor={ClassicEditor}
               data={editorData}
@@ -136,13 +137,13 @@ function DesignBlog() {
             />
           </Form.Item>
 
-          <Form.Item name="coverImageUrl" label="Image URL" rules={[{ required: true }]}>
-            <Input placeholder="Enter blog image URL" />
+          <Form.Item name="coverImageUrl" label="Link ảnh bìa" rules={[{ required: true, message: "Vui lòng nhập link hình ảnh!"}]}>
+            <Input placeholder="Nhập link ảnh bìa" />
           </Form.Item>
 
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading}>
-              Create Blog Draft
+              Tạo bản nháp
             </Button>
           </Form.Item>
         </Form>

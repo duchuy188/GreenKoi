@@ -92,36 +92,37 @@ function PondDesign() {
 
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: 24, marginLeft: "8%" }}>
-      <Card title={pondData ? "Edit Pond Design" : "Create Pond Design"} bordered={false}>
+      <h1>Tạo dự án hồ</h1>
+      <Card>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="name" label="Name" rules={[{ required: true }]}>
-                <Input placeholder="Enter pond name" />
+              <Form.Item name="name" label="Tên hồ" rules={[{ required: true, message: "Vui lòng nhập tên hồ!" }]}>
+                <Input placeholder="Nhập tên hồ" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="shape" label="Shape" rules={[{ required: true }]}>
-                <Input placeholder="Enter pond shape" />
+              <Form.Item name="shape" label="Hình dạng" rules={[{ required: true, message: "Vui lòng nhập hình dạng!"}]}>
+                <Input placeholder="Nhập hình dạng" />
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="basePrice" label="Base Price" rules={[{ required: true }]}>
-                <InputNumber min={0} step={0.01} style={{ width: "100%" }} placeholder="Enter base price" />
+              <Form.Item name="basePrice" label="Giá cả" rules={[{ required: true, message: "Vui lòng nhập giá cả!"}]}>
+                <InputNumber min={0} step={0.01} style={{ width: "100%" }} placeholder="Nhập giá cả" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="dimensions" label="Dimensions" rules={[{ required: true }]}>
-                <Input placeholder="Enter pond dimensions" />
+              <Form.Item name="dimensions" label="Kích thước" rules={[{ required: true, message: "Vui lòng nhập kích thước!"}]}>
+                <Input placeholder="Nhập kích thước" />
               </Form.Item>
             </Col>
           </Row>
 
           {/* CKEditor cho mô tả */}
-          <Form.Item label="Description" rules={[{ required: true }]}>
+          <Form.Item name="description" label="Mô tả" rules={[{ required: true, message: "Vui lòng nhập mô tả!"}]}>
             <CKEditor
               editor={ClassicEditor}
               data={descriptionData}
@@ -142,17 +143,17 @@ function PondDesign() {
             />
           </Form.Item>
 
-          <Form.Item name="imageUrl" label="Image URL" rules={[{ required: true }]}>
-            <Input.TextArea placeholder="Enter pond image URL" />
+          <Form.Item name="imageUrl" label="Link ảnh bìa" rules={[{ required: true, message: "Vui lòng nhập link hình ảnh!" }]}>
+            <Input.TextArea placeholder="Nhập link hình ảnh" />
           </Form.Item>
 
-          <Form.Item name="features" label="Features" rules={[{ required: true }]}>
-            <Input.TextArea placeholder="Enter pond features" />
+          <Form.Item name="features" label="Đặc trưng" rules={[{ required: true, message: "Vui lòng nhập đặc trưng!"}]}>
+            <Input.TextArea placeholder="Nhập đặc trưng" />
           </Form.Item>
 
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading}>
-              {pondData ? "Update Pond Design" : "Create Pond Design"}
+              {pondData ? "Update Pond Design" : "Tạo thiết kế hồ"}
             </Button>
             {pondData && (
               <Button style={{ marginLeft: 8 }} onClick={() => {
