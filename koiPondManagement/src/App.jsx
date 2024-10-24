@@ -39,7 +39,7 @@ import ProjectTasks from "./components/page/admin/construction/construction";
 import ProtectedRoute from './components/ProtectedRoute';
 import InfoProfile from "./components/profiledashboard/InfoProfile";
 import OrdersCustomer from "./components/ordersCustomer/OrdersCustomer";
-import Maintenance from "./components/page/admin/manage-maintenance";
+import Maintenance from "./components/page/admin/manage-maintenance";              
 import MaintenanceRequest from "./components/page/admin/consulting/maintenance";
 function App() {
   const router = createBrowserRouter([
@@ -147,6 +147,10 @@ function App() {
             {
               path: "orderlist",
               element: <OrdersList/>,
+            },
+            {
+              path: "maintenance",
+              element: <Maintenance/>,
             },
             {
               path: "consulting",

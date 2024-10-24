@@ -7,41 +7,107 @@ import {
   Descriptions,
   Image,
   message,
+  Select,
+  Form,
+  Input,
+  DatePicker,
+  Row,
+  Col,
 } from "antd";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
+import moment from 'moment';
 
 const MaintenanceRequest = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState(null); // Store the selected record for details modal
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("PENDING");
+  const [form] = Form.useForm();
 
   useEffect(() => {
     fetchMaintenanceRequests();
-  }, []);
+  }, [statusFilter]);
 
   const fetchMaintenanceRequests = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/api/maintenance-requests/pending");
+      const response = await api.get(`/api/maintenance-requests/${statusFilter.toLowerCase()}`);
+      console.log("API response:", response.data);
       setMaintenanceRequests(response.data);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+      }
       toast.error("Không thể tải danh sách yêu cầu bảo trì");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+  };
+
   const handleViewMaintenanceDetails = (record) => {
     setSelectedRecord(record);
     setIsModalVisible(true);
+    if (record.requestStatus === "REVIEWING") {
+      form.setFieldsValue({
+        id: record.id,
+        customerId: record.customerId,
+        projectId: record.projectId,
+        description: record.description,
+        requestStatus: record.requestStatus,
+        maintenanceStatus: record.maintenanceStatus,
+        scheduledDate: record.scheduledDate,
+        agreedPrice: record.agreedPrice,
+        assignedTo: record.assignedTo,
+        maintenanceNotes: record.maintenanceNotes,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+        attachments: record.attachments,
+        
+      });
+    }
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
     setSelectedRecord(null);
+  };
+
+  const handleStartReview = async (id) => {
+    try {
+      const response = await api.patch(`/api/maintenance-requests/${id}/review`);
+      if (response.status === 200) {
+        message.success("Bắt đầu xem xét yêu cầu bảo trì thành công");
+        fetchMaintenanceRequests(); // Refresh the list
+      }
+    } catch (error) {
+      console.error("Error starting review:", error);
+      toast.error("Không thể bắt đầu xem xét yêu cầu bảo trì");
+    }
+  };
+
+  const handleUpdateMaintenanceRequest = async (values) => {
+    try {
+      const response = await api.patch(`/api/maintenance-requests/${selectedRecord.id}/confirm`, {
+        agreedPrice: values.agreedPrice,
+        requestStatus: 'CONFIRMED'  // Add this line to update the status
+      });
+      if (response.status === 200) {
+        message.success("Cập nhật giá đã thỏa thuận thành công");
+        setIsModalVisible(false);
+        fetchMaintenanceRequests();
+      }
+    } catch (error) {
+      console.error("Error updating maintenance request:", error);
+      toast.error("Không thể cập nhật giá đã thỏa thuận");
+    }
   };
 
   const columns = [
@@ -60,61 +126,139 @@ const MaintenanceRequest = () => {
           <Button onClick={() => handleViewMaintenanceDetails(record)}>
             View Details
           </Button>
+          {record.requestStatus === "PENDING" && (
+            <Button onClick={() => handleStartReview(record.id)}>
+              Start Review
+            </Button>
+          )}
         </Space>
       ),
     },
   ];
 
+  const renderModalContent = () => {
+    if (!selectedRecord) return null;
+
+    if (selectedRecord.requestStatus === "PENDING") {
+      return (
+        <Descriptions column={1} bordered>
+          <Descriptions.Item label="ID">{selectedRecord.id}</Descriptions.Item>
+          <Descriptions.Item label="Customer ID">{selectedRecord.customerId}</Descriptions.Item>
+          <Descriptions.Item label="Project ID">{selectedRecord.projectId}</Descriptions.Item>
+          <Descriptions.Item label="Description">{selectedRecord.description}</Descriptions.Item>
+          <Descriptions.Item label="Request Status">{selectedRecord.requestStatus}</Descriptions.Item>
+          <Descriptions.Item label="Created At">{selectedRecord.createdAt}</Descriptions.Item>
+          <Descriptions.Item label="Updated At">{selectedRecord.updatedAt}</Descriptions.Item>
+          <Descriptions.Item label="Attachments">{selectedRecord.attachments}</Descriptions.Item>
+        </Descriptions>
+      );
+    } else if (selectedRecord.requestStatus === "REVIEWING") {
+      return (
+        <Form
+          form={form}
+          onFinish={handleUpdateMaintenanceRequest}
+          layout="vertical"
+          initialValues={{
+            ...selectedRecord,
+            scheduledDate: selectedRecord.scheduledDate ? moment(selectedRecord.scheduledDate) : null,
+          }}
+        >
+          <Form.Item name="id" label="ID">
+            <Input disabled />
+          </Form.Item>
+          <Form.Item name="customerId" label="Customer ID">
+            <Input disabled />
+          </Form.Item>
+          <Form.Item name="projectId" label="Project ID">
+            <Input disabled />
+          </Form.Item>
+          <Form.Item name="description" label="Description">
+            <Input.TextArea disabled />
+          </Form.Item>
+          <Form.Item name="requestStatus" label="Request Status">
+            <Input disabled />
+          </Form.Item>
+          <Form.Item name="maintenanceStatus" label="Maintenance Status" hidden>
+            <Input disabled />
+          </Form.Item>
+          <Form.Item name="scheduledDate" label="Scheduled Date" hidden>
+            <DatePicker disabled />
+          </Form.Item>
+          <Form.Item 
+            name="agreedPrice" 
+            label="Agreed Price"
+            rules={[{ required: true, message: 'Please input the agreed price!' }]}
+          >
+            <Input type="number" disabled={selectedRecord.requestStatus !== "REVIEWING"} />
+          </Form.Item>
+          <Form.Item name="assignedTo" label="Assigned To" hidden>
+            <Input/>
+          </Form.Item>
+          <Form.Item name="maintenanceNotes" label="Maintenance Notes" hidden>
+            <Input.TextArea/>
+          </Form.Item>
+          <Form.Item name="createdAt" label="Created At">
+            <Input disabled />
+          </Form.Item>
+          <Form.Item name="updatedAt" label="Updated At">
+            <Input disabled />
+          </Form.Item>
+          <Form.Item name="attachments" label="Attachments">
+            <Input disabled />
+          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="requestStatus" label="Request Status">
+                <Input disabled />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="agreedPrice" label="Agreed Price">
+                <Input type="number" disabled={selectedRecord.requestStatus !== "REVIEWING"} />
+              </Form.Item>
+            </Col>
+          </Row>
+          {selectedRecord.requestStatus === "REVIEWING" && (
+            <Button type="primary" htmlType="submit">
+              Update Agreed Price
+            </Button>
+          )}
+        </Form>
+      );
+    }
+  };
+
   return (
     <div>
       <h1>Yêu cầu bảo trì</h1>
-      <Table
-        columns={columns}
-        dataSource={maintenanceRequests}
-        loading={loading}
-        rowKey="id"
-        locale={{ emptyText: "Không có yêu cầu bảo trì nào" }}
-      />
+      <Select
+        style={{ width: 200, marginBottom: 16 }}
+        value={statusFilter}
+        onChange={handleStatusFilterChange}
+      >
+        <Select.Option value="PENDING">Đang chờ</Select.Option>
+        <Select.Option value="REVIEWING">Đang xem xét</Select.Option>
+        <Select.Option value="CONFIRMED">Đã xác nhận</Select.Option>
+      </Select>
+      {loading ? (
+        <div>Đang tải dữ liệu...</div>
+      ) : maintenanceRequests.length > 0 ? (
+        <Table
+          columns={columns}
+          dataSource={maintenanceRequests}
+          rowKey="id"
+        />
+      ) : (
+        <div>Không có yêu cầu bảo trì nào cho trạng thái này</div>
+      )}
       <Modal
         title="Chi tiết yêu cầu bảo trì"
         visible={isModalVisible}
-        onCancel={handleCancel}
+        onCancel={() => setIsModalVisible(false)}
         footer={null}
+        width={800}
       >
-        {selectedRecord && (
-          <Descriptions column={1} bordered>
-            <Descriptions.Item label="ID">{selectedRecord.id}</Descriptions.Item>
-            <Descriptions.Item label="Customer ID">{selectedRecord.customerId}</Descriptions.Item>
-            <Descriptions.Item label="Consultant ID">{selectedRecord.consultantId}</Descriptions.Item>
-            <Descriptions.Item label="Project ID">{selectedRecord.projectId}</Descriptions.Item>
-            <Descriptions.Item label="Agreed Price">{selectedRecord.agreedPrice}</Descriptions.Item>
-            <Descriptions.Item label="Description">{selectedRecord.description}</Descriptions.Item>
-            <Descriptions.Item label="Request Status">{selectedRecord.requestStatus}</Descriptions.Item>
-            <Descriptions.Item label="Maintenance Status">{selectedRecord.maintenanceStatus}</Descriptions.Item>
-            <Descriptions.Item label="Scheduled Date">{selectedRecord.scheduledDate}</Descriptions.Item>
-            <Descriptions.Item label="Start Date">{selectedRecord.startDate}</Descriptions.Item>
-            <Descriptions.Item label="Completion Date">{selectedRecord.completionDate}</Descriptions.Item>
-            <Descriptions.Item label="Assigned To">{selectedRecord.assignedTo}</Descriptions.Item>
-            <Descriptions.Item label="Cancellation Reason">
-              {selectedRecord.cancellationReason || "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Created At">{selectedRecord.createdAt}</Descriptions.Item>
-            <Descriptions.Item label="Updated At">{selectedRecord.updatedAt}</Descriptions.Item>
-            <Descriptions.Item label="Maintenance Notes">{selectedRecord.maintenanceNotes}</Descriptions.Item>
-            <Descriptions.Item label="Attachments">{selectedRecord.attachments}</Descriptions.Item>
-            <Descriptions.Item label="Maintenance Images">
-              {selectedRecord.maintenanceImages?.length ? (
-                <Image.PreviewGroup>
-                  {selectedRecord.maintenanceImages.map((url, index) => (
-                    <Image key={index} width={100} src={url} />
-                  ))}
-                </Image.PreviewGroup>
-              ) : (
-                "No Images"
-              )}
-            </Descriptions.Item>
-          </Descriptions>
-        )}
+        {renderModalContent()}
       </Modal>
     </div>
   );
