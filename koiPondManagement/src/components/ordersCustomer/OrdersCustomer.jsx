@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Button, Modal, message } from 'antd';
+import { Card, Row, Col, Button, Modal, message, Rate, Input, Form } from 'antd';
 import api from '/src/components/config/axios';
 import moment from 'moment';
 
@@ -8,6 +8,8 @@ const OrdersCustomer = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
+  const [form] = Form.useForm();
 
   useEffect(() => {
     fetchOrders();
@@ -36,6 +38,39 @@ const OrdersCustomer = () => {
     setIsModalVisible(true);
   };
 
+  const handleReview = (order) => {
+    setSelectedOrder(order);
+    setIsReviewModalVisible(true);
+  };
+
+  const submitReview = async (values) => {
+    try {
+      const reviewData = {
+        maintenanceRequestId: selectedOrder.id, 
+        projectId: selectedOrder.id,
+        rating: values.rating,
+        comment: values.comment,
+        reviewDate: moment().format("YYYY-MM-DDTHH:mm:ss.SSS"),
+        status: "SUBMITTED"
+      };
+
+      const response = await api.post(`/api/projects/${selectedOrder.id}/reviews`, reviewData);
+      console.log('Review submission response:', response);
+      message.success('Review submitted successfully');
+      setIsReviewModalVisible(false);
+      form.resetFields();
+      fetchOrders();
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+        console.error("Response headers:", error.response.headers);
+      }
+      message.error(`Failed to submit review: ${error.message}`);
+    }
+  };
+
   return (
     <div>
       <h1>My Orders</h1>
@@ -44,7 +79,14 @@ const OrdersCustomer = () => {
           <Col xs={24} sm={12} md={8} lg={6} key={order.id}>
             <Card
               title={order.name}
-              extra={<Button onClick={() => handleViewDetails(order)}>View Details</Button>}
+              extra={
+                <div>
+                  <Button onClick={() => handleViewDetails(order)}>View Details</Button>
+                  {order.statusName === 'COMPLETED' && (
+                    <Button onClick={() => handleReview(order)} style={{ marginLeft: '8px' }}>Review</Button>
+                  )}
+                </div>
+              }
               loading={loading}
             >
               <p><strong>ID:</strong> {order.id}</p>
@@ -82,6 +124,26 @@ const OrdersCustomer = () => {
             </ul>
           </div>
         )}
+      </Modal>
+      <Modal
+        title="Submit Review"
+        visible={isReviewModalVisible}
+        onCancel={() => setIsReviewModalVisible(false)}
+        footer={null}
+      >
+        <Form form={form} onFinish={submitReview}>
+          <Form.Item name="rating" label="Rating" rules={[{ required: true, message: 'Please rate the project' }]}>
+            <Rate />
+          </Form.Item>
+          <Form.Item name="comment" label="Comment" rules={[{ required: true, message: 'Please leave a comment' }]}>
+            <Input.TextArea rows={4} />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit">
+              Submit Review
+            </Button>
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );

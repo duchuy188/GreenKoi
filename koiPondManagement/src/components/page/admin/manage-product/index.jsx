@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Table, message, Button, Popconfirm, Card, Row, Col, Switch, Typography, Tag, Space, Progress, Modal, Select } from 'antd';
+import { Table, message, Button, Popconfirm, Card, Row, Col, Switch, Typography, Tag, Space, Progress, Modal, Select, Tooltip, Rate } from 'antd';
 import api from "../../../config/axios";
 import moment from 'moment';
-import { CalendarOutlined, DollarOutlined, FileTextOutlined, UserOutlined } from '@ant-design/icons';
+import { CalendarOutlined, DollarOutlined, FileTextOutlined, UserOutlined, StarOutlined } from '@ant-design/icons';
 
 const { Text, Title } = Typography;
 const { Option } = Select;
@@ -16,6 +16,7 @@ const OrdersList = () => {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [selectedConstructorId, setSelectedConstructorId] = useState(null);
   const [constructors, setConstructors] = useState([]);
+  const [projectReviews, setProjectReviews] = useState({});
 
   useEffect(() => {
     fetchOrders();
@@ -27,9 +28,10 @@ const OrdersList = () => {
       setLoading(true);
       const response = await api.get('/api/projects');
       setOrders(response.data);
-      // Fetch tasks for each project
+      // Fetch tasks and reviews for each project
       for (const order of response.data) {
         fetchProjectTasks(order.id, order.constructorId);
+        fetchProjectReview(order.id);
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -50,6 +52,20 @@ const OrdersList = () => {
     } catch (error) {
       console.error(`Error fetching tasks for project ${projectId}:`, error);
       message.error(`Failed to load tasks for project ${projectId}`);
+    }
+  };
+
+  const fetchProjectReview = async (projectId) => {
+    try {
+      const response = await api.get(`/api/projects/${projectId}/reviews`);
+      console.log(`Review for project ${projectId}:`, response.data); // Log để kiểm tra
+      setProjectReviews(prevReviews => ({
+        ...prevReviews,
+        [projectId]: response.data
+      }));
+    } catch (error) {
+      console.error(`Error fetching review for project ${projectId}:`, error);
+      // Don't show an error message for missing reviews
     }
   };
 
@@ -270,6 +286,25 @@ const OrdersList = () => {
         </span>
       ),
     },
+    {
+      title: 'Customer Review',
+      key: 'customerReview',
+      render: (_, record) => {
+        const review = projectReviews[record.id];
+        console.log(`Rendering review for project ${record.id}:`, review); // Log để kiểm tra
+        return review ? (
+          <Space>
+            <StarOutlined style={{ color: '#fadb14' }} />
+            <span>{review.rating} / 5</span>
+            <Tooltip title={review.comment}>
+              <Button type="link">View Comment</Button>
+            </Tooltip>
+          </Space>
+        ) : (
+          <span>No review yet</span>
+        );
+      },
+    },
   ];
 
   const renderCardView = () => (
@@ -326,6 +361,16 @@ const OrdersList = () => {
               
               <Text strong><UserOutlined /> Constructor:</Text>
               <Text>{order.constructorId ? `${order.constructorName || 'Assigned'}` : 'Not assigned'}</Text>
+              
+              <Text strong><StarOutlined /> Customer Review:</Text>
+              {projectReviews[order.id] ? (
+                <>
+                  <Rate disabled defaultValue={projectReviews[order.id].rating} />
+                  <Text>{projectReviews[order.id].comment}</Text>
+                </>
+              ) : (
+                <Text>No review yet</Text>
+              )}
             </Space>
           </Card>
         </Col>
