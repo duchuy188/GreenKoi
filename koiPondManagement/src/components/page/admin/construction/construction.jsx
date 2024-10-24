@@ -58,11 +58,11 @@ const ProjectTasks = () => {
       } else if (newPercentage < 100) {
         newStatus = 'in process';
       } else {
-        newStatus = 'complete';
+        newStatus = 'COMPLETED';
       }
 
       // Kiểm tra nếu task đã hoàn thành
-      if (tasks.find(task => task.id === taskId)?.status === 'complete') {
+      if (tasks.find(task => task.id === taskId)?.status === 'COMPLETED') {
         message.warning('Cannot update a completed task');
         return;
       }
@@ -108,7 +108,7 @@ const ProjectTasks = () => {
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
-        <Tag color={status === 'completed' ? 'green' : 'blue'}>
+        <Tag color={status === 'COMPLETED' ? 'green' : 'blue'}>
           {status ? status.toUpperCase() : 'N/A'}
         </Tag>
       ),
@@ -120,7 +120,7 @@ const ProjectTasks = () => {
       render: (percentage, record) => (
         <Space>
           <Progress percent={percentage || 0} size="small" />
-          {record.status !== 'complete' && (
+          {record.status !== 'COMPLETED' && (
             <Button onClick={() => updateTaskStatus(record.id, Math.min((percentage || 0) + 10, 100))}>
               Update
             </Button>

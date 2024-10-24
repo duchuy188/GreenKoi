@@ -141,6 +141,21 @@ const OrdersList = () => {
     }
   };
 
+  const completeProject = async (id) => {
+    try {
+      const response = await api.patch(`/api/projects/${id}/complete`);
+      if (response.status === 200) {
+        message.success("Project completed successfully");
+        setOrders(prevOrders => prevOrders.map(order => 
+          order.id === id ? {...order, statusId: 'PS6', statusName: 'COMPLETED'} : order
+        ));
+      }
+    } catch (error) {
+      console.error('Error completing project:', error);
+      message.error("Failed to complete project");
+    }
+  };
+
   const columns = [
     {
       title: 'ID',
@@ -216,6 +231,16 @@ const OrdersList = () => {
             <Button danger>Cancel Project</Button>
           </Popconfirm>
           <Button onClick={() => showAssignModal(record.id)}>Assign Constructor</Button>
+          {record.statusId !== 'PS6' && (
+            <Popconfirm
+              title="Are you sure all tasks are completed and you want to mark this project as complete?"
+              onConfirm={() => completeProject(record.id)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button type="primary">Complete Project</Button>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -259,9 +284,19 @@ const OrdersList = () => {
               </Space>
             }
             extra={
-              <Button danger size="small">
-                Cancel
-              </Button>
+              <Space>
+                <Button danger size="small">Cancel</Button>
+                {order.statusId !== 'P54' && (
+                  <Popconfirm
+                    title="Are you sure all tasks are completed and you want to mark this project as complete?"
+                    onConfirm={() => completeProject(order.id)}
+                    okText="Yes"
+                    cancelText="No"
+                  >
+                    <Button type="primary" size="small">Complete</Button>
+                  </Popconfirm>
+                )}
+              </Space>
             }
             hoverable
           >
