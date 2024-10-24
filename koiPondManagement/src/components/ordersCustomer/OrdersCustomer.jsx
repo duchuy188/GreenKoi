@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Button, Modal, message, Rate, Input, Form } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import api from '/src/components/config/axios';
 import moment from 'moment';
 
@@ -10,6 +11,7 @@ const OrdersCustomer = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchOrders();
@@ -71,6 +73,10 @@ const OrdersCustomer = () => {
     }
   };
 
+  const handleRequestMaintenance = (order) => {
+    navigate('/customer-maintenance', { state: { projectId: order.id } });
+  };
+
   return (
     <div>
       <h1>My Orders</h1>
@@ -83,7 +89,10 @@ const OrdersCustomer = () => {
                 <div>
                   <Button onClick={() => handleViewDetails(order)}>View Details</Button>
                   {order.statusName === 'COMPLETED' && (
-                    <Button onClick={() => handleReview(order)} style={{ marginLeft: '8px' }}>Review</Button>
+                    <>
+                      <Button onClick={() => handleReview(order)} style={{ marginLeft: '8px' }}>Review</Button>
+                      <Button onClick={() => handleRequestMaintenance(order)} style={{ marginLeft: '8px' }}>Yêu Cầu bảo trì</Button>
+                    </>
                   )}
                 </div>
               }

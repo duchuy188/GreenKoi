@@ -66,7 +66,7 @@ const items = [
     "blogproject",
   ),
   ]),
-  getItem("NHân viên tư vấn", "consulting", <CommentOutlined />, [
+  getItem("Nhân viên tư vấn", "consulting", <CommentOutlined />, [
     getItem(
       <Link to="/dashboard/consulting/requests">Yêu cầu</Link>,
       "consulting-requests"
@@ -74,6 +74,10 @@ const items = [
     getItem(
       <Link to="/dashboard/consulting/orders">Đơn hàng</Link>,
       "consulting-orders"
+    ),
+    getItem(
+      <Link to="/dashboard/consulting/maintenance">Bảo trì</Link>,
+      "consulting-maintenance"
     ),
   ]),
   getItem("NHân viên xây dựng", "construction", <CommentOutlined />, [
