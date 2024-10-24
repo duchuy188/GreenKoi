@@ -164,8 +164,10 @@ public class MaintenanceRequestService {
     }
 
     public List<MaintenanceRequestDTO> getAssignedMaintenanceRequests(String staffId) {
-        return maintenanceRequestRepository.findByAssignedToIdAndMaintenanceStatus(
-            staffId, MaintenanceRequest.MaintenanceStatus.ASSIGNED)
+        return maintenanceRequestRepository.findByAssignedToIdAndMaintenanceStatusIn(
+            staffId, List.of(MaintenanceRequest.MaintenanceStatus.ASSIGNED, 
+                             MaintenanceRequest.MaintenanceStatus.IN_PROGRESS, 
+                             MaintenanceRequest.MaintenanceStatus.SCHEDULED))
             .stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());
@@ -388,6 +390,28 @@ public class MaintenanceRequestService {
 
     public List<MaintenanceRequestDTO> getReviewingMaintenanceRequests() {
         return maintenanceRequestRepository.findByRequestStatus(MaintenanceRequest.RequestStatus.REVIEWING)
+            .stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
+    }
+
+    public List<MaintenanceRequestDTO> getCompletedMaintenanceRequests() {
+        return maintenanceRequestRepository.findByMaintenanceStatus(MaintenanceRequest.MaintenanceStatus.COMPLETED)
+            .stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
+    }
+
+    public List<MaintenanceRequestDTO> getAllCompletedMaintenanceRequests() {
+        return maintenanceRequestRepository.findByMaintenanceStatus(MaintenanceRequest.MaintenanceStatus.COMPLETED)
+            .stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
+    }
+
+    public List<MaintenanceRequestDTO> getCompletedMaintenanceRequestsForStaff(String staffId) {
+        return maintenanceRequestRepository.findByAssignedToIdAndMaintenanceStatus(
+            staffId, MaintenanceRequest.MaintenanceStatus.COMPLETED)
             .stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());

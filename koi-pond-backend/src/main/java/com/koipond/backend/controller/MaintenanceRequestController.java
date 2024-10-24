@@ -187,5 +187,25 @@ public class MaintenanceRequestController {
         return ResponseEntity.ok(reviewingRequests);
     }
 
+    @GetMapping("/completed")
+    @PreAuthorize("hasAnyRole('ROLE_1', 'ROLE_4')") // Allow Manager and Construction Staff
+    @Operation(summary = "Get completed maintenance requests", description = "Retrieves all completed maintenance requests. Accessible by managers and construction staff.")
+    public ResponseEntity<List<MaintenanceRequestDTO>> getCompletedMaintenanceRequests(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String role = userDetails.getAuthorities().iterator().next().getAuthority();
+
+        List<MaintenanceRequestDTO> completedRequests;
+        if ("ROLE_1".equals(role)) {
+            // Manager: Get all completed requests
+            completedRequests = maintenanceRequestService.getAllCompletedMaintenanceRequests();
+        } else {
+            // Construction Staff: Get only completed requests assigned to them
+            String staffId = userDetails.getId();
+            completedRequests = maintenanceRequestService.getCompletedMaintenanceRequestsForStaff(staffId);
+        }
+
+        return ResponseEntity.ok(completedRequests);
+    }
+
     // Add more endpoints as needed
 }

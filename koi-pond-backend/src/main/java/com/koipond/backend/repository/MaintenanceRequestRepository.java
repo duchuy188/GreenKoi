@@ -3,7 +3,6 @@ package com.koipond.backend.repository;
 import com.koipond.backend.model.MaintenanceRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
 
 @Repository
@@ -25,4 +24,8 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
     
     // Thêm phương thức đếm số yêu cầu bảo trì đang chờ xử lý (pending và chưa có trạng thái bảo trì)
     long countByRequestStatusAndMaintenanceStatusIsNull(MaintenanceRequest.RequestStatus requestStatus);
+
+    List<MaintenanceRequest> findByAssignedToIdAndMaintenanceStatusIn(String assignedToId, List<MaintenanceRequest.MaintenanceStatus> statuses);
+
+    List<MaintenanceRequest> findByMaintenanceStatus(MaintenanceRequest.MaintenanceStatus status);
 }

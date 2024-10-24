@@ -177,6 +177,9 @@ public class SecurityConfig {
                         // New rule for reviewing maintenance requests
                         .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/reviewing").hasAuthority("ROLE_2")
 
+                        // New rule for completed maintenance requests
+                        .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/completed").hasAnyAuthority("ROLE_1", "ROLE_4")
+
                         // Catch-all rule
                         .anyRequest().authenticated();
 
