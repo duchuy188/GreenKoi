@@ -179,5 +179,13 @@ public class MaintenanceRequestController {
         return ResponseEntity.ok(review);
     }
 
+    @GetMapping("/reviewing")
+    @PreAuthorize("hasRole('ROLE_2')")
+    @Operation(summary = "Get reviewing maintenance requests", description = "Retrieves all maintenance requests in reviewing status. Only accessible by consultants.")
+    public ResponseEntity<List<MaintenanceRequestDTO>> getReviewingMaintenanceRequests() {
+        List<MaintenanceRequestDTO> reviewingRequests = maintenanceRequestService.getReviewingMaintenanceRequests();
+        return ResponseEntity.ok(reviewingRequests);
+    }
+
     // Add more endpoints as needed
 }

@@ -385,4 +385,11 @@ public class MaintenanceRequestService {
             .map(this::convertToReviewDTO)
             .orElseThrow(() -> new ResourceNotFoundException("Review not found for maintenance request: " + maintenanceRequestId));
     }
+
+    public List<MaintenanceRequestDTO> getReviewingMaintenanceRequests() {
+        return maintenanceRequestRepository.findByRequestStatus(MaintenanceRequest.RequestStatus.REVIEWING)
+            .stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
+    }
 }

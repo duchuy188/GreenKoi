@@ -174,6 +174,9 @@ public class SecurityConfig {
                         // Dashboard endpoints
                         .requestMatchers("/api/dashboard/**").hasAuthority("ROLE_1")
 
+                        // New rule for reviewing maintenance requests
+                        .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/reviewing").hasAuthority("ROLE_2")
+
                         // Catch-all rule
                         .anyRequest().authenticated();
 
