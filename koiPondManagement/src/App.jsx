@@ -41,6 +41,7 @@ import InfoProfile from "./components/profiledashboard/InfoProfile";
 import OrdersCustomer from "./components/ordersCustomer/OrdersCustomer";
 import Maintenance from "./components/page/admin/manage-maintenance";              
 import MaintenanceRequest from "./components/page/admin/consulting/maintenance";
+import ConstrucMain from "./components/page/admin/construction/construc-main";
 function App() {
   const router = createBrowserRouter([
     {
@@ -175,6 +176,10 @@ function App() {
                 {
                   path: "tasks",
                   element: <ProjectTasks />,
+                },
+                {
+                  path: "main",
+                  element: <ConstrucMain />,
                 },
               ],
             },
