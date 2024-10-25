@@ -26,7 +26,7 @@ const RequestConsulting = () => {
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [editOrderModalVisible, setEditOrderModalVisible] = useState(false);
   const [editOrderForm] = Form.useForm();
-  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("PENDING");
 
   useEffect(() => {
     fetchConsultationRequests();
@@ -50,13 +50,20 @@ const RequestConsulting = () => {
       const response = await api.get("/api/ConsultationRequests");
       console.log("Raw consultation requests:", response.data);
       if (Array.isArray(response.data)) {
-        const requests = response.data.map((request) => {
-          console.log("Individual request:", request);
-          return request;
-        });
+        const requests = response.data
+          .filter(request => request.status !== "CANCELLED")
+          .map((request) => {
+            console.log("Individual request:", request);
+            return request;
+          })
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); 
+      
         setConsultationRequests(requests);
       } else if (response.data.consultationRequests) {
-        setConsultationRequests(response.data.consultationRequests);
+        const filteredRequests = response.data.consultationRequests
+          .filter(request => request.status !== "CANCELLED")
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setConsultationRequests(filteredRequests);
       } else {
         setConsultationRequests([]);
         toast.error(
@@ -138,7 +145,7 @@ const RequestConsulting = () => {
         ...values,
         startDate: values.startDate.format('YYYY-MM-DD'),
         endDate: values.endDate.format('YYYY-MM-DD'),
-        promotionId: null, // You may want to handle this differently
+        promotionId: null,
         address: values.address,
         customerId: values.customerId,
         consultantId: values.consultantId || null,
@@ -149,9 +156,9 @@ const RequestConsulting = () => {
       const response = await api.post("/api/projects", projectData);
       if (response.data) {
         message.success("Order created successfully");
-        await fetchConsultationRequests();
-        // Update consultation request status to COMPLETED
+ 
         await updateConsultationStatus(selectedRequest.id, "COMPLETED");
+        await fetchConsultationRequests(); 
         setEditOrderModalVisible(false);
       }
     } catch (error) {
@@ -170,8 +177,10 @@ const RequestConsulting = () => {
       await api.put(
         `/api/ConsultationRequests/${id}/status?newStatus=${newStatus}`
       );
+      console.log(`Consultation status updated to ${newStatus}`);
     } catch (error) {
       console.error("Error updating consultation status:", error);
+      message.error("Failed to update consultation status");
     }
   };
 
@@ -272,14 +281,14 @@ const RequestConsulting = () => {
           style={{ width: 200 }}
         />
         <Select
-          defaultValue="ALL"
+          value={statusFilter}
           style={{ width: 120 }}
           onChange={handleStatusFilterChange}
         >
-          <Select.Option value="ALL">All Statuses</Select.Option>
           <Select.Option value="PENDING">Pending</Select.Option>
           <Select.Option value="IN_PROGRESS">In Progress</Select.Option>
           <Select.Option value="COMPLETED">Completed</Select.Option>
+          <Select.Option value="ALL">All Statuses</Select.Option>
         </Select>
       </Space>
       <Table

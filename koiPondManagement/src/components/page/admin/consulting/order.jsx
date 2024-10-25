@@ -19,8 +19,10 @@ const Orders = () => {
     try {
       setLoading(true);
       const response = await api.get('/api/projects/consultant');
-      console.log('Fetched orders:', response.data); // Thêm dòng này
-      setOrders(response.data);
+      console.log('Fetched orders:', response.data);
+      // Sort orders by createdAt in descending order
+      const sortedOrders = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setOrders(sortedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       message.error("Failed to load orders");
@@ -185,6 +187,8 @@ const Orders = () => {
         dataSource={orders}
         loading={loading}
         rowKey="id"
+        // Add this line to disable default sorting
+        pagination={{ defaultSortOrder: 'descend' }}
       />
       <Modal
         title="Edit Order"

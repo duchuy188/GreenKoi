@@ -123,7 +123,9 @@ function Profile() {
         }
       );
       console.log("Consultation requests:", response.data);
-      setConsultationRequests(response.data);
+      // Filter out CANCELLED requests
+      const filteredRequests = response.data.filter(request => request.status !== "CANCELLED");
+      setConsultationRequests(filteredRequests);
     } catch (err) {
       console.error("Lỗi khi tìm kiếm yêu cầu tư vấn:", err);
       message.error("Không tải được yêu cầu tư vấn");

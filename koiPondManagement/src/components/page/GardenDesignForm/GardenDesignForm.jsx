@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // Sử dụng hook điều hướng
-import { message } from "antd";
-import api from "../../config/axios"; // Đảm bảo đường dẫn này chính xác
-import "./GardenDesignForm.css"; // Tạo file CSS riêng cho component này
+import { useNavigate, useLocation } from "react-router-dom"; 
+import { toast } from "react-toastify"; 
+import api from "../../config/axios"; 
+import "./GardenDesignForm.css"; 
 
 const GardenDesignForm = () => {
-  const navigate = useNavigate(); // Hook điều hướng trang
+  const navigate = useNavigate(); 
   const location = useLocation();
   const [formData, setFormData] = useState({
-    name: "", // for pond design
-    description: "", // for pond design
-    shape: "", // for pond design
-    dimensions: "", // for pond design
-    features: "", // for pond design
-    customerName: "", // for consultation request
-    customerPhone: "", // for consultation request
-    customerAddress: "", // for consultation request
-    notes: "", // for consultation request
+    name: "", 
+    description: "", 
+    shape: "", 
+    dimensions: "", 
+    features: "", 
+    customerName: "",
+    customerPhone: "", 
+    customerAddress: "", 
+    notes: "",
   });
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = localStorage.getItem("token"); // Giả sử token được lưu trong localStorage
+        const token = localStorage.getItem("token"); 
         const response = await api.get("/api/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -36,13 +36,13 @@ const GardenDesignForm = () => {
         }));
       } catch (error) {
         console.error("Error fetching user profile:", error);
-        // Xử lý lỗi ở đây, ví dụ hiển thị thông báo cho người dùng
+      
       }
     };
 
     fetchUserProfile();
 
-    // Điền thông tin từ location state nếu có
+   
     if (location.state) {
       const { id, name, description, shape, dimensions, features, basePrice } =
         location.state;
@@ -74,14 +74,14 @@ const GardenDesignForm = () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      alert("Bạn cần đăng nhập để gửi yêu cầu");
+      toast.error("Bạn cần đăng nhập để gửi yêu cầu");
       navigate("/login");
       return;
     }
 
     try {
       const consultationRequest = {
-        designId: location.state?.projectId, // Use projectId from location state
+        designId: location.state?.projectId, 
         customerName: formData.customerName,
         customerPhone: formData.customerPhone,
         customerAddress: formData.customerAddress,
@@ -104,7 +104,7 @@ const GardenDesignForm = () => {
       );
 
       if (response.status === 201 || response.status === 200) {
-        alert("Yêu cầu tư vấn đã được gửi thành công!");
+        toast.success("Yêu cầu tư vấn đã được gửi thành công!");
         navigate("/");
       }
     } catch (error) {
@@ -114,7 +114,7 @@ const GardenDesignForm = () => {
         console.error("Response status:", error.response.status);
         console.error("Response headers:", error.response.headers);
       }
-      alert("Có lỗi xảy ra khi gửi yêu cầu tư vấn. Vui lòng thử lại sau.");
+      toast.error("Có lỗi xảy ra khi gửi yêu cầu tư vấn. Vui lòng thử lại sau.");
     }
   };
 
@@ -156,7 +156,7 @@ const GardenDesignForm = () => {
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => navigate(`/duan/${location.state?.projectId}`)} // Điều hướng quay lại trang dự án
+            onClick={() => navigate(`/duan/${location.state?.projectId}`)}
           >
             Xem chi tiết
           </button>
