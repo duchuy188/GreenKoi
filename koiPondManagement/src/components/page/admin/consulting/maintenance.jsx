@@ -228,6 +228,10 @@ const MaintenanceRequest = () => {
     }
   };
 
+  const filteredRequests = maintenanceRequests.filter(request => 
+    request.requestStatus === "PENDING" || request.requestStatus === "REVIEWING"
+  );
+
   return (
     <div>
       <h1>Yêu cầu bảo trì</h1>
@@ -238,14 +242,13 @@ const MaintenanceRequest = () => {
       >
         <Select.Option value="PENDING">Đang chờ</Select.Option>
         <Select.Option value="REVIEWING">Đang xem xét</Select.Option>
-        <Select.Option value="CONFIRMED">Đã xác nhận</Select.Option>
       </Select>
       {loading ? (
         <div>Đang tải dữ liệu...</div>
-      ) : maintenanceRequests.length > 0 ? (
+      ) : filteredRequests.length > 0 ? (
         <Table
           columns={columns}
-          dataSource={maintenanceRequests}
+          dataSource={filteredRequests}
           rowKey="id"
         />
       ) : (
