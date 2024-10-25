@@ -89,6 +89,10 @@ const items = [
       <Link to="/dashboard/construction/tasks">Công việc</Link>,
       "construction-tasks"
     ),
+    getItem(
+      <Link to="/dashboard/construction/main">Bảo trì</Link>,
+      "construction-main"
+    ),
   ]),
 ];
 
@@ -141,7 +145,7 @@ const Dashboard = () => {
     if (path.includes('consulting')) {
       return roleId === 2; // Consultant
     }
-    if (path.includes('construction')) {
+    if (path.includes('construction'))  {
       return roleId === 4; // Constructor
     }
    
