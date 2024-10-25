@@ -93,6 +93,10 @@ const items = [
       <Link to="/dashboard/construction/main">Bảo trì</Link>,
       "construction-main"
     ),
+    getItem(
+      <Link to="/dashboard/construction/reviewcomplete">Đánh giá hoàn thành</Link>,
+      "construction-reviewcomplete"
+    ),
   ]),
 ];
 

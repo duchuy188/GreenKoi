@@ -42,6 +42,7 @@ import OrdersCustomer from "./components/ordersCustomer/OrdersCustomer";
 import Maintenance from "./components/page/admin/manage-maintenance";              
 import MaintenanceRequest from "./components/page/admin/consulting/maintenance";
 import ConstrucMain from "./components/page/admin/construction/construc-main";
+import ConstrucReviewComplete from "./components/page/admin/construction/construc-reviewcomplete";
 function App() {
   const router = createBrowserRouter([
     {
@@ -181,6 +182,10 @@ function App() {
                   path: "main",
                   element: <ConstrucMain />,
                 },
+                {
+                  path: "reviewcomplete",
+                  element: <ConstrucReviewComplete />,
+                }
               ],
             },
             {

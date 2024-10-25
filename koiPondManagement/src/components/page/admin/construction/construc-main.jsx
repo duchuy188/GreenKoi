@@ -39,6 +39,7 @@ const ConstrucMain = () => {
         maintenanceImages: request.maintenanceImages,
         createdAt: request.createdAt,
         updatedAt: request.updatedAt,
+        assignedTo: request.assignedTo || '',
       }));
 
       setMaintenanceRequests(transformedData);
@@ -124,7 +125,7 @@ const ConstrucMain = () => {
               reader.onerror = error => reject(error);
             });
           }
-          return file.url; // If it's already a URL
+          return file.url; 
         })
       );
 
@@ -300,6 +301,12 @@ const ConstrucMain = () => {
       dataIndex: 'updatedAt',
       key: 'updatedAt',
       render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss'),
+    },
+    {
+      title: 'Assigned To',
+      dataIndex: 'assignedTo',
+      key: 'assignedTo',
+      render: (assignedTo) => assignedTo || '-',
     },
     // Actions column ở cuối
     {
