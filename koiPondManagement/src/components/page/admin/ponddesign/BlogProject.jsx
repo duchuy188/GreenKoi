@@ -387,8 +387,8 @@ function BlogProject() {
           >
             <Option value="ALL">Tất cả</Option>
             <Option value="PENDING_APPROVAL">Chờ duyệt</Option>
-            <Option value="APPROVED">Đã duyệt</Option>
-            <Option value="REJECTED">Từ chối</Option>
+            <Option value="Duyệt">Đã duyệt</Option>
+            <Option value="Từ chối">Từ chối</Option>
           </Select>
         </Space>
         <Table

@@ -77,7 +77,7 @@ const OrdersList = () => {
       });
       
       if (response.status === 200) {
-        message.success("Project cancelled successfully");
+        message.success("Đã hủy dự án thành công");
         // Cập nhật trạng thái dự án trong danh sách local nếu cần
         setOrders(prevOrders => prevOrders.map(order => 
           order.id === id ? {...order, statusId: response.data.statusId, statusName: response.data.statusName} : order
@@ -131,7 +131,7 @@ const OrdersList = () => {
       console.log('Response received:', response);
 
       if (response.status === 200) {
-        message.success("Gán nhà thầu thành công");
+        message.success("Đã phân công nhà thầu thành công");
         setIsAssignModalVisible(false);
         setOrders(prevOrders => prevOrders.map(order => 
           order.id === selectedProjectId ? {...order, ...response.data} : order
@@ -161,7 +161,7 @@ const OrdersList = () => {
     try {
       const response = await api.patch(`/api/projects/${id}/complete`);
       if (response.status === 200) {
-        message.success("Hoàn thành dự án thành công");
+        message.success("Đã hoàn thành dự án thành công");
         setOrders(prevOrders => prevOrders.map(order => 
           order.id === id ? {...order, statusId: 'PS6', statusName: 'COMPLETED'} : order
         ));
@@ -179,47 +179,47 @@ const OrdersList = () => {
       key: 'id',
     },
     {
-      title: 'Name',
+      title: 'Tên',
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: 'Description',
+      title: 'Mô tả',
       dataIndex: 'description',
       key: 'description',
     },
     {
-      title: 'Total Price',
+      title: 'Tổng giá',
       dataIndex: 'totalPrice',
       key: 'totalPrice',
     },
     {
-      title: 'Deposit Amount',
+      title: 'Số tiền đặt cọc',
       dataIndex: 'depositAmount',
       key: 'depositAmount',
     },
     {
-      title: 'Start Date',
+      title: 'Ngày bắt đầu',
       dataIndex: 'startDate',
       key: 'startDate',
     },
     {
-      title: 'End Date',
+      title: 'Ngày kết thúc',
       dataIndex: 'endDate',
       key: 'endDate',
     },
     {
-      title: 'Customer ID',
+      title: 'Mã khách hàng',
       dataIndex: 'customerId',
       key: 'customerId',
     },
     {
-      title: 'Consultant ID',
+      title: 'Mã tư vấn viên',
       dataIndex: 'consultantId',
       key: 'consultantId',
     },
     {
-      title: 'Status',
+      title: 'Trạng thái',
       dataIndex: 'statusId',
       key: 'statusId',
       render: (statusId) => {
@@ -228,40 +228,40 @@ const OrdersList = () => {
       },
     },
     {
-      title: 'Created At',
+      title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss'),
     },
     {
-      title: 'Actions',
+      title: 'Hành động',
       key: 'actions',
       render: (_, record) => (
         <Space>
           <Popconfirm
-            title="Are you sure you want to cancel this project?"
+            title="Bạn có chắc chắn muốn hủy dự án này không?"
             onConfirm={() => cancelProject(record.id)}
-            okText="Yes"
-            cancelText="No"
+            okText="Có"
+            cancelText="Không"
           >
-            <Button danger>Cancel Project</Button>
+            <Button danger>Hủy dự án</Button>
           </Popconfirm>
-          <Button onClick={() => showAssignModal(record.id)}>Assign Constructor</Button>
+          <Button onClick={() => showAssignModal(record.id)}>Phân công nhà thầu</Button>
           {record.statusId !== 'PS6' && (
             <Popconfirm
-              title="Are you sure all tasks are completed and you want to mark this project as complete?"
+              title="Bạn có chắc chắn rằng tất cả công việc đã hoàn thành và muốn đánh dấu dự án này là hoàn thành không?"
               onConfirm={() => completeProject(record.id)}
-              okText="Yes"
-              cancelText="No"
+              okText="Có"
+              cancelText="Không"
             >
-              <Button type="primary">Complete Project</Button>
+              <Button type="primary">Hoàn thành dự án</Button>
             </Popconfirm>
           )}
         </Space>
       ),
     },
     {
-      title: 'Tasks Progress',
+      title: 'Tiến độ công việc',
       key: 'tasksProgress',
       render: (_, record) => {
         const tasks = projectTasks[record.id] || [];
@@ -271,23 +271,23 @@ const OrdersList = () => {
         return (
           <Space direction="vertical">
             <Progress percent={Math.round(totalProgress)} size="small" />
-            <Text>{`${completedTasks}/${tasks.length} tasks completed`}</Text>
+            <Text>{`${completedTasks}/${tasks.length} công việc đã hoàn thành`}</Text>
           </Space>
         );
       },
     },
     {
-      title: 'Constructor',
+      title: 'Nhà thầu',
       dataIndex: 'constructorId',
       key: 'constructor',
       render: (constructorId, record) => (
         <span>
-          {constructorId ? `${record.constructorName || 'Assigned'}` : 'Not assigned'}
+          {constructorId ? `${record.constructorName || 'Đã phân công'}` : 'Chưa phân công'}
         </span>
       ),
     },
     {
-      title: 'Customer Review',
+      title: 'Đánh giá của khách hàng',
       key: 'customerReview',
       render: (_, record) => {
         const review = projectReviews[record.id];
@@ -297,11 +297,11 @@ const OrdersList = () => {
             <StarOutlined style={{ color: '#fadb14' }} />
             <span>{review.rating} / 5</span>
             <Tooltip title={review.comment}>
-              <Button type="link">View Comment</Button>
+              <Button type="link">Xem bình luận</Button>
             </Tooltip>
           </Space>
         ) : (
-          <span>No review yet</span>
+          <span>Chưa có đánh giá</span>
         );
       },
     },
@@ -314,21 +314,21 @@ const OrdersList = () => {
           <Card
             title={
               <Space>
-                <Title level={5}>Order {order.id.slice(-4)}</Title>
+                <Title level={5}>Đơn hàng {order.id.slice(-4)}</Title>
                 <Tag color={getStatusColor(order.statusId)}>{order.statusId}</Tag>
               </Space>
             }
             extra={
               <Space>
-                <Button danger size="small">Cancel</Button>
+                <Button danger size="small">Hủy</Button>
                 {order.statusId !== 'P54' && (
                   <Popconfirm
-                    title="Are you sure all tasks are completed and you want to mark this project as complete?"
+                    title="Bạn có chắc chắn rằng tất cả công việc đã hoàn thành và muốn đánh dấu dự án này là hoàn thành không?"
                     onConfirm={() => completeProject(order.id)}
-                    okText="Yes"
-                    cancelText="No"
+                    okText="Có"
+                    cancelText="Không"
                   >
-                    <Button type="primary" size="small">Complete</Button>
+                    <Button type="primary" size="small">Hoàn thành</Button>
                   </Popconfirm>
                 )}
               </Space>
@@ -336,40 +336,40 @@ const OrdersList = () => {
             hoverable
           >
             <Space direction="vertical" size="small">
-              <Text strong><FileTextOutlined /> Name:</Text>
+              <Text strong><FileTextOutlined /> Tên:</Text>
               <Text>{order.name}</Text>
               
-              <Text strong><FileTextOutlined /> Description:</Text>
-              <Text>{order.description || 'N/A'}</Text>
+              <Text strong><FileTextOutlined /> Mô tả:</Text>
+              <Text>{order.description || 'Không có'}</Text>
               
-              <Text strong><DollarOutlined /> Total Price:</Text>
+              <Text strong><DollarOutlined /> Tổng giá:</Text>
               <Text>{order.totalPrice || 0}</Text>
               
-              <Text strong><CalendarOutlined /> Created At:</Text>
+              <Text strong><CalendarOutlined /> Ngày tạo:</Text>
               <Text>{moment(order.createdAt).format('YYYY-MM-DD HH:mm:ss')}</Text>
               
-              <Text strong><CalendarOutlined /> Tasks Progress:</Text>
+              <Text strong><CalendarOutlined /> Tiến độ công việc:</Text>
               {projectTasks[order.id] && (
                 <>
                   <Progress 
                     percent={Math.round((projectTasks[order.id].filter(task => task.status === 'completed').length / projectTasks[order.id].length) * 100)} 
                     size="small" 
                   />
-                  <Text>{`${projectTasks[order.id].filter(task => task.status === 'completed').length}/${projectTasks[order.id].length} tasks completed`}</Text>
+                  <Text>{`${projectTasks[order.id].filter(task => task.status === 'completed').length}/${projectTasks[order.id].length} công việc đã hoàn thành`}</Text>
                 </>
               )}
               
-              <Text strong><UserOutlined /> Constructor:</Text>
-              <Text>{order.constructorId ? `${order.constructorName || 'Assigned'}` : 'Not assigned'}</Text>
+              <Text strong><UserOutlined /> Nhà thầu:</Text>
+              <Text>{order.constructorId ? `${order.constructorName || 'Đã phân công'}` : 'Chưa phân công'}</Text>
               
-              <Text strong><StarOutlined /> Customer Review:</Text>
+              <Text strong><StarOutlined /> Đánh giá của khách hàng:</Text>
               {projectReviews[order.id] ? (
                 <>
                   <Rate disabled defaultValue={projectReviews[order.id].rating} />
                   <Text>{projectReviews[order.id].comment}</Text>
                 </>
               ) : (
-                <Text>No review yet</Text>
+                <Text>Chưa có đánh giá</Text>
               )}
             </Space>
           </Card>
@@ -393,7 +393,7 @@ const OrdersList = () => {
 
   return (
     <div>
-      <h1>Orders List</h1>
+      <h1>Danh sách đơn hàng</h1>
       <div style={{ marginBottom: 16 }}>
         <span style={{ marginRight: 8 }}>View mode:</span>
         <Switch
@@ -414,14 +414,14 @@ const OrdersList = () => {
         renderCardView()
       )}
       <Modal
-        title="Assign Constructor"
+        title="Phân công nhà thầu"
         visible={isAssignModalVisible}
         onOk={handleAssignConstructor}
         onCancel={() => setIsAssignModalVisible(false)}
       >
         <Select
           style={{ width: '100%' }}
-          placeholder="Select a constructor"
+          placeholder="Chọn một nhà thầu"
           onChange={(value) => setSelectedConstructorId(value)}
           loading={constructors.length === 0}
         >

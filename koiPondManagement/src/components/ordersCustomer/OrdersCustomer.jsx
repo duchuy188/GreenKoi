@@ -28,11 +28,11 @@ const OrdersCustomer = () => {
         setOrders(response.data);
       } else {
         console.error("Unexpected data structure:", response.data);
-        message.error('Unexpected data structure received');
+        message.error('Cấu trúc dữ liệu không mong đợi');
       }
     } catch (error) {
       console.error("Error fetching orders:", error);
-      message.error('Failed to load orders');
+      message.error('Không thể tải danh sách đơn hàng');
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ const OrdersCustomer = () => {
 
       const response = await api.post(`/api/projects/${selectedOrder.id}/reviews`, reviewData);
       console.log('Review submission response:', response);
-      message.success('Review submitted successfully');
+      message.success('Đánh giá đã được gửi thành công');
       setIsReviewModalVisible(false);
       form.resetFields();
       fetchOrders();
@@ -72,7 +72,7 @@ const OrdersCustomer = () => {
         console.error("Response status:", error.response.status);
         console.error("Response headers:", error.response.headers);
       }
-      message.error(`Failed to submit review: ${error.message}`);
+      message.error(`Không thể gửi đánh giá: ${error.message}`);
     }
   };
 
@@ -95,13 +95,13 @@ const OrdersCustomer = () => {
 
       const response = await api.post(`/api/maintenance-requests`, maintenanceData);
       console.log('Maintenance request submission response:', response);
-      message.success('Maintenance request submitted successfully');
+      message.success('Yêu cầu bảo trì đã được gửi thành công');
       setIsMaintenanceModalVisible(false);
       maintenanceForm.resetFields();
       fetchOrders(); // Refresh the orders list
     } catch (error) {
       console.error("Error submitting maintenance request:", error);
-      message.error(`Failed to submit maintenance request: ${error.message}`);
+      message.error(`Không thể gửi yêu cầu bảo trì: ${error.message}`);
     } finally {
       setMaintenanceLoading(false);
     }
@@ -109,7 +109,7 @@ const OrdersCustomer = () => {
 
   return (
     <div>
-      <h1>My Orders</h1>
+      <h1>Đơn Hàng Của Tôi</h1>
       <Row gutter={[16, 16]}>
         {orders.map(order => (
           <Col xs={24} sm={12} md={8} lg={6} key={order.id}>
@@ -117,47 +117,47 @@ const OrdersCustomer = () => {
               title={order.name}
               extra={
                 <div>
-                  <Button onClick={() => handleViewDetails(order)}>View Details</Button>
+                  <Button onClick={() => handleViewDetails(order)}>Xem Chi Tiết</Button>
                   {order.statusName === 'COMPLETED' && (
                     <>
-                      <Button onClick={() => handleReview(order)} style={{ marginLeft: '8px' }}>Review</Button>
-                      <Button onClick={() => handleRequestMaintenance(order)} style={{ marginLeft: '8px' }}>Yêu Cầu bảo trì</Button>
+                      <Button onClick={() => handleReview(order)} style={{ marginLeft: '8px' }}>Đánh Giá</Button>
+                      <Button onClick={() => handleRequestMaintenance(order)} style={{ marginLeft: '8px' }}>Yêu Cầu Bảo Trì</Button>
                     </>
                   )}
                 </div>
               }
               loading={loading}
             >
-              <p><strong>ID:</strong> {order.id}</p>
-              <p><strong>Total Price:</strong> {order.totalPrice != null ? `$${Number(order.totalPrice).toFixed(2)}` : 'N/A'}</p>
-              <p><strong>Status:</strong> {order.statusName}</p>
-              <p><strong>Start Date:</strong> {moment(order.startDate).format('YYYY-MM-DD')}</p>
-              <p><strong>End Date:</strong> {moment(order.endDate).format('YYYY-MM-DD')}</p>
+              <p><strong>Mã Đơn:</strong> {order.id}</p>
+              <p><strong>Tổng Giá:</strong> {order.totalPrice != null ? `$${Number(order.totalPrice).toFixed(2)}` : 'N/A'}</p>
+              <p><strong>Trạng Thái:</strong> {order.statusName}</p>
+              <p><strong>Ngày Bắt Đầu:</strong> {moment(order.startDate).format('DD/MM/YYYY')}</p>
+              <p><strong>Ngày Kết Thúc:</strong> {moment(order.endDate).format('DD/MM/YYYY')}</p>
             </Card>
           </Col>
         ))}
       </Row>
       <Modal
-        title="Order Details"
+        title="Chi Tiết Đơn Hàng"
         visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
       >
         {selectedOrder && (
           <div>
-            <p><strong>Name:</strong> {selectedOrder.name || 'N/A'}</p>
-            <p><strong>Description:</strong> {selectedOrder.description || 'N/A'}</p>
-            <p><strong>Total Price:</strong> {selectedOrder.totalPrice != null ? `$${Number(selectedOrder.totalPrice).toFixed(2)}` : 'N/A'}</p>
-            <p><strong>Deposit Amount:</strong> {selectedOrder.depositAmount != null ? `$${Number(selectedOrder.depositAmount).toFixed(2)}` : 'N/A'}</p>
-            <p><strong>Status:</strong> {selectedOrder.statusName || 'N/A'}</p>
-            <p><strong>Start Date:</strong> {selectedOrder.startDate ? moment(selectedOrder.startDate).format('YYYY-MM-DD') : 'N/A'}</p>
-            <p><strong>End Date:</strong> {selectedOrder.endDate ? moment(selectedOrder.endDate).format('YYYY-MM-DD') : 'N/A'}</p>
-            <p><strong>Consultant ID:</strong> {selectedOrder.consultantId || 'N/A'}</p>
-            <h3>Tasks:</h3>
+            <p><strong>Tên:</strong> {selectedOrder.name || 'N/A'}</p>
+            <p><strong>Mô Tả:</strong> {selectedOrder.description || 'N/A'}</p>
+            <p><strong>Tổng Giá:</strong> {selectedOrder.totalPrice != null ? `$${Number(selectedOrder.totalPrice).toFixed(2)}` : 'N/A'}</p>
+            <p><strong>Số Tiền Đặt Cọc:</strong> {selectedOrder.depositAmount != null ? `$${Number(selectedOrder.depositAmount).toFixed(2)}` : 'N/A'}</p>
+            <p><strong>Trạng Thái:</strong> {selectedOrder.statusName || 'N/A'}</p>
+            <p><strong>Ngày Bắt Đầu:</strong> {selectedOrder.startDate ? moment(selectedOrder.startDate).format('DD/MM/YYYY') : 'N/A'}</p>
+            <p><strong>Ngày Kết Thúc:</strong> {selectedOrder.endDate ? moment(selectedOrder.endDate).format('DD/MM/YYYY') : 'N/A'}</p>
+            <p><strong>Mã Tư Vấn Viên:</strong> {selectedOrder.consultantId || 'N/A'}</p>
+            <h3>Công Việc:</h3>
             <ul>
               {(selectedOrder.tasks || []).map((task, index) => (
                 <li key={index}>
-                  {task.name} - Status: {task.status}, Completion: {task.completionPercentage != null ? `${task.completionPercentage}%` : 'N/A'}
+                  {task.name} - Trạng Thái: {task.status}, Hoàn Thành: {task.completionPercentage != null ? `${task.completionPercentage}%` : 'N/A'}
                 </li>
               ))}
             </ul>
@@ -165,27 +165,27 @@ const OrdersCustomer = () => {
         )}
       </Modal>
       <Modal
-        title="Submit Review"
+        title="Gửi Đánh Giá"
         visible={isReviewModalVisible}
         onCancel={() => setIsReviewModalVisible(false)}
         footer={null}
       >
         <Form form={form} onFinish={submitReview}>
-          <Form.Item name="rating" label="Rating" rules={[{ required: true, message: 'Please rate the project' }]}>
+          <Form.Item name="rating" label="Đánh Giá" rules={[{ required: true, message: 'Vui lòng đánh giá dự án' }]}>
             <Rate />
           </Form.Item>
-          <Form.Item name="comment" label="Comment" rules={[{ required: true, message: 'Please leave a comment' }]}>
+          <Form.Item name="comment" label="Bình Luận" rules={[{ required: true, message: 'Vui lòng để lại bình luận' }]}>
             <Input.TextArea rows={4} />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
-              Submit Review
+              Gửi Đánh Giá
             </Button>
           </Form.Item>
         </Form>
       </Modal>
       <Modal
-        title="Maintenance Request"
+        title="Yêu Cầu Bảo Trì"
         visible={isMaintenanceModalVisible}
         onCancel={() => {
           setIsMaintenanceModalVisible(false);
@@ -203,17 +203,17 @@ const OrdersCustomer = () => {
           </Form.Item>
           <Form.Item
             name="description"
-            label="Description"
-            rules={[{ required: true, message: "Please input description" }]}
+            label="Mô Tả"
+            rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
           >
             <Input.TextArea rows={4} />
           </Form.Item>
-          <Form.Item name="attachments" label="Attachments">
+          <Form.Item name="attachments" label="Tệp Đính Kèm">
             <Input />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={maintenanceLoading}>
-              Submit Request
+              Gửi Yêu Cầu
             </Button>
           </Form.Item>
         </Form>

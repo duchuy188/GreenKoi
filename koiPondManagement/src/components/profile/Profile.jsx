@@ -151,6 +151,7 @@ function Profile() {
   };
 
   const handleEdit = (record) => {
+    console.log("Editing record:", record);
     setEditingRequest(record);
     editForm.setFieldsValue({
       designName: record.designName,
@@ -258,14 +259,18 @@ function Profile() {
               icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
               style={{ marginRight: "10px" }}
-            />
+            >
+              Chỉnh sửa
+            </Button>
             <Popconfirm
               title="Bạn có chắc chắn muốn xóa yêu cầu này?"
               onConfirm={() => handleDelete(record.id)}
               okText="Có"
               cancelText="Không"
             >
-              <Button icon={<DeleteOutlined />} danger />
+              <Button icon={<DeleteOutlined />} danger>
+                Xóa
+              </Button>
             </Popconfirm>
           </span>
         ) : null,
@@ -397,6 +402,39 @@ function Profile() {
           </div>
         </div>
       </div>
+      <Modal
+        title="Chỉnh sửa yêu cầu tư vấn"
+        visible={!!editingRequest}
+        onCancel={() => setEditingRequest(null)}
+        footer={null}
+      >
+        <Form form={editForm} onFinish={handleEditSubmit} layout="vertical">
+          <Form.Item
+            name="designName"
+            label="Tên dự án"
+            rules={[{ required: true, message: 'Vui lòng nhập tên dự án' }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item name="notes" label="Ghi chú">
+            <Input.TextArea />
+          </Form.Item>
+          <Form.Item name="customerName" label="Tên khách hàng">
+            <Input />
+          </Form.Item>
+          <Form.Item name="customerPhone" label="Số điện thoại">
+            <Input />
+          </Form.Item>
+          <Form.Item name="customerAddress" label="Địa chỉ">
+            <Input />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit">
+              Cập nhật
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }
