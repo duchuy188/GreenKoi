@@ -11,6 +11,8 @@ import {
   Tabs,
   message,
   Popconfirm,
+  DatePicker,
+  Image,
 } from "antd";
 import {
   EditOutlined,
@@ -18,6 +20,7 @@ import {
   UserOutlined,
   ShoppingOutlined,
 } from "@ant-design/icons";
+import moment from 'moment';
 
 function Profile() {
   const [profileData, setProfileData] = useState(null);
@@ -29,6 +32,10 @@ function Profile() {
   const [activeTab, setActiveTab] = useState("1");
   const [editingRequest, setEditingRequest] = useState(null);
   const [editForm] = Form.useForm();
+  const [activeSubTab, setActiveSubTab] = useState("design");
+  const [maintenanceRequests, setMaintenanceRequests] = useState([]);
+  const [isMaintenanceModalVisible, setIsMaintenanceModalVisible] = useState(false);
+  const [maintenanceForm] = Form.useForm();
 
   // Get user information from Redux store
   const user = useSelector((state) => state.user);
@@ -38,6 +45,7 @@ function Profile() {
       await fetchProfileData();
       console.log("Profile data after fetch:", profileData);
       await fetchConsultationRequests();
+      await fetchMaintenanceRequests();
     };
 
     fetchData();
@@ -79,7 +87,7 @@ function Profile() {
             throw new Error("Invalid profile data");
           }
         } catch (apiError) {
-          console.error("Lỗi khi lấy hồ sơ từ API:", apiError);
+          console.error("Lỗi khi lấy hồ sơ t API:", apiError);
         }
       }
 
@@ -131,6 +139,21 @@ function Profile() {
       message.error("Không tải được yêu cầu tư vấn");
     }
   };
+
+  const fetchMaintenanceRequests = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const customerId = profileData?.id || localStorage.getItem("customerId");
+      const response = await api.get(`/api/maintenance-requests/customer/${customerId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setMaintenanceRequests(response.data);
+    } catch (err) {
+      console.error("Error fetching maintenance requests:", err);
+      message.error("Không tải được yêu cầu bảo trì");
+    }
+  };
+
   const handleEditInfo = () => {
     form.setFieldsValue(profileData);
     setIsEditing(true);
@@ -218,6 +241,71 @@ function Profile() {
   const handlePhoneChange = (e) => {
     const value = e.target.value.replace(/[^\d]/g, "");
     form.setFieldsValue({ phone: value });
+  };
+
+  const handleMaintenanceSubmit = async (values) => {
+    try {
+      const token = localStorage.getItem("token");
+      const customerId = profileData?.id || localStorage.getItem("customerId");
+      const projectId = values.projectId || null; // Assuming projectId is optional
+      await api.post("/api/maintenance-requests", {
+        customerId,
+        projectId,
+        description: values.description,
+        requestStatus: "PENDING",
+        maintenanceStatus: "ASSIGNED",
+        scheduledDate: values.scheduledDate.format("YYYY-MM-DD"),
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      message.success("Yêu cầu bảo trì đã được gửi thành công");
+      setIsMaintenanceModalVisible(false);
+      maintenanceForm.resetFields();
+      fetchMaintenanceRequests();
+    } catch (err) {
+      console.error("Error submitting maintenance request:", err);
+      message.error("Không thể gửi yêu cầu bảo trì");
+    }
+  };
+
+  const maintenanceColumns = [
+    {
+      title: "Hình Ảnh",
+      dataIndex: "attachments",
+      key: "attachments",
+      render: (attachments) => (
+        <Image.PreviewGroup>
+          {attachments && attachments.map((attachment, index) => (
+            <Image
+              key={index}
+              width={50}
+              src={attachment}
+              alt={`Attachment ${index + 1}`}
+            />
+          ))}
+        </Image.PreviewGroup>
+      ),
+    },
+    { title: "Tên Dự Án", dataIndex: "projectId", key: "projectId" },
+    { 
+      title: "Ngày Yêu Cầu", 
+      dataIndex: "createdAt", 
+      key: "createdAt",
+      render: (text) => moment(text).format('DD/MM/YYYY')
+    },
+    
+    { title: "Trạng Thái", dataIndex: "requestStatus", key: "requestStatus" },
+    { title: "Ghi Chú", dataIndex: "description", key: "description" },
+    { title: "Hành Động", key: "action", render: (_, record) => (
+      <span>
+        <Button icon={<EditOutlined />} onClick={() => handleEdit(record)}>Chỉnh sửa</Button>
+      </span>
+    )}
+  ];
+
+  const handleViewDetails = (record) => {
+    // Implement view details functionality
+    console.log("Viewing details of:", record);
   };
 
   if (loading) return <div>Đang tải...</div>;
@@ -393,12 +481,26 @@ function Profile() {
 
             {activeTab === "2" && (
               <div>
-                <h3>Yêu cầu tư vấn của tôi</h3>
-                <Table
-                  dataSource={consultationRequests}
-                  columns={consultationColumns}
-                  rowKey="id"
-                />
+                <h3>Yêu cầu của tôi</h3>
+                <Tabs
+                  activeKey={activeSubTab}
+                  onChange={(key) => setActiveSubTab(key)}
+                >
+                  <Tabs.TabPane tab="Yêu cầu thiết kế và xây dựng" key="design">
+                    <Table
+                      dataSource={consultationRequests}
+                      columns={consultationColumns}
+                      rowKey="id"
+                    />
+                  </Tabs.TabPane>
+                  <Tabs.TabPane tab="Yêu cầu bảo trì" key="maintenance">
+                    <Table
+                      dataSource={maintenanceRequests}
+                      columns={maintenanceColumns}
+                      rowKey="id"
+                    />
+                  </Tabs.TabPane>
+                </Tabs>
               </div>
             )}
           </div>
@@ -433,6 +535,40 @@ function Profile() {
           <Form.Item>
             <Button type="primary" htmlType="submit">
               Cập nhật
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+      <Modal
+        title="Yêu Cầu Bảo Trì"
+        visible={isMaintenanceModalVisible}
+        onCancel={() => setIsMaintenanceModalVisible(false)}
+        footer={null}
+      >
+        <Form form={maintenanceForm} onFinish={handleMaintenanceSubmit} layout="vertical">
+          <Form.Item
+            name="projectId"
+            label="Mã Dự Án"
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="description"
+            label="Mô Tả"
+            rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
+          >
+            <Input.TextArea />
+          </Form.Item>
+          <Form.Item
+            name="scheduledDate"
+            label="Ngày Dự Kiến"
+            rules={[{ required: true, message: 'Vui lòng chọn ngày dự kiến' }]}
+          >
+            <DatePicker />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit">
+              Gửi Yêu Cầu
             </Button>
           </Form.Item>
         </Form>
