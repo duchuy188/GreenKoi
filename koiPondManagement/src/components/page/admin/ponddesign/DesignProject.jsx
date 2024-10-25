@@ -152,7 +152,6 @@ function DesignProject() {
       ),
     },
     { title: "Giá", dataIndex: "basePrice", key: "basePrice" },
-    { title: "Tạo bởi", dataIndex: "createdById", key: "createdById" },
     {
       title: "Trạng thái",
       dataIndex: "status",

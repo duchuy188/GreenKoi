@@ -23,7 +23,10 @@ function BrowsePond() {
       const response = await api.get("/api/blog/posts/pending");
       setPosts(response.data);
     } catch (err) {
-      message.error("Không thể lấy bài viết blog đang chờ: " + (err.response?.data?.message || err.message));
+      message.error(
+        "Không thể lấy bài viết blog đang chờ: " +
+          (err.response?.data?.message || err.message)
+      );
     } finally {
       setPostsLoading(false);
     }
@@ -35,7 +38,10 @@ function BrowsePond() {
       const response = await api.get("/api/blog/posts/approved/all");
       setApprovedPosts(response.data);
     } catch (err) {
-      message.error("Không thể lấy bài viết blog đã duyệt: " + (err.response?.data?.message || err.message));
+      message.error(
+        "Không thể lấy bài viết blog đã duyệt: " +
+          (err.response?.data?.message || err.message)
+      );
     } finally {
       setPostsLoading(false);
     }
@@ -43,7 +49,7 @@ function BrowsePond() {
 
   // Add refresh function
   const refreshData = () => {
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
   };
 
   useEffect(() => {
@@ -72,9 +78,9 @@ function BrowsePond() {
         message.success("Duyệt blog thành công");
       } else if (actionType === "reject") {
         await api.post(`/api/blog/posts/${selectedPost.id}/reject`, {
-          additionalProp1: rejectReason, 
+          additionalProp1: rejectReason,
           additionalProp2: rejectReason, // Thêm prop này nếu cần
-          additionalProp3: rejectReason  // Thêm prop này nếu cần
+          additionalProp3: rejectReason, // Thêm prop này nếu cần
         });
         message.success("Từ chối blog thành công");
       }
@@ -82,7 +88,10 @@ function BrowsePond() {
       setSubmitModalVisible(false);
       setSelectedPost(null);
     } catch (err) {
-      message.error(`Không thể ${actionType} blog: ` + (err.response?.data?.message || err.message));
+      message.error(
+        `Không thể ${actionType} blog: ` +
+          (err.response?.data?.message || err.message)
+      );
     }
   };
 
@@ -92,7 +101,10 @@ function BrowsePond() {
       message.success("Xóa blog thành công");
       refreshData(); // Trigger refresh after delete
     } catch (err) {
-      message.error("Không thể xóa bài viết blog: " + (err.response?.data?.message || err.message));
+      message.error(
+        "Không thể xóa bài viết blog: " +
+          (err.response?.data?.message || err.message)
+      );
     }
   };
 
@@ -102,7 +114,10 @@ function BrowsePond() {
       message.success("Khôi phục blog thành công");
       refreshData(); // Trigger refresh after restore
     } catch (err) {
-      message.error("Không thể khôi phục bài viết blog: " + (err.response?.data?.message || err.message));
+      message.error(
+        "Không thể khôi phục bài viết blog: " +
+          (err.response?.data?.message || err.message)
+      );
     }
   };
 
@@ -111,7 +126,7 @@ function BrowsePond() {
       title: "ID",
       dataIndex: "id",
       key: "id",
-      render: (text, record, index) => index + 1
+      render: (text, record, index) => index + 1,
     },
     {
       title: "Tiêu Đề",
@@ -163,11 +178,7 @@ function BrowsePond() {
       title: "Hoạt Động",
       dataIndex: "active",
       key: "active",
-      render: (active) => (
-        <Tag>
-          {active ? 'Hoạt động' : 'Không hoạt động'}
-        </Tag>
-      )
+      render: (active) => <Tag>{active ? "Hoạt động" : "Không hoạt động"}</Tag>,
     },
     {
       title: "Thời gian tạo",
@@ -185,11 +196,18 @@ function BrowsePond() {
       key: "actions",
       render: (text, record) => (
         <>
-          <Button type="link" onClick={() => openActionModal(record, "approve")}>
-            Approve
+          <Button
+            type="primary"
+            onClick={() => openActionModal(record, "approve")}
+          >
+            Chấp Nhận
           </Button>
-          <Button type="link" onClick={() => openActionModal(record, "reject")}>
-            Reject
+          <Button
+            type="primary"
+            danger
+            onClick={() => openActionModal(record, "reject")}
+          >
+            Không chấp nhận
           </Button>
         </>
       ),
@@ -203,11 +221,19 @@ function BrowsePond() {
       render: (text, record) => (
         <div>
           {record.active ? (
-            <Button type="link" danger onClick={() => handleDeletePost(record.id)}>
+            <Button
+              type="link"
+              danger
+              onClick={() => handleDeletePost(record.id)}
+            >
               Xóa
             </Button>
           ) : (
-            <Button type="link" className="text-green-500" onClick={() => handleRestorePost(record.id)}>
+            <Button
+              type="link"
+              className="text-green-500"
+              onClick={() => handleRestorePost(record.id)}
+            >
               Khôi phục
             </Button>
           )}
@@ -246,15 +272,16 @@ function BrowsePond() {
 
       {/* Action confirmation modal */}
       <Modal
-        title={actionType === "approve" ? "Approve Blog" : "Reject Blog"}
+        title={actionType === "approve" ? "Approve Blog" : "Từ chối"}
         open={submitModalVisible}
         onOk={handleBlogAction}
         onCancel={() => setSubmitModalVisible(false)}
+        okText="Xác nhận"
+        cancelText="Hủy"
       >
-        <p>Are you sure you want to {actionType} this blog?</p>
         {actionType === "reject" && (
           <TextArea
-            placeholder="Enter the reason for rejection"
+            placeholder="Nhập lý do tử chối..."
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             rows={4}
@@ -273,7 +300,7 @@ function BrowsePond() {
           </Button>,
         ]}
       >
-        <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+        <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
           <div dangerouslySetInnerHTML={{ __html: currentContent }} />
         </div>
       </Modal>

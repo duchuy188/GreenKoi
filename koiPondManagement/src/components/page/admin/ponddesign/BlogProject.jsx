@@ -82,9 +82,7 @@ function BlogProject() {
         setBlogData(null);
         setIsEditModalVisible(false);
       } else {
-        message.error(
-          "Không thể tạo bài viết mới. Chỉ cho phép cập nhật."
-        );
+        message.error("Không thể tạo bài viết mới. Chỉ cho phép cập nhật.");
       }
 
       form.resetFields();
@@ -107,8 +105,7 @@ function BlogProject() {
       fetchBlogs();
     } catch (err) {
       message.error(
-        "Xóa nháp thất bại: " +
-          (err.response?.data?.message || err.message)
+        "Xóa nháp thất bại: " + (err.response?.data?.message || err.message)
       );
     } finally {
       setLoading(false);
@@ -123,8 +120,7 @@ function BlogProject() {
       fetchBlogs();
     } catch (err) {
       message.error(
-        "Gửi nháp thất bại: " +
-          (err.response?.data?.message || err.message)
+        "Gửi nháp thất bại: " + (err.response?.data?.message || err.message)
       );
     } finally {
       setLoading(false);
@@ -157,7 +153,12 @@ function BlogProject() {
   );
 
   const draftColumns = [
-    { title: "ID", dataIndex: "id", key: "id", render: (text, record, index) => index + 1,},
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+      render: (text, record, index) => index + 1,
+    },
     {
       title: "Tiêu đề",
       dataIndex: "title",
@@ -249,6 +250,8 @@ function BlogProject() {
           <Popconfirm
             title="Bạn có chắc chắn muốn xóa?"
             onConfirm={() => handleDeleteDraft(record.id)}
+            okText="Đồng ý"
+            cancelText="Hủy"
           >
             <Button type="link" danger>
               <RiDeleteBin2Fill />
@@ -260,7 +263,12 @@ function BlogProject() {
   ];
 
   const pendingColumns = [
-    { title: "ID", dataIndex: "id", key: "id", render: (text, record, index) => index + 1},
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+      render: (text, record, index) => index + 1,
+    },
     {
       title: "Tiêu đề",
       dataIndex: "title",
