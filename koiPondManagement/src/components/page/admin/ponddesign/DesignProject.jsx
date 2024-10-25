@@ -26,8 +26,7 @@ function DesignProject() {
   const [searchText, setSearchText] = useState("");
   const [designerPonds, setDesignerPonds] = useState([]);
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [isDescriptionModalVisible, setIsDescriptionModalVisible] =
-    useState(false);
+  const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
   const [currentDescription, setCurrentDescription] = useState("");
   const [isEditModalVisible, setIsEditModalVisible] = useState(false); // Thêm state cho modal chỉnh sửa
   const navigate = useNavigate();
@@ -114,7 +113,7 @@ function DesignProject() {
 
   // Updated columns definition
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id" },
+    { title: "ID", dataIndex: "id", key: "id", render: (text, record, index) => index + 1},
     { title: "Tên Hồ", dataIndex: "name", key: "name" },
     {
       title: "Mô tả",
@@ -122,7 +121,7 @@ function DesignProject() {
       key: "description",
       render: (text) => (
         <span>
-          {text.slice(0, 50)}...
+          {text ? text.slice(0, 5) : "No description available"}...
           <Button type="link" onClick={() => showDescriptionModal(text)}>
             Xem thêm
           </Button>
@@ -139,7 +138,19 @@ function DesignProject() {
     },
     { title: "Hình dáng", dataIndex: "shape", key: "shape" },
     { title: "Kích Thước", dataIndex: "dimensions", key: "dimensions" },
-    { title: "Đặc Trưng", dataIndex: "features", key: "features" },
+    {
+      title: "Đặc Trưng",
+      dataIndex: "features",
+      key: "features",
+      render: (text) => (
+        <span>
+          {text ? text.slice(0, 5) : "No features available"}...
+          <Button type="link" onClick={() => showDescriptionModal(text)}>
+            Xem thêm
+          </Button>
+        </span>
+      ),
+    },
     { title: "Giá", dataIndex: "basePrice", key: "basePrice" },
     { title: "Tạo bởi", dataIndex: "createdById", key: "createdById" },
     {
@@ -192,14 +203,9 @@ function DesignProject() {
   ];
 
   return (
-    <div style={{ maxWidth: 1550, margin: "0 auto", padding: 24 }}>
+    <div style={{ maxWidth: 1550, margin: "0 auto" }}>
       <Card>
         <h1>CÁC DỰ ÁN HỒ</h1>
-        <Search
-          placeholder="Tìm kiếm"
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ width: 200, marginRight: 16 }} // Thêm khoảng cách 16px
-        />
         <Select
           defaultValue="ALL"
           onChange={(value) => setStatusFilter(value)}
@@ -226,7 +232,7 @@ function DesignProject() {
         okText="Đóng"
         cancelButtonProps={{ style: { display: "none" } }}
       >
-        <p>{currentDescription}</p>
+        <div dangerouslySetInnerHTML={{ __html: currentDescription }} />
       </Modal>
 
       {/* Modal chỉnh sửa */}
@@ -257,43 +263,13 @@ function DesignProject() {
             name="description"
             rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
           >
-            <Input.TextArea rows={4} />
-          </Form.Item>
-
-          <Form.Item
-            label="Hình dáng"
-            name="shape"
-            rules={[{ required: true, message: "Vui lòng nhập hình dáng" }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            label="Kích Thước"
-            name="dimensions"
-            rules={[{ required: true, message: "Vui lòng nhập kích thước" }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            label="Đặc Trưng"
-            name="features"
-          >
-            <Input />
+            <Input.TextArea rows={3} />
           </Form.Item>
 
           <Form.Item
             label="Giá"
             name="basePrice"
             rules={[{ required: true, message: "Vui lòng nhập giá" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Link ảnh"
-            name="imageUrl"
-            rules={[{ required: true, message: "Vui lòng nhập link ảnh " }]}
           >
             <Input />
           </Form.Item>

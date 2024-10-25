@@ -157,7 +157,7 @@ function BlogProject() {
   );
 
   const draftColumns = [
-    { title: "ID", dataIndex: "id", key: "id" },
+    { title: "ID", dataIndex: "id", key: "id", render: (text, record, index) => index + 1,},
     {
       title: "Tiêu đề",
       dataIndex: "title",
@@ -260,7 +260,7 @@ function BlogProject() {
   ];
 
   const pendingColumns = [
-    { title: "ID", dataIndex: "id", key: "id" },
+    { title: "ID", dataIndex: "id", key: "id", render: (text, record, index) => index + 1},
     {
       title: "Tiêu đề",
       dataIndex: "title",
@@ -373,12 +373,6 @@ function BlogProject() {
       <div>
         <h1>Bài viết đã gửi</h1>
         <Space style={{ marginBottom: 16 }}>
-          <Search
-            placeholder="Tìm kiếm..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 200 }}
-          />
           <Select
             value={statusFilter}
             onChange={setStatusFilter}
@@ -387,8 +381,8 @@ function BlogProject() {
           >
             <Option value="ALL">Tất cả</Option>
             <Option value="PENDING_APPROVAL">Chờ duyệt</Option>
-            <Option value="Duyệt">Đã duyệt</Option>
-            <Option value="Từ chối">Từ chối</Option>
+            <Option value="APPROVED">Đã duyệt</Option>
+            <Option value="REJECTED">Từ chối</Option>
           </Select>
         </Space>
         <Table
@@ -403,7 +397,7 @@ function BlogProject() {
       {/* Modal for viewing content */}
       <Modal
         title={currentTitle}
-        visible={isContentModalVisible}
+        open={isContentModalVisible}
         onCancel={() => setIsContentModalVisible(false)}
         footer={null}
       >
@@ -413,7 +407,7 @@ function BlogProject() {
       {/* Modal for editing draft */}
       <Modal
         title="Chỉnh sửa bài viết"
-        visible={isEditModalVisible}
+        open={isEditModalVisible}
         onCancel={() => setIsEditModalVisible(false)}
         footer={null}
       >

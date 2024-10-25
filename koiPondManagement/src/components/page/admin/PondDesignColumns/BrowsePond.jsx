@@ -14,8 +14,9 @@ function BrowsePond() {
   const [isContentModalVisible, setIsContentModalVisible] = useState(false);
   const [currentContent, setCurrentContent] = useState("");
   const [rejectReason, setRejectReason] = useState("");
+  // Add refresh trigger state
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // API calls và các hàm xử lý giữ nguyên...
   const fetchPosts = async () => {
     setPostsLoading(true);
     try {
@@ -40,10 +41,16 @@ function BrowsePond() {
     }
   };
 
+  // Add refresh function
+  const refreshData = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   useEffect(() => {
+    // Fetch data whenever refreshTrigger changes
     fetchPosts();
     fetchApprovedPosts();
-  }, []);
+  }, [refreshTrigger]); // Add refreshTrigger as dependency
 
   const openActionModal = (post, action) => {
     setSelectedPost(post);
@@ -65,11 +72,13 @@ function BrowsePond() {
         message.success("Duyệt blog thành công");
       } else if (actionType === "reject") {
         await api.post(`/api/blog/posts/${selectedPost.id}/reject`, {
-          additionalProp1: rejectReason,
+          additionalProp1: rejectReason, 
+          additionalProp2: rejectReason, // Thêm prop này nếu cần
+          additionalProp3: rejectReason  // Thêm prop này nếu cần
         });
         message.success("Từ chối blog thành công");
       }
-      await fetchPosts();
+      refreshData(); // Trigger refresh after action
       setSubmitModalVisible(false);
       setSelectedPost(null);
     } catch (err) {
@@ -81,7 +90,7 @@ function BrowsePond() {
     try {
       await api.delete(`/api/blog/posts/${postId}`);
       message.success("Xóa blog thành công");
-      await fetchApprovedPosts();
+      refreshData(); // Trigger refresh after delete
     } catch (err) {
       message.error("Không thể xóa bài viết blog: " + (err.response?.data?.message || err.message));
     }
@@ -91,7 +100,7 @@ function BrowsePond() {
     try {
       await api.post(`/api/blog/posts/${postId}/restore`);
       message.success("Khôi phục blog thành công");
-      await fetchApprovedPosts();
+      refreshData(); // Trigger refresh after restore
     } catch (err) {
       message.error("Không thể khôi phục bài viết blog: " + (err.response?.data?.message || err.message));
     }
@@ -102,6 +111,7 @@ function BrowsePond() {
       title: "ID",
       dataIndex: "id",
       key: "id",
+      render: (text, record, index) => index + 1
     },
     {
       title: "Tiêu Đề",
@@ -137,7 +147,17 @@ function BrowsePond() {
     {
       title: "Trạng thái",
       dataIndex: "status",
-      key: "status"
+      key: "status",
+      render: (status) => {
+        switch (status) {
+          case "PENDING_APPROVAL":
+            return "Đang chờ xử lý";
+          case "APPROVED":
+            return "Đã chấp nhận";
+          default:
+            return status;
+        }
+      },
     },
     {
       title: "Hoạt Động",
@@ -145,7 +165,7 @@ function BrowsePond() {
       key: "active",
       render: (active) => (
         <Tag>
-          {active ? 'True' : 'False'}
+          {active ? 'Hoạt động' : 'Không hoạt động'}
         </Tag>
       )
     },
@@ -179,17 +199,16 @@ function BrowsePond() {
   const approvedColumns = [
     ...columns.slice(0, -1),
     {
-      title: "Actions",
       key: "actions",
       render: (text, record) => (
         <div>
           {record.active ? (
             <Button type="link" danger onClick={() => handleDeletePost(record.id)}>
-              Delete
+              Xóa
             </Button>
           ) : (
             <Button type="link" className="text-green-500" onClick={() => handleRestorePost(record.id)}>
-              Restore
+              Khôi phục
             </Button>
           )}
         </div>
@@ -200,10 +219,8 @@ function BrowsePond() {
   return (
     <div style={{ maxWidth: 1500, margin: "0 0 0 -30px", padding: 24 }}>
       <Card className="mb-8">
-        <h1 className="text-2xl font-bold mb-6">Quản lý Blog</h1>
-
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Pending Blogs</h2>
+          <h2 className="text-xl font-semibold mb-4">Chờ duyệt Blog </h2>
           <Table
             columns={columns}
             dataSource={posts}
@@ -216,7 +233,7 @@ function BrowsePond() {
 
       <Card className="mt-8">
         <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Approved Blogs</h2>
+          <h2 className="text-xl font-semibold mb-4"> Quản lý Blog</h2>
           <Table
             columns={approvedColumns}
             dataSource={approvedPosts}

@@ -73,7 +73,7 @@ function PondDesignColumns() {
   };
 
   const PondDesignColumns = [
-    { title: "ID", dataIndex: "id", key: "id" },
+    { title: "ID", dataIndex: "id", key: "id", render: (text, record, index) => index + 1},
     { title: "Tên Hồ", dataIndex: "name", key: "name" },
     {
       title: "Mô tả",
@@ -81,7 +81,7 @@ function PondDesignColumns() {
       key: "description",
       render: (text) => (
         <span>
-          {text.slice(0, 50)}...
+          {text.slice(0, 5)}...
           <Button type="link" onClick={() => showDescriptionModal(text)}>
             Xem thêm
           </Button>
@@ -98,7 +98,19 @@ function PondDesignColumns() {
     },
     { title: "Hình dáng", dataIndex: "shape", key: "shape" },
     { title: "Kích Thước", dataIndex: "dimensions", key: "dimensions" },
-    { title: "Đặc Trưng", dataIndex: "features", key: "features" },
+    {
+      title: "Đặc Trưng",
+      dataIndex: "features",
+      key: "features",
+      render: (text) => (
+        <span>
+          {text ? text.slice(0, 5) : "No features available"}...
+          <Button type="link" onClick={() => showDescriptionModal(text)}>
+            Xem thêm
+          </Button>
+        </span>
+      ),
+    },
     { title: "Giá", dataIndex: "basePrice", key: "basePrice" },
     { title: "Tạo bởi", dataIndex: "createdById", key: "createdById" },
     {
@@ -178,7 +190,7 @@ function PondDesignColumns() {
         okText="Đóng"
         cancelButtonProps={{ style: { display: 'none' } }}
       >
-        <p>{currentDescription}</p>
+        <div dangerouslySetInnerHTML={{ __html: currentDescription }} />
       </Modal>
     </div>
   );
