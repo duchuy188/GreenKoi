@@ -25,6 +25,9 @@ const MaintenanceRequest = () => {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [statusFilter, setStatusFilter] = useState("PENDING");
   const [form] = Form.useForm();
+  const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState('');
+  const [cancellingRequestId, setCancellingRequestId] = useState(null);
 
   useEffect(() => {
     fetchMaintenanceRequests();
@@ -110,6 +113,36 @@ const MaintenanceRequest = () => {
     }
   };
 
+  const handleCancelRequest = (id) => {
+    setCancellingRequestId(id);
+    setIsCancelModalVisible(true);
+  };
+
+  const handleCancelModalOk = async () => {
+    try {
+      const response = await api.patch(`/api/maintenance-requests/${cancellingRequestId}/cancel`, {
+        cancellationReason: cancellationReason,
+        requestStatus: 'CANCELLED'  // Add this line to update the status
+      });
+      if (response.status === 200) {
+        message.success("Yêu cầu bảo trì đã được hủy thành công");
+        setIsCancelModalVisible(false);
+        setCancellationReason('');
+        setCancellingRequestId(null);
+        fetchMaintenanceRequests();
+      }
+    } catch (error) {
+      console.error("Error canceling maintenance request:", error);
+      toast.error("Không thể hủy yêu cầu bảo trì");
+    }
+  };
+
+  const handleCancelModalCancel = () => {
+    setIsCancelModalVisible(false);
+    setCancellationReason('');
+    setCancellingRequestId(null);
+  };
+
   const columns = [
     { title: "ID", dataIndex: "id", key: "id" },
     { title: "Customer ID", dataIndex: "customerId", key: "customerId" },
@@ -131,28 +164,49 @@ const MaintenanceRequest = () => {
               Start Review
             </Button>
           )}
+          {record.requestStatus === "REVIEWING" && (
+            <Button onClick={() => handleCancelRequest(record.id)} danger>
+              Cancel Request
+            </Button>
+          )}
         </Space>
       ),
+    },
+    { 
+      title: "Cancellation Reason", 
+      dataIndex: "cancellationReason", 
+      key: "cancellationReason",
+      render: (text, record) => record.requestStatus === "CANCELLED" ? text : "-",
+      hidden: statusFilter !== "CANCELLED"
     },
   ];
 
   const renderModalContent = () => {
     if (!selectedRecord) return null;
 
+    const commonFields = (
+      <>
+        <Descriptions.Item label="ID">{selectedRecord.id}</Descriptions.Item>
+        <Descriptions.Item label="Customer ID">{selectedRecord.customerId}</Descriptions.Item>
+        <Descriptions.Item label="Project ID">{selectedRecord.projectId}</Descriptions.Item>
+        <Descriptions.Item label="Description">{selectedRecord.description}</Descriptions.Item>
+        <Descriptions.Item label="Request Status">{selectedRecord.requestStatus}</Descriptions.Item>
+        <Descriptions.Item label="Created At">{selectedRecord.createdAt}</Descriptions.Item>
+        <Descriptions.Item label="Updated At">{selectedRecord.updatedAt}</Descriptions.Item>
+        <Descriptions.Item label="Attachments">{selectedRecord.attachments}</Descriptions.Item>
+        {selectedRecord.requestStatus === "CANCELLED" && (
+          <Descriptions.Item label="Cancellation Reason">{selectedRecord.cancellationReason}</Descriptions.Item>
+        )}
+      </>
+    );
+
     if (selectedRecord.requestStatus === "PENDING") {
       return (
         <Descriptions column={1} bordered>
-          <Descriptions.Item label="ID">{selectedRecord.id}</Descriptions.Item>
-          <Descriptions.Item label="Customer ID">{selectedRecord.customerId}</Descriptions.Item>
-          <Descriptions.Item label="Project ID">{selectedRecord.projectId}</Descriptions.Item>
-          <Descriptions.Item label="Description">{selectedRecord.description}</Descriptions.Item>
-          <Descriptions.Item label="Request Status">{selectedRecord.requestStatus}</Descriptions.Item>
-          <Descriptions.Item label="Created At">{selectedRecord.createdAt}</Descriptions.Item>
-          <Descriptions.Item label="Updated At">{selectedRecord.updatedAt}</Descriptions.Item>
-          <Descriptions.Item label="Attachments">{selectedRecord.attachments}</Descriptions.Item>
+          {commonFields}
         </Descriptions>
       );
-    } else if (selectedRecord.requestStatus === "REVIEWING") {
+    } else if (selectedRecord.requestStatus === "REVIEWING" || selectedRecord.requestStatus === "CANCELLED") {
       return (
         <Form
           form={form}
@@ -206,22 +260,15 @@ const MaintenanceRequest = () => {
           <Form.Item name="attachments" label="Attachments">
             <Input disabled />
           </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="requestStatus" label="Request Status">
-                <Input disabled />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="agreedPrice" label="Agreed Price">
-                <Input type="number" disabled={selectedRecord.requestStatus !== "REVIEWING"} />
-              </Form.Item>
-            </Col>
-          </Row>
           {selectedRecord.requestStatus === "REVIEWING" && (
             <Button type="primary" htmlType="submit">
               Update Agreed Price
             </Button>
+          )}
+          {selectedRecord.requestStatus === "CANCELLED" && (
+            <Form.Item name="cancellationReason" label="Cancellation Reason">
+              <Input.TextArea disabled />
+            </Form.Item>
           )}
         </Form>
       );
@@ -229,7 +276,9 @@ const MaintenanceRequest = () => {
   };
 
   const filteredRequests = maintenanceRequests.filter(request => 
-    request.requestStatus === "PENDING" || request.requestStatus === "REVIEWING"
+    request.requestStatus === "PENDING" || 
+    request.requestStatus === "REVIEWING" ||
+    request.requestStatus === "CANCELLED"
   );
 
   return (
@@ -242,12 +291,13 @@ const MaintenanceRequest = () => {
       >
         <Select.Option value="PENDING">Đang chờ</Select.Option>
         <Select.Option value="REVIEWING">Đang xem xét</Select.Option>
+        <Select.Option value="CANCELLED">Đã hủy</Select.Option>
       </Select>
       {loading ? (
         <div>Đang tải dữ liệu...</div>
       ) : filteredRequests.length > 0 ? (
         <Table
-          columns={columns}
+          columns={columns.filter(col => !col.hidden)}
           dataSource={filteredRequests}
           rowKey="id"
         />
@@ -262,6 +312,19 @@ const MaintenanceRequest = () => {
         width={800}
       >
         {renderModalContent()}
+      </Modal>
+      <Modal
+        title="Hủy yêu cầu bảo trì"
+        visible={isCancelModalVisible}
+        onOk={handleCancelModalOk}
+        onCancel={handleCancelModalCancel}
+      >
+        <p>Vui lòng nhập lý do hủy yêu cầu bảo trì:</p>
+        <Input.TextArea
+          value={cancellationReason}
+          onChange={(e) => setCancellationReason(e.target.value)}
+          rows={4}
+        />
       </Modal>
     </div>
   );
