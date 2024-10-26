@@ -186,66 +186,66 @@ const RequestConsulting = () => {
 
   const columns = [
     {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
+      title: "STT",
+      key: "stt",
+      render: (_, __, index) => index + 1,
     },
     {
-      title: "Customer Name",
+      title: "Tên Khách Hàng",
       dataIndex: "customerName",
       key: "customerName",
     },
     {
-      title: "Customer Phone",
+      title: "Số Điện Thoại",
       dataIndex: "customerPhone",
       key: "customerPhone",
     },
     {
-      title: "Customer Address",
+      title: "Địa Chỉ Khách Hàng",
       dataIndex: "customerAddress",
       key: "customerAddress",
     },
     {
-      title: "Customer ID",
+      title: "Mã Khách Hàng",
       dataIndex: "customerId",
       key: "customerId",
     },
     {
-      title: "Design Name",
+      title: "Tên Thiết Kế",
       dataIndex: "designName",
       key: "designName",
     },
     {
-      title: "Design Description",
+      title: "Mô Tả Thiết Kế",
       dataIndex: "designDescription",
       key: "designDescription",
     },
     {
-      title: "Customer Note",
+      title: "Ghi Chú Khách Hàng",
       dataIndex: "notes",
       key: "customerNote",
     },
     {
-      title: "Status",
+      title: "Trạng Thái",
       dataIndex: "status",
       key: "status",
     },
     {
-      title: "Created At",
+      title: "Ngày Tạo",
       dataIndex: "createdAt",
       key: "createdAt",
       sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
       sortDirections: ['ascend', 'descend'],
     },
     {
-      title: "Updated At",
+      title: "Ngày Cập Nhật",
       dataIndex: "updatedAt",
       key: "updatedAt",
       sorter: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
       sortDirections: ['ascend', 'descend'],
     },
     {
-      title: "Actions",
+      title: "Hành động",
       key: "actions",
       render: (_, record) => (
         <Space size="middle">
@@ -265,6 +265,12 @@ const RequestConsulting = () => {
         </Space>
       ),
     },
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+      hidden: true,
+    },
   ];
 
   const handleStatusFilterChange = (value) => {
@@ -276,7 +282,7 @@ const RequestConsulting = () => {
       <h1>Yêu cầu của khách hàng</h1>
       <Space style={{ marginBottom: 16 }}>
         <Input.Search
-          placeholder="Search requests"
+          placeholder="Tìm kiếm yêu cầu"
           onChange={(e) => setSearchText(e.target.value)}
           style={{ width: 200 }}
         />
@@ -292,7 +298,7 @@ const RequestConsulting = () => {
         </Select>
       </Space>
       <Table
-        columns={columns}
+        columns={columns.filter(column => !column.hidden)}
         dataSource={filteredRequests}
         loading={loading}
         rowKey="id"

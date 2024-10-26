@@ -30,7 +30,7 @@ function MaintenanceRequests() {
         .filter(item => item.requestStatus !== "CANCELLED")
         .map(item => ({
           ...item,
-          attachments: item.attachments && item.attachments.length > 0 ? item.attachments[0] : null
+          attachments: item.attachments || []
         }))
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       
@@ -44,7 +44,7 @@ function MaintenanceRequests() {
   const handleMaintenanceCancel = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      await api.put(`/api/maintenance-requests/${id}/cancel`, {}, {
+      await api.patch(`/api/maintenance-requests/${id}/cancel`, {}, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

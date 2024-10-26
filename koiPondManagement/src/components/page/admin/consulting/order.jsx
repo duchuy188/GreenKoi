@@ -92,52 +92,58 @@ const Orders = () => {
 
   const columns = [
     {
+      title: 'STT',
+      key: 'stt',
+      render: (_, __, index) => index + 1,
+    },
+    {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
+      hidden: true, // This will hide the column
     },
     {
-      title: 'Name',
+      title: 'Tên',
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: 'Description',
+      title: 'Mô tả',
       dataIndex: 'description',
       key: 'description',
     },
     {
-      title: 'Total Price',
+      title: 'Tổng giá',
       dataIndex: 'totalPrice',
       key: 'totalPrice',
     },
     {
-      title: 'Deposit Amount',
+      title: 'Tiền cọc',
       dataIndex: 'depositAmount',
       key: 'depositAmount',
     },
     {
-      title: 'Start Date',
+      title: 'Ngày bắt đầu',
       dataIndex: 'startDate',
       key: 'startDate',
     },
     {
-      title: 'End Date',
+      title: 'Ngày kết thúc',
       dataIndex: 'endDate',
       key: 'endDate',
     },
     {
-      title: 'Customer ID',
-      dataIndex: 'customerId',
+      title: 'Khách hàng',
+      dataIndex: 'customerName',
       key: 'customerId',
     },
     {
-      title: 'Consultant ID',
+      title: 'Nhân viên TV',
       dataIndex: 'consultantId',
       key: 'consultantId',
     },
     {
-      title: 'Status',
+      title: 'Trạng thái',
       dataIndex: 'statusId',
       key: 'statusId',
       render: (statusId) => {
@@ -146,13 +152,13 @@ const Orders = () => {
       },
     },
     {
-      title: 'Created At',
+      title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss'),
     },
     {
-      title: 'Actions',
+      title: 'Hành động',
       key: 'actions',
       render: (_, record) => {
         const menu = (
@@ -183,11 +189,10 @@ const Orders = () => {
     <div>
       <h1>Đơn hàng của khách hàng</h1>
       <Table
-        columns={columns}
+        columns={columns.filter(column => !column.hidden)}
         dataSource={orders}
         loading={loading}
         rowKey="id"
-        // Add this line to disable default sorting
         pagination={{ defaultSortOrder: 'descend' }}
       />
       <Modal
