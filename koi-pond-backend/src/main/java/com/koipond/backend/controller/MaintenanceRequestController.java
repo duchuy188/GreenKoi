@@ -207,5 +207,18 @@ public class MaintenanceRequestController {
         return ResponseEntity.ok(completedRequests);
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_5')")
+    @Operation(summary = "Update a pending maintenance request", description = "Updates a pending maintenance request. Only accessible by customers for their own requests.")
+    public ResponseEntity<MaintenanceRequestDTO> updatePendingMaintenanceRequest(
+            @PathVariable String id,
+            @RequestBody MaintenanceRequestDTO updatedRequest,
+            Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String customerId = userDetails.getId();
+        MaintenanceRequestDTO updatedDTO = maintenanceRequestService.updatePendingMaintenanceRequest(id, updatedRequest, customerId);
+        return ResponseEntity.ok(updatedDTO);
+    }
+
     // Add more endpoints as needed
 }

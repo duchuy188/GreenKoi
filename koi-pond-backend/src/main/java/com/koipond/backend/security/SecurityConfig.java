@@ -154,6 +154,8 @@ public class SecurityConfig {
                         // Maintenance Request endpoints
                         .requestMatchers(HttpMethod.POST, "/api/maintenance-requests").hasAuthority("ROLE_5")
                         .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/customer/*").hasAuthority("ROLE_5")
+                        // Add this new rule for updating pending maintenance requests
+                        .requestMatchers(HttpMethod.PUT, "/api/maintenance-requests/**").hasAuthority("ROLE_5")
                         .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/pending").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.PATCH, "/api/maintenance-requests/*/review").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.PATCH, "/api/maintenance-requests/*/confirm").hasAuthority("ROLE_2")

@@ -416,4 +416,24 @@ public class MaintenanceRequestService {
             .map(this::convertToDTO)
             .collect(Collectors.toList());
     }
+
+    public MaintenanceRequestDTO updatePendingMaintenanceRequest(String id, MaintenanceRequestDTO updatedDTO, String customerId) {
+        MaintenanceRequest request = findMaintenanceRequestById(id);
+
+        if (request.getRequestStatus() != MaintenanceRequest.RequestStatus.PENDING) {
+            throw new IllegalStateException("Can only update maintenance requests in PENDING status");
+        }
+
+        if (!request.getCustomer().getId().equals(customerId)) {
+            throw new IllegalArgumentException("Customers can only update their own maintenance requests");
+        }
+
+        // Update only allowed fields
+        request.setDescription(updatedDTO.getDescription());
+        request.setAttachments(updatedDTO.getAttachments());
+        request.setUpdatedAt(LocalDateTime.now());
+
+        MaintenanceRequest updatedRequest = maintenanceRequestRepository.save(request);
+        return convertToDTO(updatedRequest);
+    }
 }
