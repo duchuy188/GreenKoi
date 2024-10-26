@@ -17,6 +17,7 @@ const OrdersList = () => {
   const [selectedConstructorId, setSelectedConstructorId] = useState(null);
   const [constructors, setConstructors] = useState([]);
   const [projectReviews, setProjectReviews] = useState({});
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
 
   useEffect(() => {
     fetchOrders();
@@ -27,11 +28,16 @@ const OrdersList = () => {
     try {
       setLoading(true);
       const response = await api.get('/api/projects');
-      setOrders(response.data);
-      // Fetch tasks and reviews for each project
-      for (const order of response.data) {
+      // Sort orders by createdAt in descending order (newest first)
+      const sortedOrders = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setOrders(sortedOrders);
+      // Fetch tasks for each project
+      for (const order of sortedOrders) {
         fetchProjectTasks(order.id, order.constructorId);
-        fetchProjectReview(order.id);
+        // Only fetch reviews for completed projects
+        if (order.statusId === 'PS6') {
+          fetchProjectReview(order.id);
+        }
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -71,7 +77,7 @@ const OrdersList = () => {
 
   const cancelProject = async (id) => {
     try {
-      const response = await api.patch(`/api/projects/${id}`, {
+      const response = await api.patch(`/api/projects/${id}/cancel`, {
         reason: "Cancelled by admin",
         requestedById: "admin" // Thay thế bằng ID admin thực tế
       });
@@ -162,9 +168,13 @@ const OrdersList = () => {
       const response = await api.patch(`/api/projects/${id}/complete`);
       if (response.status === 200) {
         message.success("Đã hoàn thành dự án thành công");
-        setOrders(prevOrders => prevOrders.map(order => 
-          order.id === id ? {...order, statusId: 'PS6', statusName: 'COMPLETED'} : order
-        ));
+        setOrders(prevOrders => {
+          const updatedOrders = prevOrders.map(order => 
+            order.id === id ? {...order, statusId: 'PS6', statusName: 'COMPLETED'} : order
+          );
+          // Re-sort the orders to maintain the newest-first order
+          return updatedOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        });
       }
     } catch (error) {
       console.error('Error completing project:', error);
@@ -172,11 +182,23 @@ const OrdersList = () => {
     }
   };
 
+  const getConstructorName = (constructorId) => {
+    const constructor = constructors.find(c => c.id === constructorId);
+    return constructor ? constructor.name : 'Không xác định';
+  };
+
+  const toggleDescription = (orderId) => {
+    setExpandedDescriptions(prev => ({
+      ...prev,
+      [orderId]: !prev[orderId]
+    }));
+  };
+
   const columns = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
+      title: 'STT',
+      key: 'index',
+      render: (text, record, index) => index + 1,
     },
     {
       title: 'Tên',
@@ -187,6 +209,20 @@ const OrdersList = () => {
       title: 'Mô tả',
       dataIndex: 'description',
       key: 'description',
+      render: (text, record) => {
+        const isExpanded = expandedDescriptions[record.id];
+        const shortDescription = text.length > 50 ? text.slice(0, 50) + '...' : text;
+        return (
+          <>
+            <span>{isExpanded ? text : shortDescription}</span>
+            {text.length > 50 && (
+              <Button type="link" onClick={() => toggleDescription(record.id)}>
+                {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+              </Button>
+            )}
+          </>
+        );
+      },
     },
     {
       title: 'Tổng giá',
@@ -280,9 +316,9 @@ const OrdersList = () => {
       title: 'Nhà thầu',
       dataIndex: 'constructorId',
       key: 'constructor',
-      render: (constructorId, record) => (
+      render: (constructorId) => (
         <span>
-          {constructorId ? `${record.constructorName || 'Đã phân công'}` : 'Chưa phân công'}
+          {constructorId ? getConstructorName(constructorId) : 'Chưa phân công'}
         </span>
       ),
     },
@@ -290,8 +326,10 @@ const OrdersList = () => {
       title: 'Đánh giá của khách hàng',
       key: 'customerReview',
       render: (_, record) => {
+        if (record.statusId !== 'PS6') {
+          return <span>Chưa hoàn thành</span>;
+        }
         const review = projectReviews[record.id];
-        console.log(`Rendering review for project ${record.id}:`, review); // Log để kiểm tra
         return review ? (
           <Space>
             <StarOutlined style={{ color: '#fadb14' }} />
@@ -309,12 +347,12 @@ const OrdersList = () => {
 
   const renderCardView = () => (
     <Row gutter={[16, 16]}>
-      {orders.map(order => (
+      {orders.map((order, index) => (
         <Col xs={24} sm={12} md={8} lg={6} key={order.id}>
           <Card
             title={
               <Space>
-                <Title level={5}>Đơn hàng {order.id.slice(-4)}</Title>
+                <Title level={5}>Đơn hàng {index + 1}</Title>
                 <Tag color={getStatusColor(order.statusId)}>{order.statusId}</Tag>
               </Space>
             }
@@ -340,7 +378,18 @@ const OrdersList = () => {
               <Text>{order.name}</Text>
               
               <Text strong><FileTextOutlined /> Mô tả:</Text>
-              <Text>{order.description || 'Không có'}</Text>
+              <Text>
+                {expandedDescriptions[order.id] 
+                  ? order.description 
+                  : (order.description.length > 50 
+                    ? order.description.slice(0, 50) + '...' 
+                    : order.description)}
+              </Text>
+              {order.description.length > 50 && (
+                <Button type="link" onClick={() => toggleDescription(order.id)}>
+                  {expandedDescriptions[order.id] ? 'Thu gọn' : 'Xem thêm'}
+                </Button>
+              )}
               
               <Text strong><DollarOutlined /> Tổng giá:</Text>
               <Text>{order.totalPrice || 0}</Text>
@@ -363,13 +412,17 @@ const OrdersList = () => {
               <Text>{order.constructorId ? `${order.constructorName || 'Đã phân công'}` : 'Chưa phân công'}</Text>
               
               <Text strong><StarOutlined /> Đánh giá của khách hàng:</Text>
-              {projectReviews[order.id] ? (
-                <>
-                  <Rate disabled defaultValue={projectReviews[order.id].rating} />
-                  <Text>{projectReviews[order.id].comment}</Text>
-                </>
+              {order.statusId === 'PS6' ? (
+                projectReviews[order.id] ? (
+                  <>
+                    <Rate disabled defaultValue={projectReviews[order.id].rating} />
+                    <Text>{projectReviews[order.id].comment}</Text>
+                  </>
+                ) : (
+                  <Text>Chưa có đánh giá</Text>
+                )
               ) : (
-                <Text>Chưa có đánh giá</Text>
+                <Text>Chưa hoàn thành</Text>
               )}
             </Space>
           </Card>

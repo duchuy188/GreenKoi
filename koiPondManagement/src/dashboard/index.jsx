@@ -70,17 +70,17 @@ const items = [
     "blogproject",
   ),
   ]),
-  getItem("Nhân viên tư vấn", "consulting", <CommentOutlined />, [
+  getItem("Nhân viên tư vấn", "nhanvientuvan", <CommentOutlined />, [
     getItem(
-      <Link to="/dashboard/consulting/requests">Yêu cầu</Link>,
-      "consulting-requests"
+      <Link to="/dashboard/nhanvientuvan/yeucau">Yêu cầu</Link>,
+      "nhanvientuvan-yeucau"
     ),
     getItem(
-      <Link to="/dashboard/consulting/orders">Đơn hàng</Link>,
+      <Link to="/dashboard/nhanvientuvan/donhang">Đơn hàng</Link>,
       "consulting-orders"
     ),
     getItem(
-      <Link to="/dashboard/consulting/maintenance">Bảo trì</Link>,
+      <Link to="/dashboard/nhanvientuvan/baotri">Bảo trì</Link>,
       "consulting-maintenance"
     ),
   ]),
@@ -147,7 +147,7 @@ const Dashboard = () => {
     if (path.includes('ponddesign') || path.includes('designproject') || path.includes('designblog') || path.includes('blogproject')) {
       return roleId === 3; // Designer
     }
-    if (path.includes('consulting')) {
+    if (path.includes('nhanvientuvan')) {
       return roleId === 2; // Consultant
     }
     if (path.includes('construction'))  {
@@ -199,7 +199,7 @@ const Dashboard = () => {
       case 1: // Manager
         return ['management'];
       case 2: // Consultant
-        return ['consulting'];
+        return ['nhanvientuvan'];
       case 3: // Designer
         return ['ponddesigns'];
       case 4: // Construction
@@ -219,7 +219,7 @@ const Dashboard = () => {
           navigate('/dashboard/usermanagement');
           break;
         case 2: // Consultant
-          navigate('/dashboard/consulting/requests');
+          navigate('/dashboard/nhanvientuvan/yeucau');
           break;
         case 3: // Designer
           navigate('/dashboard/ponddesign');

@@ -121,7 +121,7 @@ const ProjectTasks = () => {
         <Space>
           <Progress percent={percentage || 0} size="small" />
           {record.status !== 'COMPLETED' && (
-            <Button onClick={() => updateTaskStatus(record.id, Math.min((percentage || 0) + 10, 100))}>
+            <Button onClick={() => updateTaskStatus(record.id, Math.min((percentage || 0) + 25, 100))}>
               Update
             </Button>
           )}

@@ -21,8 +21,10 @@ const Orders = () => {
       setLoading(true);
       const response = await api.get('/api/projects/consultant');
       console.log('Fetched orders:', response.data);
-      // Sort orders by createdAt in descending order
-      const sortedOrders = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      // Sort orders by createdAt in descending order and filter out COMPLETED (PS6) orders
+      const sortedOrders = response.data
+        .filter(order => order.statusId !== 'PS6')
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setOrders(sortedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -42,14 +44,13 @@ const Orders = () => {
     setIsModalVisible(true);
   };
   const statusOptions = [
-
-    { value: 'APPROVED', label: 'Approved' },
-    { value: 'PLANNING', label: 'Planning' },
-    { value: 'IN_PROGRESS', label: 'In Progress' },
-    { value: 'ON_HOLD', label: 'On Hold' },
-    { value: 'COMPLETED', label: 'Completed' },
-    { value: 'CANCELLED', label: 'Cancelled' },
-    { value: 'MAINTENANCE', label: 'Maintenance' },
+    { value: 'PENDING', label: 'Chờ duyệt' },
+    { value: 'APPROVED', label: 'Đã duyệt' },
+    { value: 'PLANNING', label: 'Đang lên kế hoạch' },
+    { value: 'IN_PROGRESS', label: 'Đang thực hiện' },
+    { value: 'ON_HOLD', label: 'Tạm dừng' },
+    { value: 'CANCELLED', label: 'Đã hủy' },
+    { value: 'MAINTENANCE', label: 'Bảo trì' },
 
     // Add more statuses as needed
   ];
@@ -182,12 +183,12 @@ const Orders = () => {
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'statusId',
-      key: 'statusId',
+      dataIndex: 'statusName',
+      key: 'statusName',
       width: 120,
-      render: (statusId) => {
-        const status = statusOptions.find(s => s.value === statusId);
-        return status ? status.label : statusId;
+      render: (statusName) => {
+        const status = statusOptions.find(s => s.value === statusName);
+        return status ? status.label : statusName;
       },
     },
     {

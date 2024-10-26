@@ -112,7 +112,8 @@ function App() {
       path: "dashboard",
       element: <ProtectedRoute allowedRoles={[1, 2, 3, 4]} />,
       children: [
-        { path: "",
+        { 
+          path: "",
           element: <Dashboard />,
           children: [         
             {
@@ -155,21 +156,25 @@ function App() {
               element: <Maintenance/>,
             },
             {
-              path: "consulting",
+              path: "nhanvientuvan",
               children: [
                 {
-                  path: "maintenance",
+                  path: "baotri",
                   element: <MaintenanceRequest />,
                 },
                 {
-                  path: "requests",
+                  path: "yeucau",
                   element: <RequestConsulting />,
                 },
                 {
-                  path: "orders",
+                  path: "donhang",
                   element: <ConsultingOrders />,
                 },
               ],
+            },
+            {
+              path: "nhanvientuvan/yeucau",
+              element: <RequestConsulting />,
             },
             {
               path: "construction",
