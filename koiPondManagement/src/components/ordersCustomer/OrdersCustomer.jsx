@@ -102,7 +102,7 @@ const OrdersCustomer = () => {
       fetchOrders(); // Refresh the orders list
     } catch (error) {
       console.error("Error submitting maintenance request:", error);
-      message.error(`Không thể gửi yêu cầu bảo trì: ${error.message}`);
+      message.error(`Không thể gửi yêu cầu bảo trì: Đơn hàng chưa hoàn thành`);
     } finally {
       setMaintenanceLoading(false);
     }
@@ -146,8 +146,14 @@ const OrdersCustomer = () => {
                 </p>
               </div>
               <div className="card-footer bg-transparent border-top-0 pt-0">
-                <button className="btn btn-warning btn-sm w-100 text-dark" onClick={() => handleViewDetails(order)}>
+                <button className="btn btn-warning btn-sm w-100 text-dark mb-2" onClick={() => handleViewDetails(order)}>
                   <i className="fas fa-eye me-2"></i>Xem Chi Tiết
+                </button>
+                <button className="btn btn-info btn-sm w-100 text-dark mb-2" onClick={() => handleRequestMaintenance(order)}>
+                  <i className="fas fa-tools me-2"></i>Yêu Cầu Bảo Trì
+                </button>
+                <button className="btn btn-success btn-sm w-100 text-dark" onClick={() => handleReview(order)}>
+                  <i className="fas fa-star me-2"></i>Đánh Giá
                 </button>
               </div>
             </div>

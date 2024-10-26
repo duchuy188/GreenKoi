@@ -131,7 +131,11 @@ function UserManagement() {
   };
 
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id" },
+    { 
+      title: "STT", 
+      key: "index", 
+      render: (text, record, index) => index + 1 
+    },
     { title: "Tên đăng nhập", dataIndex: "username", key: "username" },
     { title: "Email", dataIndex: "email", key: "email" },
     { title: "Số điện thoại", dataIndex: "phone", key: "phone" },
@@ -174,7 +178,19 @@ function UserManagement() {
         </Select>
       </div>
       <Button type="primary" onClick={() => { setShowModal(true); setIsEdit(false); form.resetFields(); }} style={{ marginBottom: 16 }}>Thêm người dùng</Button>
-      <Table dataSource={filteredUsers} columns={columns} rowKey="id" loading={loading} locale={{ emptyText: "Không tìm thấy người dùng hoặc lỗi tải dữ liệu" }} />
+      <Table 
+        dataSource={filteredUsers} 
+        columns={columns} 
+        rowKey="id" 
+        loading={loading} 
+        locale={{ emptyText: "Không tìm thấy người dùng hoặc lỗi tải dữ liệu" }}
+        pagination={{
+          showSizeChanger: true,
+          showQuickJumper: true,
+          pageSizeOptions: ['10', '20', '50', '100'],
+          showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} mục`,
+        }}
+      />
       <Modal open={showModal} onCancel={() => setShowModal(false)} title="Quản lý người dùng" onOk={() => form.submit()} confirmLoading={loading} width={400}>
         <Form form={form} labelCol={{ span: 24 }} onFinish={handleSubmit} size="small">
           <Form.Item name="id" hidden><Input /></Form.Item>
@@ -202,4 +218,3 @@ function UserManagement() {
 }
 
 export default UserManagement;
-             
