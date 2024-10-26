@@ -10,11 +10,13 @@ import {
   Input,
   DatePicker,
   InputNumber,
+  Tag,
 } from "antd";
 import { FaEdit, FaShoppingCart } from "react-icons/fa";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import moment from "moment";
+import { EllipsisOutlined } from '@ant-design/icons';
 
 const RequestConsulting = () => {
   const [consultationRequests, setConsultationRequests] = useState([]);
@@ -27,6 +29,7 @@ const RequestConsulting = () => {
   const [editOrderModalVisible, setEditOrderModalVisible] = useState(false);
   const [editOrderForm] = Form.useForm();
   const [statusFilter, setStatusFilter] = useState("PENDING");
+  const [expandedRows, setExpandedRows] = useState({});
 
   useEffect(() => {
     fetchConsultationRequests();
@@ -184,6 +187,13 @@ const RequestConsulting = () => {
     }
   };
 
+  const toggleDescription = (recordId) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [recordId]: !prev[recordId]
+    }));
+  };
+
   const columns = [
     {
       title: "STT",
@@ -209,6 +219,7 @@ const RequestConsulting = () => {
       title: "Mã Khách Hàng",
       dataIndex: "customerId",
       key: "customerId",
+      hidden: true,
     },
     {
       title: "Tên Thiết Kế",
@@ -219,6 +230,25 @@ const RequestConsulting = () => {
       title: "Mô Tả Thiết Kế",
       dataIndex: "designDescription",
       key: "designDescription",
+      render: (text, record) => {
+        if (!text) return null;
+        const isExpanded = expandedRows[record.id];
+        const shortText = text.slice(0, 10);
+        return (
+          <>
+            {isExpanded ? text : shortText}
+            {text.length > 100 && (
+              <Button 
+                type="link" 
+                onClick={() => toggleDescription(record.id)}
+                icon={<EllipsisOutlined />}
+              >
+                {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+              </Button>
+            )}
+          </>
+        );
+      },
     },
     {
       title: "Ghi Chú Khách Hàng",
@@ -226,9 +256,33 @@ const RequestConsulting = () => {
       key: "customerNote",
     },
     {
-      title: "Trạng Thái",
+      title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      width: 120,
+      render: (status) => {
+        let color = 'default';
+        let text = 'Không xác định';
+        
+        switch (status) {
+          case 'PENDING':
+            color = 'gold';
+            text = 'Đang chờ';
+            break;
+          case 'IN_PROGRESS':
+            color = 'blue';
+            text = 'Đang thực hiện';
+            break;
+          case 'COMPLETED':
+            color = 'green';
+            text = 'Hoàn thành';
+            break;
+          default:
+            break;
+        }
+        
+        return <Tag color={color}>{text}</Tag>;
+      },
     },
     {
       title: "Ngày Tạo",
@@ -277,6 +331,32 @@ const RequestConsulting = () => {
     setStatusFilter(value);
   };
 
+  // Modify the getResponsiveColumns function
+  const getResponsiveColumns = () => {
+    const screenWidth = window.innerWidth;
+    if (screenWidth < 768) {
+      return columns.filter(col => ['stt', 'customerName', 'status', 'actions'].includes(col.key));
+    } else if (screenWidth < 1024) {
+      return columns.filter(col => ['stt', 'customerName', 'customerPhone', 'status', 'createdAt', 'actions'].includes(col.key));
+    } else if (screenWidth < 1440) {
+      return columns.filter(col => ['stt', 'customerName', 'customerPhone', 'customerAddress', 'designName', 'status', 'createdAt', 'actions'].includes(col.key));
+    }
+    return columns.filter(column => !column.hidden);
+  };
+
+  // Add this new state
+  const [responsiveColumns, setResponsiveColumns] = useState(getResponsiveColumns());
+
+  // Add this new useEffect
+  useEffect(() => {
+    const handleResize = () => {
+      setResponsiveColumns(getResponsiveColumns());
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div>
       <h1>Yêu cầu của khách hàng</h1>
@@ -291,17 +371,20 @@ const RequestConsulting = () => {
           style={{ width: 120 }}
           onChange={handleStatusFilterChange}
         >
-          <Select.Option value="PENDING">Pending</Select.Option>
-          <Select.Option value="IN_PROGRESS">In Progress</Select.Option>
-          <Select.Option value="COMPLETED">Completed</Select.Option>
-          <Select.Option value="ALL">All Statuses</Select.Option>
+          <Select.Option value="PENDING">đang chờ</Select.Option>
+          <Select.Option value="IN_PROGRESS">đang thực hiện</Select.Option>
+          <Select.Option value="COMPLETED">đã hoàn thành</Select.Option>
+          <Select.Option value="ALL">Tất cả</Select.Option>
         </Select>
       </Space>
       <Table
-        columns={columns.filter(column => !column.hidden)}
+        columns={responsiveColumns}
         dataSource={filteredRequests}
         loading={loading}
         rowKey="id"
+        pagination={{ pageSize: 10 }}
+        size="small"
+        style={{ overflowX: 'hidden' }}
       />
       <Modal
         title="Update Status"
@@ -312,9 +395,9 @@ const RequestConsulting = () => {
         <Form form={form} onFinish={handleUpdateStatus}>
           <Form.Item name="status" label="Status" rules={[{ required: true }]}>
             <Select>
-              <Select.Option value="PENDING">Pending</Select.Option>
-              <Select.Option value="IN_PROGRESS">In Progress</Select.Option>
-              <Select.Option value="COMPLETED">Completed</Select.Option>
+              <Select.Option value="PENDING">đang chờ</Select.Option>
+              <Select.Option value="IN_PROGRESS">đang thực hiện</Select.Option>
+              <Select.Option value="COMPLETED">đã hoàn thành</Select.Option>
             </Select>
           </Form.Item>
           <Form.Item>
@@ -349,16 +432,17 @@ const RequestConsulting = () => {
           <Form.Item name="endDate" label="End Date" rules={[{ required: true }]} hidden>
             <DatePicker />
           </Form.Item>
-          <Form.Item name="designId" label="Design ID" rules={[{ required: true }]}>
-            <Input readOnly/>
+          <Form.Item name="designId" label="Design ID" rules={[{ required: true }]} hidden>
+            <Input hidden/>
           </Form.Item>
           <Form.Item name="address" label="Address" rules={[{ required: true }]}>
             <Input readOnly/>
           </Form.Item>
-          <Form.Item name="customerId" label="Customer ID" rules={[{ required: true }]}>
+          
+          <Form.Item name="customerId" label="Customer ID" rules={[{ required: true }]} hidden>
             <Input readOnly/>
           </Form.Item>
-          <Form.Item name="consultantId" label="Consultant ID">
+          <Form.Item name="consultantId" label="Consultant ID" hidden>
             <Input disabled />
           </Form.Item>
           <Form.Item>

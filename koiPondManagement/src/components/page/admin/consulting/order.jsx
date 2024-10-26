@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, message, Modal, Form, Input, DatePicker, InputNumber, Button, Popconfirm, Dropdown, Menu } from 'antd';
 import api from "../../../config/axios";
 import moment from 'moment';
-import { EditOutlined, DownOutlined } from '@ant-design/icons';
+import { EditOutlined, DownOutlined, EllipsisOutlined } from '@ant-design/icons';
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -10,6 +10,7 @@ const Orders = () => {
   const [form] = Form.useForm();
   const [editingOrder, setEditingOrder] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [expandedRows, setExpandedRows] = useState({});
 
   useEffect(() => {
     fetchOrders();
@@ -90,11 +91,19 @@ const Orders = () => {
     }
   };
 
+  const toggleDescription = (recordId) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [recordId]: !prev[recordId]
+    }));
+  };
+
   const columns = [
     {
       title: 'STT',
       key: 'stt',
       render: (_, __, index) => index + 1,
+      width: 60,
     },
     {
       title: 'ID',
@@ -106,46 +115,76 @@ const Orders = () => {
       title: 'Tên',
       dataIndex: 'name',
       key: 'name',
+      width: 150,
     },
     {
       title: 'Mô tả',
       dataIndex: 'description',
       key: 'description',
+      width: 200,
+      render: (text, record) => {
+        if (!text) return null;
+        const isExpanded = expandedRows[record.id];
+        const shortText = text.slice(0, 10);
+        return (
+          <>
+            {isExpanded ? text : shortText}
+            {text.length > 100 && (
+              <Button 
+                type="link" 
+                onClick={() => toggleDescription(record.id)}
+                icon={<EllipsisOutlined />}
+              >
+                {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+              </Button>
+            )}
+          </>
+        );
+      },
     },
     {
       title: 'Tổng giá',
       dataIndex: 'totalPrice',
       key: 'totalPrice',
+      width: 100,
     },
     {
       title: 'Tiền cọc',
       dataIndex: 'depositAmount',
       key: 'depositAmount',
+      width: 100,
     },
     {
-      title: 'Ngày bắt đầu',
+      title: 'Ngày BĐ',
       dataIndex: 'startDate',
       key: 'startDate',
+      width: 100,
     },
     {
-      title: 'Ngày kết thúc',
+      title: 'Ngày KT',
       dataIndex: 'endDate',
       key: 'endDate',
+      width: 100,
     },
     {
       title: 'Khách hàng',
-      dataIndex: 'customerName',
+      dataIndex: 'customerId',
       key: 'customerId',
+      width: 150,
+      hidden: true,
     },
     {
-      title: 'Nhân viên TV',
+      title: 'NV TV',
       dataIndex: 'consultantId',
       key: 'consultantId',
+      width: 100,
+      hidden: true,
     },
     {
       title: 'Trạng thái',
       dataIndex: 'statusId',
       key: 'statusId',
+      width: 120,
       render: (statusId) => {
         const status = statusOptions.find(s => s.value === statusId);
         return status ? status.label : statusId;
@@ -155,11 +194,13 @@ const Orders = () => {
       title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
+      width: 150,
       render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss'),
     },
     {
       title: 'Hành động',
       key: 'actions',
+      width: 100,
       render: (_, record) => {
         const menu = (
           <Menu onClick={({ key }) => updateOrderStatus(record.id, key)}>
@@ -171,13 +212,13 @@ const Orders = () => {
 
         return (
           <>
-            <Button onClick={() => handleEdit(record)} style={{ marginRight: 8 }}>
-              Edit
-            </Button>
+            <Button 
+              icon={<EditOutlined />} 
+              onClick={() => handleEdit(record)} 
+              style={{ marginRight: 8 }}
+            />
             <Dropdown overlay={menu}>
-              <Button>
-                Update Status <DownOutlined />
-              </Button>
+              <Button icon={<DownOutlined />} />
             </Dropdown>
           </>
         );
@@ -203,10 +244,10 @@ const Orders = () => {
       >
         <Form form={form} onFinish={handleUpdate} layout="vertical">
           <Form.Item name="name" label="Name" rules={[{ required: true }]}>
-            <Input />
+            <Input readOnly/>
           </Form.Item>
           <Form.Item name="description" label="Description">
-            <Input.TextArea />
+            <Input.TextArea readOnly/>
           </Form.Item>
           <Form.Item name="totalPrice" label="Total Price" rules={[{ required: true }]}>
             <InputNumber min={0} />
@@ -214,20 +255,20 @@ const Orders = () => {
           <Form.Item name="depositAmount" label="Deposit Amount">
             <InputNumber min={0} />
           </Form.Item>
-          <Form.Item name="startDate" label="Start Date" rules={[{ required: true }]}>
-            <DatePicker />
+          <Form.Item name="startDate" label="Start Date" rules={[{ required: true }]} readOnly>
+            <DatePicker readOnly />
           </Form.Item>
-          <Form.Item name="endDate" label="End Date" rules={[{ required: true }]}>
-            <DatePicker />
+          <Form.Item name="endDate" label="End Date" rules={[{ required: true }]} readOnly>
+            <DatePicker readOnly />
           </Form.Item>
-          <Form.Item name="customerId" label="Customer ID">
+          <Form.Item name="customerId" label="Customer ID" hidden>
             <Input />
           </Form.Item>
-          <Form.Item name="consultantId" label="Consultant ID">
+          <Form.Item name="consultantId" label="Consultant ID" hidden>
             <Input />
           </Form.Item>
-          <Form.Item name="createdAt" label="Created At">
-            <Input />
+          <Form.Item name="createdAt" label="Created At" readOnly>
+            <Input readOnly/>
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">

@@ -144,13 +144,45 @@ const MaintenanceRequest = () => {
   };
 
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id" },
-    { title: "Customer ID", dataIndex: "customerId", key: "customerId" },
-    { title: "Project ID", dataIndex: "projectId", key: "projectId" },
-    { title: "Description", dataIndex: "description", key: "description" },
-    { title: "Request Status", dataIndex: "requestStatus", key: "requestStatus" },
-    { title: "Maintenance Status", dataIndex: "maintenanceStatus", key: "maintenanceStatus" },
-    { title: "Scheduled Date", dataIndex: "scheduledDate", key: "scheduledDate" },
+    {
+      title: "Hình Ảnh",
+      dataIndex: "attachments",
+      key: "attachments",
+      render: (attachments) => (
+        attachments && typeof attachments === 'string' ? (
+          <Image
+            width={50}
+            src={attachments}
+            alt="Attachment"
+          />
+        ) : null
+      ),
+    },
+    { title: "ID", dataIndex: "id", key: "id", hidden: true },
+    { title: "Customer ID", dataIndex: "customerId", key: "customerId", hidden: true },
+    { title: "Project ID", dataIndex: "projectId", key: "projectId", hidden: true },
+    { title: "Mô tả", dataIndex: "description", key: "description" },
+    {
+      title: "Trạng thái yêu cầu",
+      dataIndex: "requestStatus",
+      key: "requestStatus",
+      render: (status) => {
+        switch (status) {
+          case "PENDING":
+            return "Đang chờ";
+          case "REVIEWING":
+            return "Đang xem xét";
+          case "CANCELLED":
+            return "Đã hủy";
+          default:
+            return status;
+        }
+      }
+    },
+    { title: "Ngày tạo", dataIndex: "createdAt", key: "createdAt", render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss') },
+    { title: "Ngày cập nhật", dataIndex: "updatedAt", key: "updatedAt", render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss') },
+    { title: "Trạng thái bảo trì", dataIndex: "maintenanceStatus", key: "maintenanceStatus", hidden: true },
+    { title: "Ngày lên lịch", dataIndex: "scheduledDate", key: "scheduledDate", hidden: true },
     {
       title: "Actions",
       key: "actions",
@@ -217,13 +249,13 @@ const MaintenanceRequest = () => {
             scheduledDate: selectedRecord.scheduledDate ? moment(selectedRecord.scheduledDate) : null,
           }}
         >
-          <Form.Item name="id" label="ID">
+          <Form.Item name="id" label="ID" hidden>
             <Input disabled />
           </Form.Item>
-          <Form.Item name="customerId" label="Customer ID">
+          <Form.Item name="customerId" label="Customer ID" hidden>
             <Input disabled />
           </Form.Item>
-          <Form.Item name="projectId" label="Project ID">
+          <Form.Item name="projectId" label="Project ID" hidden>
             <Input disabled />
           </Form.Item>
           <Form.Item name="description" label="Description">

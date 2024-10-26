@@ -108,6 +108,7 @@ const Dashboard = () => {
   const user = useSelector((state) => state.user);
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
   const [username, setUsername] = useState("");
+  const [openKeys, setOpenKeys] = useState([]);
 
   const pathSnippets = location.pathname.split("/").filter((i) => i);
   const breadcrumbItems = pathSnippets.map((_, index) => {
@@ -193,6 +194,45 @@ const Dashboard = () => {
     return <Avatar style={{ backgroundColor: '#f56a00' }}>{username.charAt(0).toUpperCase()}</Avatar>;
   };
 
+  const getDefaultOpenKeys = (roleId) => {
+    switch (roleId) {
+      case 1: // Manager
+        return ['management'];
+      case 2: // Consultant
+        return ['consulting'];
+      case 3: // Designer
+        return ['ponddesigns'];
+      case 4: // Construction
+        return ['construction'];
+      default:
+        return [];
+    }
+  };
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      const roleId = Number(user.roleId);
+      setOpenKeys(getDefaultOpenKeys(roleId));
+      switch (roleId) {
+        case 1: // Manager
+          navigate('/dashboard/usermanagement');
+          break;
+        case 2: // Consultant
+          navigate('/dashboard/consulting/requests');
+          break;
+        case 3: // Designer
+          navigate('/dashboard/ponddesign');
+          break;
+        case 4: // Construction
+          navigate('/dashboard/construction/tasks');
+          break;
+        default:
+          navigate('/dashboard');
+      }
+    }
+  }, [navigate]);
+
   return (
     <Layout
       style={{
@@ -228,6 +268,8 @@ const Dashboard = () => {
             backgroundColor: "#003366", 
             color: "#fff", 
           }}
+          openKeys={openKeys}
+          onOpenChange={setOpenKeys}
         />
       </Sider>
       <Layout>
