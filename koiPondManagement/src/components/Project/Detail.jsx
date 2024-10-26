@@ -32,7 +32,7 @@ const ProjectDetails = () => {
         setProject(response.data);
       } catch (error) {
         console.error("Error fetching project details:", error);
-        message.error("Failed to load project details. Please try again.");
+        message.error("Không thể tải thông tin dự án. Vui lòng thử lại.");
       } finally {
         setLoading(false);
       }
@@ -65,7 +65,7 @@ const ProjectDetails = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        message.error("You must be logged in to submit a request.");
+        message.error("Bạn cần đăng nhập để gửi yêu cầu tư vấn.");
         navigate("/login");
         return;
       }
@@ -100,12 +100,10 @@ const ProjectDetails = () => {
     } catch (error) {
       console.error("Error submitting consultation request:", error);
       if (error.response && error.response.status === 401) {
-        message.error("Unauthorized. Please log in again.");
+        message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
         navigate("/login");
       } else {
-        message.error(
-          "Failed to submit consultation request. Please try again."
-        );
+        message.error("Không thể gửi yêu cầu tư vấn. Vui lòng thử lại.");
       }
     }
   };
@@ -136,11 +134,11 @@ const ProjectDetails = () => {
   };
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <p>Đang tải...</p>;
   }
 
   if (!project) {
-    return <p>Project not found</p>;
+    return <p>Không tìm thấy dự án</p>;
   }
 
   return (
