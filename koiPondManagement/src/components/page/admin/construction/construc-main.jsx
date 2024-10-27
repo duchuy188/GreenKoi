@@ -168,45 +168,56 @@ const ConstrucMain = () => {
       key: 'id',
       width: 200,
       ellipsis: true,
+      hidden: true,
     },
     {
-      title: 'Customer ID',
+      title: 'Khách hàng',
       dataIndex: 'customerId',
       key: 'customerId',
     },
     {
-      title: 'Project ID',
+      title: 'Dự án',
       dataIndex: 'projectId',
       key: 'projectId',
       width: 200,
       ellipsis: true,
     },
     {
-      title: 'Consultant ID',
+      title: 'Tư vấn viên',
       dataIndex: 'consultantId',
       key: 'consultantId',
     },
     {
-      title: 'Description',
+      title: 'Mô tả',
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
     },
     {
-      title: 'Attachments',
+      title: 'Tài liệu đính kèm',
       dataIndex: 'attachments',
       key: 'attachments',
       render: (attachments) => {
-        if (!attachments) return '-';
+        if (!attachments || attachments.length === 0) return '-';
         return (
-          <a href={attachments} target="_blank" rel="noopener noreferrer">
-            View Attachment
-          </a>
+          <Space>
+            {Array.isArray(attachments) ? (
+              attachments.map((attachment, index) => (
+                <a key={index} href={attachment} target="_blank" rel="noopener noreferrer">
+                  <img src={attachment} alt={`Attachment ${index + 1}`} style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
+                </a>
+              ))
+            ) : (
+              <a href={attachments} target="_blank" rel="noopener noreferrer">
+                <img src={attachments} alt="Attachment" style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
+              </a>
+            )}
+          </Space>
         );
       }
     },
     {
-      title: 'Request Status',
+      title: 'Trạng thái yêu cầu',
       dataIndex: 'requestStatus',
       key: 'requestStatus',
       render: (status) => (
@@ -216,7 +227,7 @@ const ConstrucMain = () => {
       ),
     },
     {
-      title: 'Maintenance Status',
+      title: 'Trạng thái bảo trì',
       dataIndex: 'maintenanceStatus',
       key: 'maintenanceStatus',
       render: (status) => (
@@ -226,13 +237,13 @@ const ConstrucMain = () => {
       ),
     },
     {
-      title: 'Agreed Price',
+      title: 'Giá đồng ý',
       dataIndex: 'agreedPrice',
       key: 'agreedPrice',
       render: (price) => price?.toLocaleString() || '-',
     },
     {
-      title: 'Scheduled Date',
+      title: 'Ngày lên lịch',
       dataIndex: 'scheduledDate',
       key: 'scheduledDate',
       render: (date, record) => {
@@ -242,34 +253,34 @@ const ConstrucMain = () => {
             <DatePicker
               value={selectedDates[record.id]?.scheduledDate || date}
               onChange={(newDate) => handleDateChange(newDate, record.id, 'scheduledDate')}
-              format="YYYY-MM-DD"
+              format="DD-MM-YYYY"
             />
           );
         }
         // Nếu không edit thì hiển thị date bình thường
-        return date?.format('YYYY-MM-DD') || '-';
+        return date?.format('DD-MM-YYYY') || '-';
       },
     },
     {
-      title: 'Start Date',
+      title: 'Ngày bắt đầu',
       dataIndex: 'startDate',
       key: 'startDate',
-      render: (date) => date?.format('YYYY-MM-DD') || '-',
+      render: (date) => date?.format('DD-MM-YYYY') || '-',
     },
     {
-      title: 'Completion Date',
+      title: 'Ngày hoàn thành',
       dataIndex: 'completionDate',
       key: 'completionDate',
-      render: (date) => date?.format('YYYY-MM-DD') || '-',
+      render: (date) => date?.format('DD-MM-YYYY') || '-',
     },
     {
-      title: 'Maintenance Notes',
+      title: 'Ghi chú bảo trì',
       dataIndex: 'maintenanceNotes',
       key: 'maintenanceNotes',
       ellipsis: true,
     },
     {
-      title: 'Maintenance Images',
+      title: 'Hình ảnh bảo trì',
       dataIndex: 'maintenanceImages',
       key: 'maintenanceImages',
       render: (images) => {
@@ -283,7 +294,7 @@ const ConstrucMain = () => {
                 target="_blank" 
                 rel="noopener noreferrer"
               >
-                Image {index + 1}
+                Hình ảnh {index + 1}
               </a>
             ))}
           </Space>
@@ -291,26 +302,26 @@ const ConstrucMain = () => {
       }
     },
     {
-      title: 'Created At',
+      title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss'),
+      render: (date) => moment(date).format('DD-MM-YYYY HH:mm:ss'),
     },
     {
-      title: 'Updated At',
+      title: 'Ngày cập nhật',
       dataIndex: 'updatedAt',
       key: 'updatedAt',
-      render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss'),
+      render: (date) => moment(date).format('DD-MM-YYYY HH:mm:ss'),
     },
     {
-      title: 'Assigned To',
+      title: 'Phân công cho',
       dataIndex: 'assignedTo',
       key: 'assignedTo',
       render: (assignedTo) => assignedTo || '-',
     },
     // Actions column ở cuối
     {
-      title: 'Actions',
+      title: 'Hành động',
       key: 'actions',
       fixed: 'right',
       render: (_, record) => {
@@ -330,13 +341,13 @@ const ConstrucMain = () => {
                 }));
               }}
             >
-              Schedule
+              Lên lịch
             </Button>
 
             {/* Nút Save chỉ hiển thị khi đang edit schedule */}
             {editingIds.has(record.id) && (
               <Button onClick={() => handleSubmitDates(record.id)}>
-                Save
+                Lưu
               </Button>
             )}
 
@@ -346,7 +357,7 @@ const ConstrucMain = () => {
                 type="primary"
                 onClick={() => handleStartMaintenance(record.id)}
               >
-                Start Maintenance
+                Bắt đầu bảo trì
               </Button>
             )}
 
@@ -356,7 +367,7 @@ const ConstrucMain = () => {
                 type="primary"
                 onClick={() => showCompleteModal(record.id)}
               >
-                Complete Maintenance
+                Hoàn thành bảo trì
               </Button>
             )}
           </Space>
@@ -398,7 +409,7 @@ const ConstrucMain = () => {
 
   return (
     <Card>
-      <Title level={2}>Maintenance Requests</Title>
+      <Title level={2}>Yêu cầu bảo trì</Title>
       {loading ? (
         <div style={{ textAlign: 'center', padding: '20px' }}>
           <Spin size="large" />
@@ -417,7 +428,7 @@ const ConstrucMain = () => {
         />
       )}
       <Modal
-        title="Complete Maintenance"
+        title="Hoàn thành bảo trì"
         visible={isCompleteModalVisible}
         onOk={handleCompleteMaintenance}
         onCancel={() => {
@@ -429,9 +440,9 @@ const ConstrucMain = () => {
       >
         <Form layout="vertical">
           <Form.Item 
-            label="Maintenance Notes" 
+            label="Ghi chú bảo trì" 
             required
-            rules={[{ required: true, message: 'Please enter maintenance notes' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập ghi chú bảo trì' }]}
           >
             <Input.TextArea
               value={maintenanceNotes}
@@ -440,9 +451,9 @@ const ConstrucMain = () => {
             />
           </Form.Item>
           <Form.Item 
-            label="Maintenance Images" 
+            label="Hình ảnh bảo trì" 
             required
-            rules={[{ required: true, message: 'Please upload at least one image' }]}
+            rules={[{ required: true, message: 'Vui lòng tải lên ít nhất một hình ảnh' }]}
           >
             <Upload
               listType="picture-card"

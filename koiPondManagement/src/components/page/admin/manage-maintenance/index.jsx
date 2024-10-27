@@ -46,11 +46,12 @@ const ManageMaintenance = () => {
       let endpoint = "/api/maintenance-requests/confirmed";
       if (requestStatus === "CANCELLED") {
         endpoint = "/api/maintenance-requests/cancelled";
+      } else if (requestStatus === "COMPLETED") {
+        endpoint = "/api/maintenance-requests/completed";
       }
       const response = await api.get(endpoint);
       setMaintenanceRequests(response.data);
     } catch (error) {
-      console.error("Error fetching maintenance requests:", error);
       message.error(`Không thể tải ${requestStatus.toLowerCase()} yêu cầu.`);
     } finally {
       setLoading(false);
@@ -70,7 +71,6 @@ const ManageMaintenance = () => {
         }))
       );
     } catch (error) {
-      console.error("Error fetching staff list:", error);
       message.error("Không thể tải danh sách nhân viên.");
     }
   };
@@ -97,7 +97,6 @@ const ManageMaintenance = () => {
       setCancelReason("");
       fetchMaintenanceRequests();
     } catch (error) {
-      console.error("Error cancelling maintenance request:", error);
       message.error("Không thể hủy yêu cầu.");
     }
   };
@@ -116,42 +115,53 @@ const ManageMaintenance = () => {
       setIsAssignModalVisible(false);
       fetchMaintenanceRequests();
     } catch (error) {
-      console.error("Error assigning maintenance staff:", error);
       message.error("Không thể phân công nhân viên.");
     }
   };
 
   const columns = [
     { title: "ID", dataIndex: "id", key: "id", hidden: true },
-    { title: "Customer ID", dataIndex: "customerId", key: "customerId" },
-    { title: "Project ID", dataIndex: "projectId", key: "projectId" },
-    { title: "Consultant ID", dataIndex: "consultantId", key: "consultantId" },
-    { title: "Description", dataIndex: "description", key: "description" },
-    { title: "Request Status", dataIndex: "requestStatus", key: "requestStatus" },
-    { title: "Maintenance Status", dataIndex: "maintenanceStatus", key: "maintenanceStatus" },
+    { title: "Khách hàng", dataIndex: "customerId", key: "customerId" },
+    { title: "Dự án", dataIndex: "projectId", key: "projectId" },
+    { title: "Tư vấn viên", dataIndex: "consultantId", key: "consultantId" },
+    { title: "Mô tả", dataIndex: "description", key: "description" },
+    { title: "Trạng thái yêu cầu", dataIndex: "requestStatus", key: "requestStatus" },
+    { title: "Trạng thái bảo trì", dataIndex: "maintenanceStatus", key: "maintenanceStatus" },
     {
-      title: "Schedule Date",
+      title: "Ngày tạo",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (date) => moment(date).format("DD-MM-YYYY HH:mm:ss"),
+    },
+    {
+      title: "Ngày cập nhật",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
+      render: (date) => moment(date).format("DD-MM-YYYY HH:mm:ss"),
+    },
+    {
+      title: "Ngày lên lịch",
       dataIndex: "scheduleDate",
       key: "scheduleDate",
       hidden: true,
-      render: (date) => moment(date).format("YYYY-MM-DD") || "N/A",
+      render: (date) => moment(date).format("DD-MM-YYYY") || "N/A",
     },
     {
-      title: "Start Date",
+      title: "Ngày bắt đầu",
       dataIndex: "startDate",
       key: "startDate",
       hidden: true,
-      render: (date) => moment(date).format("YYYY-MM-DD") || "N/A",
+      render: (date) => moment(date).format("DD-MM-YYYY") || "N/A",
     },
     {
-      title: "Completion Date",
+      title: "Ngày hoàn thành",
       dataIndex: "completionDate",
       key: "completionDate",
       hidden: true,
-      render: (date) => moment(date).format("YYYY-MM-DD") || "N/A",
+      render: (date) => moment(date).format("DD-MM-YYYY") || "N/A",
     },
     {
-      title: "Actions",
+      title: "Hành động",
       key: "actions",
       render: (_, record) => (
         <>
@@ -170,6 +180,7 @@ const ManageMaintenance = () => {
           )}
         </>
       ),
+          hidden: requestStatus === "COMPLETED",
     },
   ];
 
@@ -183,9 +194,10 @@ const ManageMaintenance = () => {
       >
         <Option value="CONFIRMED">Đã xác nhận</Option>
         <Option value="CANCELLED">Đã hủy</Option>
+        <Option value="COMPLETED">Đã hoàn thành</Option>
       </Select>
       <Table
-        columns={columns}
+        columns={columns.filter(column => !column.hidden)} // Filter out hidden columns
         dataSource={maintenanceRequests}
         loading={loading}
         rowKey="id"

@@ -90,11 +90,11 @@ const items = [
       "construction-tasks"
     ),
     getItem(
-      <Link to="/dashboard/construction/main">Bảo trì</Link>,
+        <Link to="/dashboard/construction/main">Bảo trì</Link>,
       "construction-main"
     ),
     getItem(
-      <Link to="/dashboard/construction/reviewcomplete">Đánh giá hoàn thành</Link>,
+      <Link to="/dashboard/construction/reviewcomplete">Xem bảo trì hoàn thành</Link>,
       "construction-reviewcomplete"
     ),
   ]),

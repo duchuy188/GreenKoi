@@ -8,10 +8,24 @@ const ConstrucReviewComplete = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedNote, setSelectedNote] = useState('');
+  const [selectedAttachments, setSelectedAttachments] = useState([]);
+  const [attachmentModalVisible, setAttachmentModalVisible] = useState(false);
 
   const showNoteModal = (note) => {
     setSelectedNote(note);
     setModalVisible(true);
+  };
+
+  const showAttachmentModal = (attachments) => {
+    const formattedAttachments = attachments.map(attachment => {
+      if (typeof attachment === 'string') {
+        // Assume it's an image URL if it's a string
+        return { type: 'image', url: attachment };
+      }
+      return attachment;
+    });
+    setSelectedAttachments(formattedAttachments);
+    setAttachmentModalVisible(true);
   };
 
   const columns = [
@@ -19,84 +33,88 @@ const ConstrucReviewComplete = () => {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
+      hidden: true,
     },
     {
-      title: 'Customer ID',
+      title: 'Khách hàng ID',
       dataIndex: 'customerId',
       key: 'customerId',
     },
     {
-      title: 'Project ID',
+      title: 'Dự án ID',
       dataIndex: 'projectId',
       key: 'projectId',
     },
     {
-      title: 'Consultant ID',
+      title: 'Tư vấn viên ID',
       dataIndex: 'consultantId',
       key: 'consultantId',
     },
     {
-      title: 'Description',
+      title: 'Mô tả',
       dataIndex: 'description',
       key: 'description',
     },
     {
-      title: 'Attachments',
+      title: 'Tài liệu đính kèm',
       dataIndex: 'attachments',
       key: 'attachments',
     },
     {
-      title: 'Request Status',
+      title: 'Trạng thái yêu cầu',
       dataIndex: 'requestStatus',
       key: 'requestStatus',
+      hidden: true,
     },
     {
-      title: 'Maintenance Status',
+      title: 'Trạng thái bảo trì',
       dataIndex: 'maintenanceStatus',
       key: 'maintenanceStatus',
+      hidden: true,
     },
     {
-      title: 'Agreed Price',
+      title: 'Giá đồng ý',
       dataIndex: 'agreedPrice',
       key: 'agreedPrice',
     },
     {
-      title: 'Scheduled Date',
+      title: 'Ngày lên lịch',
       dataIndex: 'scheduledDate',
       key: 'scheduledDate',
     },
     {
-      title: 'Start Date',
+      title: 'Ngày bắt đầu',
       dataIndex: 'startDate',
       key: 'startDate',
     },
     {
-      title: 'Completion Date',
+      title: 'Ngày hoàn thành',
       dataIndex: 'completionDate',
       key: 'completionDate',
     },
     {
-      title: 'Assigned To',
+      title: 'Giao cho',
       dataIndex: 'assignedTo',
       key: 'assignedTo',
     },
     {
-      title: 'Cancellation Reason',
+      title: 'Lý do hủy',
       dataIndex: 'cancellationReason',
       key: 'cancellationReason',
+      hidden: true,
     },
     {
-      title: 'Created At',
+      title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
     },
     {
-      title: 'Updated At',
+      title: 'Ngày cập nhật',
       dataIndex: 'updatedAt',
       key: 'updatedAt',
     },
     {
-      title: 'Maintenance Notes',
+      title: 'Ghi chú bảo trì',
       dataIndex: 'maintenanceNotes',
       key: 'maintenanceNotes',
       render: (text) => (
@@ -106,7 +124,7 @@ const ConstrucReviewComplete = () => {
       ),
     },
     {
-      title: 'Maintenance Images',
+      title: 'Hình ảnh bảo trì',
       dataIndex: 'maintenanceImages',
       key: 'maintenanceImages',
       render: (images) => (
@@ -150,6 +168,36 @@ const ConstrucReviewComplete = () => {
         onCancel={() => setModalVisible(false)}
       >
         <p>{selectedNote}</p>
+      </Modal>
+      <Modal
+        title="Tài liệu đính kèm"
+        visible={attachmentModalVisible}
+        onOk={() => setAttachmentModalVisible(false)}
+        onCancel={() => setAttachmentModalVisible(false)}
+        width={800}
+      >
+        <Image.PreviewGroup>
+          {selectedAttachments.map((attachment, index) => (
+            <div key={index} style={{ marginBottom: '20px' }}>
+              {attachment.type === 'image' ? (
+                <Image
+                  src={attachment.url}
+                  alt={`Attachment ${index + 1}`}
+                  style={{ maxWidth: '100%', maxHeight: '200px' }}
+                />
+              ) : (
+                <a 
+                  href={attachment.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ fontSize: '16px', textDecoration: 'underline' }}
+                >
+                  {attachment.name || `Tài liệu ${index + 1}`}
+                </a>
+              )}
+            </div>
+          ))}
+        </Image.PreviewGroup>
       </Modal>
     </>
   );
