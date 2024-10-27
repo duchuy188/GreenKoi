@@ -8,12 +8,12 @@ SELECT @sql += N'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id))
 FROM sys.foreign_keys;
 EXEC sp_executesql @sql;
 
--- Xóa tất cả các bảng
-DROP TABLE IF EXISTS project_cancellations;
+-- 2. Xóa tất cả các bảng theo thứ tự phụ thuộc
 DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS blog_posts;
 DROP TABLE IF EXISTS payments;
-DROP TABLE IF EXISTS project_stages;
+DROP TABLE IF EXISTS project_cancellations;  
+DROP TABLE IF EXISTS tasks;
 DROP TABLE IF EXISTS maintenance_requests;
 DROP TABLE IF EXISTS consultation_requests;
 DROP TABLE IF EXISTS projects;
@@ -21,11 +21,8 @@ DROP TABLE IF EXISTS promotions;
 DROP TABLE IF EXISTS designs;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS roles;
-DROP TABLE IF EXISTS cancellation_policies;
 DROP TABLE IF EXISTS project_statuses;
-DROP TABLE IF EXISTS project_stage_statuses;
 DROP TABLE IF EXISTS task_templates;
-DROP TABLE IF EXISTS tasks;
 
 PRINT 'All tables have been dropped successfully.';
 */
@@ -40,15 +37,6 @@ CREATE TABLE project_statuses (
     updated_at DATETIME2 NOT NULL DEFAULT GETDATE()
 );
 
--- Bảng project_stage_statuses
-CREATE TABLE project_stage_statuses (
-    id NVARCHAR(36) PRIMARY KEY,
-    name NVARCHAR(50) NOT NULL UNIQUE,
-    description NVARCHAR(MAX),
-    is_active BIT NOT NULL DEFAULT 1,
-    created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
-    updated_at DATETIME2 NOT NULL DEFAULT GETDATE()
-);
 
 -- Bảng roles
 CREATE TABLE roles (
@@ -70,6 +58,8 @@ CREATE TABLE users (
     full_name NVARCHAR(100),
     address NVARCHAR(MAX),
     role_id NVARCHAR(36),
+    has_active_project BIT NOT NULL DEFAULT 0,  
+    has_active_maintenance BIT NOT NULL DEFAULT 0,  
     is_active BIT NOT NULL DEFAULT 1,
     created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
@@ -88,6 +78,7 @@ CREATE TABLE designs (
     features NVARCHAR(MAX),
     created_by NVARCHAR(36),
     status NVARCHAR(20),
+    rejection_reason NVARCHAR(MAX), 
     is_active BIT NOT NULL DEFAULT 1,
     created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
@@ -112,6 +103,7 @@ CREATE TABLE projects (
     id NVARCHAR(36) PRIMARY KEY,
     customer_id NVARCHAR(36),
     consultant_id NVARCHAR(36),
+    constructor_id NVARCHAR(36),  
     design_id NVARCHAR(36),
     promotion_id NVARCHAR(36),
     discounted_price DECIMAL(10, 2),
@@ -120,24 +112,27 @@ CREATE TABLE projects (
     status_id NVARCHAR(36),
     total_price DECIMAL(10, 2) NOT NULL,
     deposit_amount DECIMAL(10, 2) NOT NULL,
+    remaining_amount NUMERIC(38, 2) NOT NULL DEFAULT 0, 
     start_date DATE,
     end_date DATE,
     address NVARCHAR(MAX),
     progress_percentage INT NOT NULL DEFAULT 0,
+    completed_stages INT NOT NULL DEFAULT 0,  
+    total_stages INT NOT NULL DEFAULT 7,     
     internal_notes NVARCHAR(MAX),
-    customer_feedback NVARCHAR(MAX),
-    payment_status NVARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    payment_status NVARCHAR(20) NOT NULL DEFAULT 'UNPAID',
     estimated_completion_date DATE,
-    total_stages INT NOT NULL DEFAULT 0,
-    completed_stages INT NOT NULL DEFAULT 0,
+    completion_date DATE,
     is_active BIT NOT NULL DEFAULT 1,
     created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     FOREIGN KEY (customer_id) REFERENCES users(id),
     FOREIGN KEY (consultant_id) REFERENCES users(id),
+    FOREIGN KEY (constructor_id) REFERENCES users(id), 
     FOREIGN KEY (design_id) REFERENCES designs(id),
     FOREIGN KEY (promotion_id) REFERENCES promotions(id),
-    FOREIGN KEY (status_id) REFERENCES project_statuses(id)
+    FOREIGN KEY (status_id) REFERENCES project_statuses(id),
+    CONSTRAINT CHK_project_payment_status CHECK (payment_status IN ('UNPAID', 'DEPOSIT_PAID', 'FULLY_PAID'))
 );
 
 -- Bảng consultation_requests
@@ -153,22 +148,8 @@ CREATE TABLE consultation_requests (
     FOREIGN KEY (design_id) REFERENCES designs(id)
 );
 
--- Bảng project_stages
-CREATE TABLE project_stages (
-    id NVARCHAR(36) PRIMARY KEY,
-    project_id NVARCHAR(36),
-    name NVARCHAR(100) NOT NULL,
-    description NVARCHAR(MAX),
-    status_id NVARCHAR(36),
-    start_date DATE,
-    end_date DATE,
-    created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
-    updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
-    FOREIGN KEY (project_id) REFERENCES projects(id),
-    FOREIGN KEY (status_id) REFERENCES project_stage_statuses(id)
-);
 
--- Bảng payments
+
 CREATE TABLE payments (
     id NVARCHAR(36) PRIMARY KEY,
     project_id NVARCHAR(36),
@@ -179,9 +160,10 @@ CREATE TABLE payments (
     notes NVARCHAR(MAX),
     created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
-    FOREIGN KEY (project_id) REFERENCES projects(id)
+    FOREIGN KEY (project_id) REFERENCES projects(id),
+    CONSTRAINT CHK_payment_method CHECK (payment_method IN ('CASH', 'BANK_TRANSFER', 'VNPAY')),
+    CONSTRAINT CHK_payment_status CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED'))
 );
-
 -- Bảng maintenance_requests
 CREATE TABLE maintenance_requests (
     id NVARCHAR(36) PRIMARY KEY,
@@ -244,38 +226,23 @@ CREATE TABLE reviews (
     FOREIGN KEY (maintenance_request_id) REFERENCES maintenance_requests(id)
 );
 
--- Bảng cancellation_policies
-CREATE TABLE cancellation_policies (
+-- Bảng tasks
+CREATE TABLE tasks (
     id NVARCHAR(36) PRIMARY KEY,
-    name NVARCHAR(100) NOT NULL,
+    project_id NVARCHAR(36) NOT NULL,
+    name NVARCHAR(255) NOT NULL,
     description NVARCHAR(MAX),
-    refund_percentage DECIMAL(5, 2) NOT NULL,
-    time_limit INT NOT NULL,
-    is_active BIT NOT NULL DEFAULT 1,
-    created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
-    updated_at DATETIME2 NOT NULL DEFAULT GETDATE()
-);
-
--- Bảng project_cancellations
-CREATE TABLE project_cancellations (
-    id NVARCHAR(36) PRIMARY KEY,
-    project_id NVARCHAR(36),
-    policy_id NVARCHAR(36),
-    reason NVARCHAR(MAX),
-    requested_by NVARCHAR(36),
     status NVARCHAR(20) NOT NULL,
-    refund_amount DECIMAL(10, 2),
-    cancellation_date DATETIME2 NOT NULL,
-    processed_by NVARCHAR(36),
-    processed_at DATETIME2,
+    order_index INT NOT NULL,
+    completion_percentage INT NOT NULL DEFAULT 0,
     notes NVARCHAR(MAX),
     created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
-    FOREIGN KEY (project_id) REFERENCES projects(id),
-    FOREIGN KEY (policy_id) REFERENCES cancellation_policies(id),
-    FOREIGN KEY (requested_by) REFERENCES users(id),
-    FOREIGN KEY (processed_by) REFERENCES users(id)
+    FOREIGN KEY (project_id) REFERENCES projects(id)
 );
+
+
+
 
 -- Thêm dữ liệu vào bảng project_statuses
 INSERT INTO project_statuses (id, name, description, is_active)
@@ -287,15 +254,9 @@ VALUES
 ('PS5', 'ON_HOLD', 'Project is temporarily on hold', 1),
 ('PS6', 'COMPLETED', 'Project has been completed', 1),
 ('PS7', 'CANCELLED', 'Project has been cancelled', 1),
-('PS8', 'MAINTENANCE', 'Project is in the maintenance phase', 1);
+('PS8', 'MAINTENANCE', 'Project is in the maintenance phase', 1),
+('PS9', 'TECHNICALLY_COMPLETED', 'Project is technically completed but waiting for final payment', 1);
 
--- Thêm dữ liệu vào bảng project_stage_statuses
-INSERT INTO project_stage_statuses (id, name, description, is_active)
-VALUES 
-('PSS1', 'PENDING', 'Stage is waiting to start', 1),
-('PSS2', 'IN_PROGRESS', 'Stage is currently in progress', 1),
-('PSS3', 'COMPLETED', 'Stage has been completed', 1),
-('PSS4', 'ON_HOLD', 'Stage is temporarily on hold', 1);
 
 -- Thêm dữ liệu vào bảng roles
 INSERT INTO roles (id, name, description, is_active, created_at, updated_at)
@@ -325,21 +286,16 @@ INSERT INTO promotions (id, name, description, discount_value, start_date, end_d
 VALUES
 ('P1', 'Summer Sale', '10% off on all pond designs', 10.00, '2024-06-01', '2024-08-31');
 -- Thêm dữ liệu vào bảng projects
-INSERT INTO projects (id, customer_id, consultant_id, design_id, promotion_id, name, description, status_id, total_price, deposit_amount, start_date, end_date, address, progress_percentage, payment_status, estimated_completion_date, total_stages, completed_stages)
+INSERT INTO projects (id, customer_id, consultant_id, design_id, promotion_id, name, description, status_id, total_price, deposit_amount, start_date, end_date, address, progress_percentage, payment_status, estimated_completion_date)
 VALUES
-('PR1', '5', '2', 'D1', 'P1', 'Eva''s Backyard Oasis', 'A beautiful koi pond for Eva''s backyard', 'PS4', 4500.00, 1000.00, '2024-07-01', '2024-08-15', '123 Main St, Cityville', 30, 'PARTIAL', '2024-08-15', 3, 1),
-('PR2', '6', '2', 'D2', NULL, 'Frank''s Modern Pond', 'A minimalist koi pond for Frank''s garden', 'PS3', 6000.00, 1500.00, '2024-08-01', '2024-09-30', '456 Elm St, Townsville', 10, 'PARTIAL', '2024-09-30', 3, 1);
--- Thêm dữ liệu vào bảng project_stages
-INSERT INTO project_stages (id, project_id, name, description, status_id, start_date, end_date)
-VALUES
-('PS1', 'PR1', 'Design Approval', 'Get customer approval on final design', 'PSS3', '2024-07-01', '2024-07-07'),
-('PS2', 'PR1', 'Excavation', 'Dig the pond area', 'PSS2', '2024-07-08', '2024-07-15'),
-('PS3', 'PR2', 'Initial Consultation', 'Meet with customer to discuss requirements', 'PSS3', '2024-08-01', '2024-08-03');
+('PR1', '5', '2', 'D1', 'P1', 'Eva''s Backyard Oasis', 'A beautiful koi pond for Eva''s backyard', 'PS4', 4500.00, 1000.00, '2024-07-01', '2024-08-15', '123 Main St, Cityville', 30, 'DEPOSIT_PAID', '2024-08-15'),
+('PR2', '6', '2', 'D2', NULL, 'Frank''s Modern Pond', 'A minimalist koi pond for Frank''s garden', 'PS3', 6000.00, 1500.00, '2024-08-01', '2024-09-30', '456 Elm St, Townsville', 10, 'DEPOSIT_PAID', '2024-09-30');
+
 -- Thêm dữ liệu vào bảng payments
 INSERT INTO payments (id, project_id, amount, payment_date, payment_method, status)
 VALUES
-('PAY1', 'PR1', 1000.00, '2024-07-01', 'Credit Card', 'COMPLETED'),
-('PAY2', 'PR2', 1500.00, '2024-08-01', 'Bank Transfer', 'COMPLETED');
+('PAY1', 'PR1', 1000.00, '2024-07-01', 'BANK_TRANSFER', 'COMPLETED'),
+('PAY2', 'PR2', 1500.00, '2024-08-01', 'BANK_TRANSFER', 'COMPLETED');
 -- Thêm dữ liệu vào bảng designs
 INSERT INTO designs (id, name, description, image_url, base_price, shape, dimensions, features, created_by, status, is_active)
 VALUES
@@ -348,22 +304,7 @@ VALUES
 ('D5', N'Hồ Cá Koi Mini', N'Thiết kế hồ cá Koi nhỏ gọn', 'https://example.com/mini-koi-pond.jpg', 4500.00, N'Hình tròn', '2m đường kính x 1m sâu', N'Hệ thống lọc compact, đèn LED', '3', 'PENDING_APPROVAL', 1);
 
 
-PRINT 'Database setup completed successfully.';
 
-ALTER TABLE designs ADD rejection_reason NVARCHAR(MAX);
-
-
--- Thêm cột has_active_project vào bảng users
-ALTER TABLE users ADD has_active_project BIT NOT NULL DEFAULT 0;
-
--- Thêm cột has_active_maintenance vào bảng users
-ALTER TABLE users ADD has_active_maintenance BIT NOT NULL DEFAULT 0;
-
--- Thêm cột constructor_id vào bảng projects
-ALTER TABLE projects ADD constructor_id NVARCHAR(36);
-
--- Thêm foreign key constraint
-ALTER TABLE projects ADD CONSTRAINT FK_projects_constructor FOREIGN KEY (constructor_id) REFERENCES users(id);
 
 CREATE TABLE task_templates (
     id NVARCHAR(36) PRIMARY KEY,
@@ -373,20 +314,6 @@ CREATE TABLE task_templates (
 );
 
 
-CREATE TABLE tasks (
-    id NVARCHAR(36) PRIMARY KEY,
-    project_id NVARCHAR(36) NOT NULL,
-    name NVARCHAR(255) NOT NULL,
-    description NVARCHAR(MAX),
-    status NVARCHAR(20) NOT NULL,
-    order_index INT NOT NULL,
-    completion_percentage INT NOT NULL DEFAULT 0,
-    notes NVARCHAR(MAX),
-    created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
-    updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
-    FOREIGN KEY (project_id) REFERENCES projects(id)
-);
-
 INSERT INTO task_templates (id, name, description, order_index) VALUES
 (NEWID(), N'Khảo sát và chuẩn bị mặt bằng', N'Khảo sát địa điểm và chuẩn bị mặt bằng cho việc xây dựng hồ cá Koi', 1),
 (NEWID(), N'Đào đất và tạo hình dáng hồ', N'Đào đất theo thiết kế và tạo hình dáng cơ bản cho hồ cá Koi', 2),
@@ -395,5 +322,4 @@ INSERT INTO task_templates (id, name, description, order_index) VALUES
 (NEWID(), N'Hoàn thiện cảnh quan xung quanh hồ', N'Tạo cảnh quan và trang trí xung quanh hồ cá Koi', 5),
 (NEWID(), N'Kiểm tra chất lượng nước và hệ thống lọc', N'Kiểm tra và điều chỉnh chất lượng nước cùng hệ thống lọc', 6),
 (NEWID(), N'Bàn giao và hướng dẫn sử dụng', N'Bàn giao dự án và hướng dẫn khách hàng cách sử dụng, bảo trì hồ cá Koi', 7);
-
-
+PRINT 'Database setup completed successfully.';
