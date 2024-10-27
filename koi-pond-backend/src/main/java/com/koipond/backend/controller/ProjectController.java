@@ -3,7 +3,6 @@ package com.koipond.backend.controller;
 import com.koipond.backend.dto.*;
 import com.koipond.backend.dto.CancelProjectRequest;
 import com.koipond.backend.service.ProjectService;
-import com.koipond.backend.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -21,6 +20,7 @@ import org.springframework.security.access.AccessDeniedException;
 import com.koipond.backend.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/projects")
@@ -33,7 +33,7 @@ public class ProjectController {
   
 
     @Autowired
-    public ProjectController(ProjectService projectService, TaskService taskService) {
+    public ProjectController(ProjectService projectService) {
         this.projectService = projectService;
      
     }
@@ -91,13 +91,8 @@ public class ProjectController {
             @Valid @RequestBody UpdateProjectStatusRequest request,
             Authentication authentication) {
         String username = getUsernameFromAuthentication(authentication);
-        boolean isManager = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_1"));
-        if ("COMPLETED".equalsIgnoreCase(request.getNewStatus())) {
-            return ResponseEntity.badRequest().body(new ErrorResponse("To mark a project as completed, use the /complete endpoint."));
-        }
         try {
-            ProjectDTO updatedProject = projectService.updateProjectStatus(id, request.getNewStatus(), username, isManager);
+            ProjectDTO updatedProject = projectService.updateProjectStatus(id, request.getNewStatus(), username);
             return ResponseEntity.ok(updatedProject);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
@@ -117,20 +112,25 @@ public class ProjectController {
             @ApiResponse(responseCode = "403", description = "Access denied"),
             @ApiResponse(responseCode = "404", description = "Project not found")
     })
-    public ResponseEntity<ProjectDTO> cancelProject(@PathVariable String id, @Valid @RequestBody CancelProjectRequest request, Authentication authentication) {
+    public ResponseEntity<ProjectDTO> cancelProject(
+            @PathVariable String id, 
+            @Valid @RequestBody CancelProjectRequest request, 
+            Authentication authentication) {
         String username = getUsernameFromAuthentication(authentication);
-        boolean isManager = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_1"));
-        ProjectDTO cancelledProject = projectService.cancelProject(id, request, username, isManager);
+        // Bỏ tham số isManager vì đã check trong service
+        ProjectDTO cancelledProject = projectService.cancelProject(id, request, username);
         return ResponseEntity.ok(cancelledProject);
     }
 
     @PatchMapping("/{id}/assign-constructor")
     @PreAuthorize("hasRole('ROLE_1')")
-    @Operation(summary = "Assign constructor to project", description = "Assigns a constructor to the project. Only accessible by managers.")
-    public ResponseEntity<ProjectDTO> assignConstructor(@PathVariable String id, @RequestParam String constructorId, Authentication authentication) {
+    public ResponseEntity<ProjectDTO> assignConstructor(
+            @PathVariable String id, 
+            @RequestParam String constructorId, 
+            Authentication authentication) {
         String managerUsername = getUsernameFromAuthentication(authentication);
-        ProjectDTO updatedProject = projectService.assignConstructor(id, constructorId, managerUsername);
+        // Đổi tên method call để match với tên mới trong service
+        ProjectDTO updatedProject = projectService.assignConstructorToProject(id, constructorId, managerUsername);
         return ResponseEntity.ok(updatedProject);
     }
 
@@ -173,7 +173,7 @@ public class ProjectController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
         }
     }
-
+    
     @GetMapping("/customer")
     @PreAuthorize("hasAuthority('ROLE_5')")
     @Operation(summary = "Get customer's projects", description = "Retrieves all projects for the authenticated customer.")
@@ -185,7 +185,7 @@ public class ProjectController {
     public ResponseEntity<?> getCustomerProjects(Authentication authentication) {
         String customerUsername = getUsernameFromAuthentication(authentication);
         logger.info("User {} attempting to access /customer endpoint", customerUsername);
-        logger.info("User authorities: {}", authentication.getAuthorities());
+
         try {
             List<ProjectDTO> projects = projectService.getProjectsByCustomer(customerUsername);
             return ResponseEntity.ok(projects);
@@ -285,6 +285,76 @@ public class ProjectController {
         } catch (Exception e) {
             logger.error("Unexpected error occurred while getting projects for constructor {}", constructorUsername, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+        }
+    }
+
+    @PostMapping("/{projectId}/create-payment")
+    @PreAuthorize("hasAuthority('ROLE_5')")
+    public ResponseEntity<?> createPaymentUrl(@PathVariable String projectId, Authentication authentication, HttpServletRequest request) {
+        String customerUsername = getUsernameFromAuthentication(authentication);
+        logger.info("Customer {} attempting to create payment URL for project {}", customerUsername, projectId);
+        try {
+            String paymentUrl = projectService.createPaymentUrl(projectId, request);
+            logger.info("Payment URL created successfully for customer {} and project {}", customerUsername, projectId);
+            return ResponseEntity.ok(new PaymentUrlResponse(paymentUrl));
+        } catch (Exception e) {
+            logger.error("Error creating payment URL for customer {} and project {}", customerUsername, projectId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{projectId}/mark-technically-completed")
+    @PreAuthorize("hasRole('ROLE_4')")
+    @Operation(summary = "Mark project as technically completed", 
+              description = "Marks a project as technically completed. Only accessible by the assigned construction staff.")
+    public ResponseEntity<?> markProjectAsTechnicallyCompleted(
+            @PathVariable String projectId, 
+            Authentication authentication) {
+        String constructorUsername = getUsernameFromAuthentication(authentication);
+        logger.info("Constructor {} attempting to mark project {} as technically completed", 
+                    constructorUsername, projectId);
+        
+        try {
+            ProjectDTO updatedProject = projectService.markProjectAsTechnicallyCompleted(
+                projectId, constructorUsername);
+            return ResponseEntity.ok(updatedProject);
+        } catch (AccessDeniedException e) {
+            logger.warn("Access denied for constructor {} to mark project {} as technically completed", 
+                        constructorUsername, projectId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErrorResponse("Access denied: " + e.getMessage()));
+        } catch (IllegalStateException e) {
+            logger.warn("Invalid state for marking project as technically completed: {}", 
+                        e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse(e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            logger.error("Project not found: {}", projectId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse("Project not found: " + e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Unexpected error occurred while marking project {} as technically completed", 
+                        projectId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("An unexpected error occurred"));
+        }
+    }
+
+    @PatchMapping("/{id}/payment-status")
+    @PreAuthorize("hasRole('ROLE_2')")  // Chỉ consultant mới có quyền
+    @Operation(summary = "Update payment status", description = "Update project payment status for cash payments")
+    public ResponseEntity<?> updatePaymentStatus(
+            @PathVariable String id,
+            @Valid @RequestBody UpdatePaymentStatusRequest request,
+            Authentication authentication) {
+        String consultantUsername = getUsernameFromAuthentication(authentication);
+        try {
+            ProjectDTO updatedProject = projectService.updatePaymentStatus(id, request.getPaymentStatus(), consultantUsername);
+            return ResponseEntity.ok(updatedProject);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
         }
     }
 

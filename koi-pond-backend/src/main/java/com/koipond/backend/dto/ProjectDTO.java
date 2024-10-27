@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import com.koipond.backend.model.Project; // Thêm import này
 
 @Data
 public class ProjectDTO {
@@ -16,6 +17,7 @@ public class ProjectDTO {
     private String statusName;
     private BigDecimal totalPrice;
     private BigDecimal depositAmount;
+    private BigDecimal remainingAmount;  // Thêm trường này
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
@@ -41,10 +43,13 @@ public class ProjectDTO {
 
     // Thêm các trường mới
     private int progressPercentage;
-    private String paymentStatus;
+    private Project.PaymentStatus paymentStatus; // Sửa đổi trường paymentStatus
     private LocalDate estimatedCompletionDate;
     private int totalStages;
     private int completedStages;
     private List<TaskDTO> tasks;  // Thêm danh sách các task
     private ReviewDTO review;  // Thêm trường này
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate technicalCompletionDate;
 }

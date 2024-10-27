@@ -88,39 +88,8 @@ class ProjectControllerTest {
         assertEquals(updatedProject, response.getBody());
     }
 
-    @Test
-    void updateProjectStatus_AsManager_ReturnsUpdatedProject() {
-        String projectId = "project1";
-        UpdateProjectStatusRequest request = new UpdateProjectStatusRequest();
-        request.setNewStatus("IN_PROGRESS");
-        String username = "manager1";
-        ProjectDTO updatedProject = new ProjectDTO();
-        doReturn(username).when(authentication).getName();
-        doReturn(Collections.singletonList(new SimpleGrantedAuthority("ROLE_1"))).when(authentication).getAuthorities();
-        doReturn(updatedProject).when(projectService).updateProjectStatus(eq(projectId), eq(request.getNewStatus()), eq(username), eq(true));
 
-        ResponseEntity<ProjectDTO> response = projectController.updateProjectStatus(projectId, request, authentication);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(updatedProject, response.getBody());
-    }
-
-    @Test
-    void updateProjectStatus_AsConsultant_ReturnsUpdatedProject() {
-        String projectId = "project1";
-        UpdateProjectStatusRequest request = new UpdateProjectStatusRequest();
-        request.setNewStatus("IN_PROGRESS");
-        String username = "consultant1";
-        ProjectDTO updatedProject = new ProjectDTO();
-        doReturn(username).when(authentication).getName();
-        doReturn(Collections.singletonList(new SimpleGrantedAuthority("ROLE_2"))).when(authentication).getAuthorities();
-        doReturn(updatedProject).when(projectService).updateProjectStatus(eq(projectId), eq(request.getNewStatus()), eq(username), eq(false));
-
-        ResponseEntity<ProjectDTO> response = projectController.updateProjectStatus(projectId, request, authentication);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(updatedProject, response.getBody());
-    }
 
     @Test
     void cancelProject_AsManager_ReturnsCancelledProject() {

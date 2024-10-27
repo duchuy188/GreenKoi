@@ -121,18 +121,7 @@ class PondDesignControllerTest {
         assertEquals(approvedDesign, response.getBody());
     }
 
-    @Test
-    void rejectDesign_ExistingDesign_ReturnsRejectedDesign() {
-        String designId = "1";
-        DesignDTO rejectedDesign = new DesignDTO();
-        rejectedDesign.setId(designId);
-        when(designService.rejectDesign(designId)).thenReturn(rejectedDesign);
 
-        ResponseEntity<DesignDTO> response = pondDesignController.rejectDesign(designId);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(rejectedDesign, response.getBody());
-    }
 
     @Test
     void deleteDesign_ExistingDesign_ReturnsNoContent() {

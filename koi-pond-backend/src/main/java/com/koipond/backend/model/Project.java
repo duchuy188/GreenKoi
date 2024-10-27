@@ -6,6 +6,8 @@ import org.hibernate.annotations.GenericGenerator;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -51,10 +53,14 @@ public class Project {
     @Column(nullable = false)
     private BigDecimal depositAmount;
 
+    @Column(nullable = false)
+    private BigDecimal remainingAmount;  // Thêm trường này
+    
     private LocalDate startDate;
     private LocalDate endDate;
     private LocalDate approvalDate;
     private LocalDate completionDate;
+    private LocalDate technicalCompletionDate;
 
     private String address;
 
@@ -68,7 +74,8 @@ public class Project {
     private String customerFeedback;
 
     @Column(nullable = false)
-    private String paymentStatus = "PENDING";
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus = PaymentStatus.UNPAID;
 
     private LocalDate estimatedCompletionDate;
 
@@ -87,6 +94,13 @@ public class Project {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @ManyToOne
+    @JoinColumn(name = "constructor_id")
+    private User constructor;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> tasks = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -98,7 +112,14 @@ public class Project {
         updatedAt = LocalDateTime.now();
     }
 
-    @ManyToOne
-    @JoinColumn(name = "constructor_id")
-    private User constructor;
+    public enum PaymentStatus {
+        UNPAID, DEPOSIT_PAID, FULLY_PAID
+    }
+
+    // Thêm helper method để tính remainingAmount
+    public void calculateRemainingAmount() {
+        if (this.totalPrice != null && this.depositAmount != null) {
+            this.remainingAmount = this.totalPrice.subtract(this.depositAmount);
+        }
+    }
 }

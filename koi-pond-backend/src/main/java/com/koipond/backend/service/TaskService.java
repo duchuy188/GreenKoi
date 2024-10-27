@@ -78,11 +78,20 @@ public class TaskService {
                 return new ResourceNotFoundException("Task not found with id: " + taskId);
             });
         
-        // Thêm logic kiểm tra quyền và xác thực ở đây nếu cần
+        Project project = task.getProject();
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+        
+        if (!user.getRoleId().equals(ROLE_CONSTRUCTION_STAFF) || 
+            !user.getId().equals(project.getConstructor().getId())) {
+            throw new AccessDeniedException("You are not authorized to update this task");
+        }
         
         task.setStatus(newStatus);
         task.setCompletionPercentage(completionPercentage);
         Task updatedTask = taskRepository.save(task);
+        
+        updateProjectProgress(project.getId());
         
         logger.info("Task updated successfully. TaskId: {}", taskId);
         return convertToDTO(updatedTask);
@@ -109,5 +118,19 @@ public class TaskService {
         return tasks.stream().allMatch(task -> 
             task.getCompletionPercentage() == 100 && "COMPLETED".equals(task.getStatus())
         );
+    }
+
+    private void updateProjectProgress(String projectId) {
+        Project project = projectRepository.findById(projectId)
+            .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + projectId));
+        List<Task> tasks = taskRepository.findByProjectId(projectId);
+        int totalTasks = tasks.size();
+        int completedTasks = (int) tasks.stream().filter(t -> "COMPLETED".equals(t.getStatus())).count();
+        int progressPercentage = (totalTasks > 0) ? (completedTasks * 100) / totalTasks : 0;
+        
+        project.setProgressPercentage(progressPercentage);
+        projectRepository.save(project);
+        
+        logger.info("Project progress updated: {}. New progress: {}%", projectId, progressPercentage);
     }
 }

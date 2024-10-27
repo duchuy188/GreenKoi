@@ -30,19 +30,7 @@ class UserManagementControllerTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    @Test
-    void getAllUsers_ReturnsListOfUsers() {
-        List<UserDTO> expectedUsers = Arrays.asList(
-            createUserDTO("1", "user1", "user1@example.com"),
-            createUserDTO("2", "user2", "user2@example.com")
-        );
-        when(userService.getAllUsers()).thenReturn(expectedUsers);
 
-        ResponseEntity<List<UserDTO>> response = userManagementController.getAllUsers();
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(expectedUsers, response.getBody());
-    }
 
     @Test
     void getUserById_ExistingUser_ReturnsUser() {

@@ -100,7 +100,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/blog/posts/approved").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/blog/posts/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/pond-designs/approved").permitAll()
-
+                        .requestMatchers("/api/payments/vnpay-return").permitAll()
                         // Specific endpoints
                         .requestMatchers(HttpMethod.PUT, "/api/ConsultationRequests/*/status").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.GET, "/api/projects/customer").access(loggedAuthorizationManager("/api/projects/customer", AuthorityAuthorizationManager.hasAuthority("ROLE_5")))
@@ -122,6 +122,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/projects/consultant").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.POST, "/api/projects").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.PUT, "/api/projects/**").hasAuthority("ROLE_2")
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/payment-status").hasAuthority("ROLE_2")
 
                         // Designer endpoints (ROLE_3)
                         .requestMatchers(HttpMethod.POST, "/api/pond-designs").hasAuthority("ROLE_3")
