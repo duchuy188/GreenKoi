@@ -1,4 +1,5 @@
 import { Button, Form, Input, Modal, Popconfirm, Table, Select, Checkbox } from "antd";
+import { EditOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
@@ -72,15 +73,14 @@ function UserManagement() {
 
       if (isDuplicateUsername) {
         toast.error("Tên đăng nhập đã tồn tại! Vui lòng chọn tên khác.");
-        return; // Stop further execution
+        return; 
       }
 
       if (isDuplicateEmail) {
         toast.error("Email đã tồn tại! Vui lòng chọn email khác.");
-        return; // Stop further execution
+        return; 
       }
-
-      // Proceed with API call if no duplicates
+        
       if (values.id) {
         await api.put(`/api/manager/users/${values.id}`, values);
         toast.success("Người dùng đã cập nhật thành công");
@@ -157,12 +157,14 @@ function UserManagement() {
     {
       title: "Hành động", dataIndex: "id", key: "id", render: (id, record) => (
         <>
-          <Button type="primary" onClick={() => { setShowModal(true); form.setFieldsValue(record); setIsEdit(true); }} style={{ marginRight: 8 }}>Sửa</Button>
-          <Popconfirm title="Bạn có muốn khóa người dùng này không?" onConfirm={() => handleBlock(id)}>
-            <Button type="default" danger>Khóa</Button>
+          <Popconfirm title="Bạn có muốn sửa người dùng này không?" onConfirm={() => { setShowModal(true); form.setFieldsValue(record); setIsEdit(true); }}>
+            <Button type="link" icon={<EditOutlined />} />
           </Popconfirm>
-          <Popconfirm title="Bạn có muốn mở khóa người dùng này không?" onConfirm={() => handleUnblock(id)} style={{ marginLeft: 8 }}>
-            <Button type="default">Mở khóa</Button>
+          <Popconfirm title="Bạn có muốn khóa người dùng này không?" onConfirm={() => handleBlock(id)}>
+            <Button type="link" icon={<LockOutlined />} danger />
+          </Popconfirm>
+          <Popconfirm title="Bạn có muốn mở khóa người dùng này không?" onConfirm={() => handleUnblock(id)}>
+            <Button type="link" icon={<UnlockOutlined />} />
           </Popconfirm>
         </>
       ),
