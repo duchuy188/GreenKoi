@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Table, Button, Popconfirm, Modal, Form, Input, message } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import api from "/src/components/config/axios";
-import moment from 'moment';
+import moment from "moment";
 
 function ConsultationRequests() {
   const [consultationRequests, setConsultationRequests] = useState([]);
@@ -34,7 +34,9 @@ function ConsultationRequests() {
         }
       );
       console.log("Consultation requests:", response.data);
-      const filteredRequests = response.data.filter(request => request.status !== "CANCELLED");
+      const filteredRequests = response.data.filter(
+        (request) => request.status !== "CANCELLED"
+      );
       setConsultationRequests(filteredRequests);
     } catch (err) {
       console.error("Lỗi khi tìm kiếm yêu cầu tư vấn:", err);
@@ -160,21 +162,21 @@ function ConsultationRequests() {
           <Form.Item
             name="designName"
             label="Tên dự án"
-            rules={[{ required: true, message: 'Vui lòng nhập tên dự án' }]}
+            rules={[{ required: true, message: "Vui lòng nhập tên dự án" }]}
           >
-            <Input />
+            <Input disabled />
           </Form.Item>
           <Form.Item name="notes" label="Ghi chú">
             <Input.TextArea />
           </Form.Item>
           <Form.Item name="customerName" label="Tên khách hàng">
-            <Input />
+            <Input disabled />
           </Form.Item>
           <Form.Item name="customerPhone" label="Số điện thoại">
-            <Input />
+            <Input disabled />
           </Form.Item>
           <Form.Item name="customerAddress" label="Địa chỉ">
-            <Input />
+            <Input disabled />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">

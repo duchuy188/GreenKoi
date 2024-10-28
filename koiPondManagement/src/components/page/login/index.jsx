@@ -74,6 +74,8 @@ function LoginPage() {
           toast.error(
             "Tài khoản của bạn đã bị chặn. Vui lòng liên hệ với quản trị viên."
           );
+        } else if (err.response.data.message === "Authentication failed: Incorrect password") {
+          toast.error("Vui lòng kiểm tra tên tài khoản, mật khẩu");
         } else {
           toast.error(
             err.response.data.message ||

@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; 
-import { toast } from "react-toastify"; 
-import api from "../../config/axios"; 
-import "./GardenDesignForm.css"; 
+import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
+import api from "../../config/axios";
+import "./GardenDesignForm.css";
 
 const GardenDesignForm = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const location = useLocation();
   const [formData, setFormData] = useState({
-    name: "", 
-    description: "", 
-    shape: "", 
-    dimensions: "", 
-    features: "", 
+    name: "",
+    description: "",
+    shape: "",
+    dimensions: "",
+    features: "",
     customerName: "",
-    customerPhone: "", 
-    customerAddress: "", 
+    customerPhone: "",
+    customerAddress: "",
     notes: "",
   });
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = localStorage.getItem("token"); 
+        const token = localStorage.getItem("token");
         const response = await api.get("/api/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -36,13 +36,11 @@ const GardenDesignForm = () => {
         }));
       } catch (error) {
         console.error("Error fetching user profile:", error);
-      
       }
     };
 
     fetchUserProfile();
 
-   
     if (location.state) {
       const { id, name, description, shape, dimensions, features, basePrice } =
         location.state;
@@ -81,7 +79,7 @@ const GardenDesignForm = () => {
 
     try {
       const consultationRequest = {
-        designId: location.state?.projectId, 
+        designId: location.state?.projectId,
         customerName: formData.customerName,
         customerPhone: formData.customerPhone,
         customerAddress: formData.customerAddress,
@@ -114,7 +112,9 @@ const GardenDesignForm = () => {
         console.error("Response status:", error.response.status);
         console.error("Response headers:", error.response.headers);
       }
-      toast.error("Có lỗi xảy ra khi gửi yêu cầu tư vấn. Vui lòng thử lại sau.");
+      toast.error(
+        "Có lỗi xảy ra khi gửi yêu cầu tư vấn. Vui lòng hãy chọn dự án để gửi yêu cầu."
+      );
     }
   };
 
@@ -132,10 +132,10 @@ const GardenDesignForm = () => {
           giá chi tiết
         </p>
         <p>
-          <strong>Hotline/Zalo:</strong> 0933 606 119
+          <strong>Hotline/Zalo:</strong> 0911 608 289
         </p>
         <p>
-          <strong>Email:</strong> info@sgl.com.vn
+          <strong>Email:</strong> info@greenkoi.com.vn
         </p>
       </div>
       <form onSubmit={handleSubmit} className="formrequestpond">
@@ -156,7 +156,14 @@ const GardenDesignForm = () => {
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => navigate(`/duan/${location.state?.projectId}`)}
+            onClick={() => {
+              if (!location.state?.projectId) {
+                toast.error("Vui lòng hãy chọn dự án của bạn");
+                navigate("/duan"); // Chuyển đến trang chọn dự án
+              } else {
+                navigate(`/duan/${location.state.projectId}`);
+              }
+            }}
           >
             Xem chi tiết
           </button>
@@ -204,6 +211,10 @@ const GardenDesignForm = () => {
             name="customerName"
             value={formData.customerName}
             onChange={handleChange}
+            onInvalid={(e) =>
+              e.target.setCustomValidity("Bạn vui lòng nhập tên")
+            }
+            onInput={(e) => e.target.setCustomValidity("")}
             required
           />
         </div>
@@ -214,7 +225,28 @@ const GardenDesignForm = () => {
             id="customerPhone"
             name="customerPhone"
             value={formData.customerPhone}
-            onChange={handleChange}
+            onChange={(e) => {
+              const value = e.target.value;
+
+              // Kiểm tra chỉ số và không chứa chữ
+              if (/^\d*$/.test(value)) {
+                if (value.length <= 10) {
+                  handleChange(e); // Cập nhật giá trị hợp lệ khi nhỏ hơn hoặc bằng 10 chữ số
+                }
+              }
+
+              // Kiểm tra đúng 10 ký tự
+              if (value.length !== 10) {
+                e.target.setCustomValidity("Số điện thoại phải đúng 10 chữ số");
+              } else {
+                e.target.setCustomValidity("");
+              }
+            }}
+            onInvalid={(e) =>
+              e.target.setCustomValidity(
+                "Bạn vui lòng nhập số điện thoại hợp lệ"
+              )
+            }
             required
           />
         </div>
@@ -226,6 +258,10 @@ const GardenDesignForm = () => {
             name="customerAddress"
             value={formData.customerAddress}
             onChange={handleChange}
+            onInvalid={(e) =>
+              e.target.setCustomValidity("Bạn vui lòng nhập địa chỉ")
+            }
+            onInput={(e) => e.target.setCustomValidity("")}
             required
           />
         </div>

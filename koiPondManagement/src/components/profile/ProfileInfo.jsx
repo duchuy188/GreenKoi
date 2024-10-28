@@ -29,45 +29,51 @@ function ProfileInfo({ profileData, setProfileData }) {
   };
 
   return (
-    <Form form={form} onFinish={handleSubmit} layout="vertical" initialValues={profileData}>
+    <Form
+      form={form}
+      onFinish={handleSubmit}
+      layout="vertical"
+      initialValues={profileData}
+    >
       <Form.Item
         name="fullName"
         label="Họ và Tên"
-        rules={[{ required: true }]}
+        rules={[{ required: true, message: "Vui lòng nhập họ và tên" }]}
       >
         <Input />
       </Form.Item>
       <Form.Item
         name="email"
         label="Email"
-        rules={[{ required: true, type: "email" }]}
+        rules={[{ required: true, message: "Vui lòng nhập email" }]}
       >
         <Input />
       </Form.Item>
       <Form.Item
         name="phone"
-        label="Phone Number"
+        label="Số điện thoại"
         rules={[
           {
             required: true,
-            message: "Please input your phone number!",
+            message: "Vui lòng nhập số điện thoại của bạn!",
           },
           {
-            max: 10,
-            message: "Phone number cannot be longer than 10 digits",
+            len: 10, // Sử dụng 'len' để bắt buộc nhập đúng 10 chữ số
+            message: "Số điện thoại phải đúng 10 chữ số",
           },
           {
             pattern: /^[0-9]*$/,
-            message: "Phone number can only contain digits",
+            message: "Số điện thoại chỉ có thể chứa chữ số",
           },
         ]}
       >
         <Input maxLength={10} onChange={handlePhoneChange} />
       </Form.Item>
+
       <Form.Item
         name="address"
         label="Địa chỉ"
-        rules={[{ required: true }]}
+        rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
       >
         <Input />
       </Form.Item>
