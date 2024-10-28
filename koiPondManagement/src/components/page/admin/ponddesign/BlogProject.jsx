@@ -31,10 +31,6 @@ function BlogProject() {
   const [pendingBlogs, setPendingBlogs] = useState([]);
   const [draftBlogs, setDraftBlogs] = useState([]);
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [isDescriptionModalVisible, setIsDescriptionModalVisible] =
-    useState(false);
-  const [currentDescription, setCurrentDescription] = useState("");
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isContentModalVisible, setIsContentModalVisible] = useState(false);
   const [currentContent, setCurrentContent] = useState("");
   const [currentTitle, setCurrentTitle] = useState("");
@@ -63,14 +59,20 @@ function BlogProject() {
     setIsContentModalVisible(true);
   };
 
-  const showEditModal = (blog) => {
-    setBlogData(blog);
-    form.setFieldsValue({
-      title: blog.title,
-      content: blog.content,
-      coverImageUrl: blog.coverImageUrl,
+  const handleEdit = (blog) => {
+    console.log("Blog data being passed:", blog); // Thêm log để debug
+    navigate("/dashboard/designblog", {
+      state: {
+        design: {
+          id: blog.id,
+          title: blog.title,
+          content: blog.content,
+          imageUrl: blog.coverImageUrl,
+          status: blog.status,
+          type: "BLOG"  // Thêm type
+        },
+      },
     });
-    setIsEditModalVisible(true);
   };
 
   const handleSubmit = async (values) => {
@@ -80,7 +82,6 @@ function BlogProject() {
         await api.put(`/api/blog/drafts/${blogData.id}`, values);
         message.success("Cập nhật bài viết thành công");
         setBlogData(null);
-        setIsEditModalVisible(false);
       } else {
         message.error("Không thể tạo bài viết mới. Chỉ cho phép cập nhật.");
       }
@@ -234,29 +235,35 @@ function BlogProject() {
       key: "action",
       render: (text, record) => (
         <Space size="middle">
-          <Button type="link" onClick={() => showEditModal(record)}>
-            <FaEdit />
-          </Button>
-          <Popconfirm
-            title="Bạn có chắc chắn muốn đưa dự án lên không?"
-            onConfirm={() => handleSubmitDraft(record.id)}
-            okText="Đồng ý"
-            cancelText="Hủy"
-          >
-            <Button type="link">
-              <BsUpload />
+          <Tooltip title="Chỉnh sửa">
+            <Button type="link" onClick={() => handleEdit(record)}>
+              <FaEdit />
             </Button>
-          </Popconfirm>
-          <Popconfirm
-            title="Bạn có chắc chắn muốn xóa?"
-            onConfirm={() => handleDeleteDraft(record.id)}
-            okText="Đồng ý"
-            cancelText="Hủy"
-          >
-            <Button type="link" danger>
-              <RiDeleteBin2Fill />
-            </Button>
-          </Popconfirm>
+          </Tooltip>
+          <Tooltip title="Đưa dự án lên">
+            <Popconfirm
+              title="Bạn có chắc chắn muốn đưa dự án lên không?"
+              onConfirm={() => handleSubmitDraft(record.id)}
+              okText="Đồng ý"
+              cancelText="Hủy"
+            >
+              <Button type="link">
+                <BsUpload />
+              </Button>
+            </Popconfirm>
+          </Tooltip>
+          <Tooltip title="Xóa">
+            <Popconfirm
+              title="Bạn có chắc chắn muốn xóa?"
+              onConfirm={() => handleDeleteDraft(record.id)}
+              okText="Đồng ý"
+              cancelText="Hủy"
+            >
+              <Button type="link" danger>
+                <RiDeleteBin2Fill />
+              </Button>
+            </Popconfirm>
+          </Tooltip>
         </Space>
       ),
     },
@@ -379,7 +386,7 @@ function BlogProject() {
 
       {/* Bảng Pending có thanh search và filter */}
       <div>
-        <h1>Bài viết đã gửi</h1>
+        <h1>Bài viết ã gửi</h1>
         <Space style={{ marginBottom: 16 }}>
           <Select
             value={statusFilter}
@@ -402,7 +409,7 @@ function BlogProject() {
         />
       </div>
 
-      {/* Modal for viewing content */}
+      {/* Keep only the content viewing modal */}
       <Modal
         title={currentTitle}
         open={isContentModalVisible}
@@ -410,51 +417,6 @@ function BlogProject() {
         footer={null}
       >
         <div dangerouslySetInnerHTML={{ __html: currentContent }} />
-      </Modal>
-
-      {/* Modal for editing draft */}
-      <Modal
-        title="Chỉnh sửa bài viết"
-        open={isEditModalVisible}
-        onCancel={() => setIsEditModalVisible(false)}
-        footer={null}
-      >
-        <Form form={form} onFinish={handleSubmit}>
-          <Form.Item
-            name="title"
-            label="Tiêu đề"
-            rules={[{ required: true, message: "Vui lòng nhập tiêu đề!" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="content"
-            label="Nội dung"
-            rules={[{ required: true, message: "Vui lòng nhập nội dung!" }]}
-          >
-            <Input.TextArea rows={4} />
-          </Form.Item>
-          <Form.Item
-            name="coverImageUrl"
-            label="URL hình ảnh bìa"
-            rules={[
-              { required: true, message: "Vui lòng nhập URL hình ảnh bìa!" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Cập nhật
-            </Button>
-            <Button
-              onClick={() => setIsEditModalVisible(false)}
-              style={{ marginLeft: 8 }}
-            >
-              Hủy
-            </Button>
-          </Form.Item>
-        </Form>
       </Modal>
     </div>
   );

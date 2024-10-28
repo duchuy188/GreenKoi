@@ -77,14 +77,13 @@ function BrowsePond() {
         await api.post(`/api/blog/posts/${selectedPost.id}/approve`);
         message.success("Duyệt blog thành công");
       } else if (actionType === "reject") {
+        // Sửa lại body request khi reject
         await api.post(`/api/blog/posts/${selectedPost.id}/reject`, {
-          additionalProp1: rejectReason,
-          additionalProp2: rejectReason, // Thêm prop này nếu cần
-          additionalProp3: rejectReason, // Thêm prop này nếu cần
+          reason: rejectReason, // Gửi reason thay vì additionalProps
         });
         message.success("Từ chối blog thành công");
       }
-      refreshData(); // Trigger refresh after action
+      refreshData();
       setSubmitModalVisible(false);
       setSelectedPost(null);
     } catch (err) {
@@ -278,13 +277,17 @@ function BrowsePond() {
         onCancel={() => setSubmitModalVisible(false)}
         okText="Xác nhận"
         cancelText="Hủy"
+        okButtonProps={{
+          disabled: actionType === "reject" && !rejectReason.trim(),
+        }}
       >
         {actionType === "reject" && (
           <TextArea
-            placeholder="Nhập lý do tử chối..."
+            placeholder="Nhập lý do từ chối..."
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             rows={4}
+            required
           />
         )}
       </Modal>

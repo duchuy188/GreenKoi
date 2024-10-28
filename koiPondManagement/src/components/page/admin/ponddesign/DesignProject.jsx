@@ -26,7 +26,8 @@ function DesignProject() {
   const [searchText, setSearchText] = useState("");
   const [designerPonds, setDesignerPonds] = useState([]);
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
+  const [isDescriptionModalVisible, setIsDescriptionModalVisible] =
+    useState(false);
   const [currentDescription, setCurrentDescription] = useState("");
   const [isEditModalVisible, setIsEditModalVisible] = useState(false); // Thêm state cho modal chỉnh sửa
   const navigate = useNavigate();
@@ -53,10 +54,10 @@ function DesignProject() {
     try {
       setLoading(true);
       if (pondData) {
-        await api.put(`/api/pond-designs/${pondData.id}`, values);
+        await api.put(`/api/pond-designs/${pondData.id}`, values); // Sửa dấu backtick
         message.success("Cập nhật thiết kế hồ thành công");
         setPondData(null);
-        setIsEditModalVisible(false); // Đóng modal sau khi cập nhật thành công
+        setIsEditModalVisible(false);
       } else {
         message.error("Không thể tạo thiết kế hồ mới. Chỉ cho phép cập nhật.");
       }
@@ -64,7 +65,10 @@ function DesignProject() {
       form.resetFields();
       fetchDesignerPonds();
     } catch (err) {
-      message.error("Cập nhật thiết kế hồ thất bại: " + (err.response?.data?.message || err.message));
+      message.error(
+        "Cập nhật thiết kế hồ thất bại: " +
+          (err.response?.data?.message || err.message)
+      );
     } finally {
       setLoading(false);
     }
@@ -74,11 +78,14 @@ function DesignProject() {
   const handleDelete = async (id) => {
     try {
       setLoading(true);
-      await api.delete(`/api/pond-designs/${id}`);
+      await api.delete(`/api/pond-designs/${id}`); // Sửa dấu backtick
       message.success("Xóa thiết kế hồ thành công");
       fetchDesignerPonds();
     } catch (err) {
-      message.error("Xóa thiết kế hồ thất bại: " + (err.response?.data?.message || err.message));
+      message.error(
+        "Xóa thiết kế hồ thất bại: " +
+          (err.response?.data?.message || err.message)
+      );
     } finally {
       setLoading(false);
     }
@@ -92,15 +99,13 @@ function DesignProject() {
 
   // Hiển thị modal chỉnh sửa
   const showEditModal = (pond) => {
-    setPondData(pond);
-    form.setFieldsValue(pond);  // Gán giá trị hiện tại của hồ vào form để chỉnh sửa
-    setIsEditModalVisible(true);  // Hiển thị modal
+    navigate(`/dashboard/ponddesign`, { state: { pond } }); // Sửa dấu backtick
   };
 
   // Đóng modal chỉnh sửa
   const handleEditModalClose = () => {
     setIsEditModalVisible(false);
-    form.resetFields();  // Reset form sau khi đóng modal
+    form.resetFields(); // Reset form sau khi đóng modal
   };
 
   // Filter designer ponds based on status and search text
@@ -113,7 +118,12 @@ function DesignProject() {
 
   // Updated columns definition
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id", render: (text, record, index) => index + 1},
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+      render: (text, record, index) => index + 1,
+    },
     { title: "Tên Hồ", dataIndex: "name", key: "name" },
     {
       title: "Mô tả",
@@ -179,7 +189,7 @@ function DesignProject() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => showEditModal(record)}  // Mở modal và gửi dữ liệu hồ cần chỉnh sửa
+              onClick={() => showEditModal(record)} // Mở modal và gửi dữ liệu hồ cần chỉnh sửa
             >
               <FaEdit />
             </Button>
@@ -238,8 +248,8 @@ function DesignProject() {
       <Modal
         title="Chỉnh sửa Thiết kế Hồ"
         open={isEditModalVisible}
-        onOk={form.submit}  // Khi nhấn OK sẽ submit form
-        onCancel={handleEditModalClose}  // Đóng modal khi nhấn Cancel
+        onOk={form.submit} // Khi nhấn OK sẽ submit form
+        onCancel={handleEditModalClose} // Đóng modal khi nhấn Cancel
         okText="Lưu"
         cancelText="Hủy"
         confirmLoading={loading}
@@ -247,7 +257,7 @@ function DesignProject() {
         <Form
           form={form}
           layout="vertical"
-          onFinish={handleSubmit}  // Hàm xử lý khi submit form
+          onFinish={handleSubmit} // Hàm xử lý khi submit form
         >
           <Form.Item
             label="Tên Hồ"

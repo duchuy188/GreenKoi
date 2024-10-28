@@ -1,157 +1,236 @@
-import React, { useState } from "react";
-import { Form, Input, Button, message, Card, Modal } from "antd";
+import React, { useState, useEffect } from "react";
+import { Form, Input, Button, message, Card } from "antd";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { storage } from "../../../config/firebase";  // Đường dẫn đến file firebase.js
+import { storage } from "../../../config/firebase";
 import api from "../../../config/axios";
+import { useLocation, useNavigate } from "react-router-dom";
 
 function DesignBlog() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [submitModalVisible, setSubmitModalVisible] = useState(false);
-  const [selectedPost, setSelectedPost] = useState(null);
-  const [editorData, setEditorData] = useState("");
+  const [designData, setDesignData] = useState(null);
+  const [descriptionData, setDescriptionData] = useState("");
 
-  // Custom Upload Adapter to handle image upload to Firebase
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.state && location.state.design) {
+      const design = location.state.design;
+      console.log("Received design data:", design); // Thêm log để debug
+      setDesignData(design);
+      setDescriptionData(design.content || "");
+      form.setFieldsValue({
+        title: design.title,
+        imageUrl: design.imageUrl,
+      });
+    }
+  }, [location.state, form]);
+
+  // Custom Upload Adapter
   class MyUploadAdapter {
     constructor(loader) {
       this.loader = loader;
     }
 
     upload() {
-      return this.loader.file
-        .then((file) => {
-          return new Promise((resolve, reject) => {
-            const storageRef = ref(storage, `images/${file.name}`); // Tạo ref tới file trong Firebase Storage
-            const uploadTask = uploadBytesResumable(storageRef, file);
+      return this.loader.file.then((file) => {
+        return new Promise((resolve, reject) => {
+          const storageRef = ref(storage, `blog-images/${file.name}`);
+          const uploadTask = uploadBytesResumable(storageRef, file);
 
-            uploadTask.on(
-              "state_changed",
-              (snapshot) => {
-                // Có thể thêm phần xử lý progress nếu cần
-              },
-              (error) => {
-                reject(error); // Xử lý lỗi upload
-              },
-              () => {
-                // Upload thành công, lấy URL từ Firebase Storage
-                getDownloadURL(uploadTask.snapshot.ref)
-                  .then((downloadURL) => {
-                    console.log("File available at:", downloadURL); // Kiểm tra URL của file
-                    resolve({
-                      default: downloadURL,  // CKEditor sẽ sử dụng URL này để hiển thị ảnh
-                    });
-                  })
-                  .catch((error) => {
-                    reject(error); // Xử lý lỗi nếu không lấy được URL
+          uploadTask.on(
+            "state_changed",
+            (snapshot) => {},
+            (error) => {
+              reject(error);
+            },
+            () => {
+              getDownloadURL(uploadTask.snapshot.ref)
+                .then((downloadURL) => {
+                  resolve({
+                    default: downloadURL,
                   });
-              }
-            );
-          });
+                })
+                .catch((error) => {
+                  reject(error);
+                });
+            }
+          );
         });
+      });
     }
 
-    abort() {
-      // Optional: xử lý abort nếu cần
-    }
+    abort() {}
   }
 
-  // Plugin to integrate the custom upload adapter
   function MyCustomUploadAdapterPlugin(editor) {
     editor.plugins.get("FileRepository").createUploadAdapter = (loader) => {
       return new MyUploadAdapter(loader);
     };
   }
 
-  // Handle form submission (create blog draft)
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      // Gửi dữ liệu blog draft lên server
-      await api.post("/api/blog/drafts", { ...values, content: editorData });
-      message.success("Tạo bản nháp blog thành công");
-      form.resetFields();
-      setEditorData("");
-      setModalVisible(false);
+      if (!descriptionData.trim()) {
+        message.error("Vui lòng nhập nội dung bài viết!");
+        setLoading(false);
+        return;
+      }
+
+      const designValues = {
+        title: values.title.trim(),
+        content: descriptionData,
+        status: "DRAFT",
+        imageUrl: values.imageUrl.trim(),
+        type: "BLOG",
+      };
+
+      console.log("=== DEBUG INFO ===");
+      console.log("Request Data:", designValues);
+      console.log("Design ID:", designData?.id);
+
+      let response;
+      if (designData && designData.id) {
+        // Update existing blog
+        const updateUrl = `/api/blog/drafts/${designData.id}`;
+        console.log("PUT Request URL:", updateUrl);
+
+        try {
+          response = await api.put(updateUrl, designValues);
+          console.log("Update Response:", response);
+
+          if (response.data) {
+            message.success("Cập nhật bài viết thành công");
+            form.resetFields();
+            setDescriptionData("");
+            navigate("/dashboard/blogproject"); // Giữ nguyên redirect khi cập nhật
+          }
+        } catch (error) {
+          console.error("PUT request error:", error);
+          throw error;
+        }
+      } else {
+        // Create new blog
+        const createUrl = "/api/blog/drafts";
+        console.log("POST Request URL:", createUrl);
+
+        response = await api.post(createUrl, designValues);
+        console.log("Create Response:", response);
+
+        if (response.data) {
+          message.success("Tạo bài viết thành công");
+          form.resetFields(); // Reset form
+          setDescriptionData(""); // Reset content
+          // Bỏ dòng navigate("/dashboard/blogproject") để ở lại trang hiện tại
+        }
+      }
     } catch (err) {
-      message.error("Tạo bản nháp blog thất bại: " + (err.response?.data?.message || err.message));
+      console.error("=== ERROR DETAILS ===");
+      console.error("Error:", err);
+      console.error("Response:", err.response);
+
+      let errorMessage = "Đã có lỗi xảy ra";
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      message.error(
+        "Không thể " +
+          (designData ? "cập nhật" : "tạo") +
+          " bài viết: " +
+          errorMessage
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Open modal to confirm submitting the blog draft
-  const openSubmitModal = (post) => {
-    setSelectedPost(post);
-    setSubmitModalVisible(true);
-  };
-
-  // Handle blog draft submission
-  const handleSubmitBlog = async () => {
-    if (!selectedPost) return;
-    try {
-      await api.post(`/api/blog/drafts/${selectedPost.id}/submit`);
-      message.success("Gửi blog thành công");
-      setSubmitModalVisible(false);
-      setSelectedPost(null);
-    } catch (err) {
-      message.error("Gửi blog thất bại: " + (err.response?.data?.message || err.message));
-    }
-  };
-
   return (
-    <div style={{ maxWidth: 1000, margin: "0 auto", padding: 24 }}>
-      <h1>Tạo bản nháp Blog</h1>
+    <div
+      style={{ maxWidth: 800, margin: "0 auto", padding: 24, marginLeft: "8%" }}
+    >
+      <h1>{designData ? "Chỉnh sửa bài viết" : "Tạo bài viết mới"}</h1>
       <Card>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="title" label="Tiêu đề" rules={[{ required: true, message: "Vui lòng nhập tiêu đề!" }]}>
+          <Form.Item
+            name="title"
+            label="Tiêu đề"
+            rules={[{ required: true, message: "Vui lòng nhập tiêu đề!" }]}
+          >
             <Input placeholder="Nhập tiêu đề" />
           </Form.Item>
 
-          <Form.Item name="content" label="Nội dung" rules={[{ required: true, message: "Vui lòng nhập nội dung!"}]}>
+          <Form.Item
+            name="content"
+            label="Nội dung"
+            rules={[{ required: true, message: "Vui lòng nhập nội dung!" }]}
+          >
             <CKEditor
               editor={ClassicEditor}
-              data={editorData}
+              data={descriptionData}
               onChange={(event, editor) => {
                 const data = editor.getData();
-                setEditorData(data);
+                setDescriptionData(data);
               }}
               config={{
-                extraPlugins: [MyCustomUploadAdapterPlugin], // Thêm plugin tùy chỉnh để upload ảnh
+                extraPlugins: [MyCustomUploadAdapterPlugin],
                 toolbar: [
-                  "heading", "|",
-                  "bold", "italic", "link", "|",
-                  "imageUpload", "|",
-                  "bulletedList", "numberedList", "|",
-                  "blockQuote", "undo", "redo",
+                  "heading",
+                  "|",
+                  "bold",
+                  "italic",
+                  "link",
+                  "|",
+                  "imageUpload",
+                  "|",
+                  "bulletedList",
+                  "numberedList",
+                  "|",
+                  "blockQuote",
+                  "undo",
+                  "redo",
                 ],
               }}
             />
           </Form.Item>
 
-          <Form.Item name="coverImageUrl" label="Link ảnh bìa" rules={[{ required: true, message: "Vui lòng nhập link hình ảnh!"}]}>
-            <Input placeholder="Nhập link ảnh bìa" />
+          <Form.Item
+            name="imageUrl"
+            label="Link ảnh bìa"
+            rules={[
+              { required: true, message: "Vui lòng nhập link hình ảnh!" },
+              { type: "url", message: "Vui lòng nhập một URL hợp lệ!" },
+            ]}
+          >
+            <Input.TextArea placeholder="Nhập link hình ảnh" />
           </Form.Item>
 
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading}>
-              Tạo bản nháp
+              {designData ? "Cập nhật bài viết" : "Tạo bài viết"}
             </Button>
+            {designData && (
+              <Button
+                style={{ marginLeft: 8 }}
+                onClick={() => {
+                  setDesignData(null);
+                  form.resetFields();
+                  setDescriptionData("");
+                  navigate("/dashboard/blogproject");
+                }}
+              >
+                Hủy chỉnh sửa
+              </Button>
+            )}
           </Form.Item>
         </Form>
       </Card>
-
-      {/* Submit confirmation modal */}
-      <Modal
-        title="Submit Blog"
-        visible={submitModalVisible}
-        onOk={handleSubmitBlog}
-        onCancel={() => setSubmitModalVisible(false)}
-      >
-        <p>Are you sure you want to submit this blog?</p>
-      </Modal>
     </div>
   );
 }
