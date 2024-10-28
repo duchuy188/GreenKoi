@@ -172,10 +172,10 @@ const Dashboard = () => {
   const profileMenu = (
     <Menu>
       <Menu.Item key="1" icon={<UserOutlined />} onClick={handleViewProfile}>
-        View my profile
+        Xem hồ sơ của tôi
       </Menu.Item>
       <Menu.Item key="2" icon={<LogoutOutlined />} onClick={handleLogout}>
-        Sign Out
+        Đăng xuất
       </Menu.Item>
     </Menu>
   );
@@ -331,7 +331,7 @@ const Dashboard = () => {
         </Footer>
       </Layout>
       <Modal
-        title="User Profile"
+        title="Hồ sơ người dùng"
         visible={isProfileModalVisible}
         onCancel={handleCloseProfileModal}
         footer={null}
