@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import jakarta.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
@@ -29,12 +28,12 @@ public class VNPayService {
         this.vnPayConfig = vnPayConfig;
     }
 
-    public String createPaymentUrl(String orderId, long amount, HttpServletRequest request) {
+    public String createPaymentUrl(String orderId, long amount, String paymentType, HttpServletRequest request) {
         try {
             String vnp_IpAddr = getIpAddress(request);
             String vnp_TmnCode = vnPayConfig.getVnpTmnCode();
 
-            // Tạo unique vnp_TxnRef bằng cách thêm timestamp
+            // Tạo unique vnp_TxnRef bằng cách thêm timestamp và paymentType
             String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
             String vnp_TxnRef = orderId + "_" + timestamp;
 
@@ -42,11 +41,28 @@ public class VNPayService {
             vnp_Params.put("vnp_Version", "2.1.0");
             vnp_Params.put("vnp_Command", "pay");
             vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
-            vnp_Params.put("vnp_Amount", String.valueOf(amount * 100));
+            vnp_Params.put("vnp_Amount", String.valueOf(amount)); // Đã nhân 100 từ service gọi
             vnp_Params.put("vnp_CurrCode", "VND");
             vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-            vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang: " + orderId);
-            vnp_Params.put("vnp_OrderType", "other");
+            
+            // Sửa switch statement thành enhanced switch
+            String orderInfo = switch (paymentType) {
+                case "PROJECT_DEPOSIT", "PROJECT_FINAL" -> 
+                    "Thanh toan project: " + orderId;
+                case "MAINTENANCE_DEPOSIT" -> 
+                    "Thanh toan dat coc bao tri: " + orderId;
+                case "MAINTENANCE_FINAL" -> 
+                    "Thanh toan nốt bao tri: " + orderId;
+                default -> 
+                    "Thanh toan: " + orderId;
+            };
+            vnp_Params.put("vnp_OrderInfo", orderInfo);
+            
+            // Thêm log để debug
+            log.info("Creating payment URL - OrderId: {}, Amount: {}, PaymentType: {}, OrderInfo: {}", 
+                orderId, amount, paymentType, orderInfo);
+            
+            vnp_Params.put("vnp_OrderType", paymentType); // Sử dụng paymentType
             vnp_Params.put("vnp_Locale", "vn");
             vnp_Params.put("vnp_ReturnUrl", vnPayConfig.getVnpReturnUrl());
             vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
@@ -70,14 +86,14 @@ public class VNPayService {
                 String fieldValue = vnp_Params.get(fieldName);
                 if ((fieldValue != null) && !fieldValue.isEmpty()) {
                     // Build hashData
-                    hashData.append(fieldName);
-                    hashData.append('=');
-                    hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.name()));
+                    hashData.append(fieldName)
+                           .append('=')
+                           .append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8));
 
                     // Build query
-                    query.append(fieldName);
-                    query.append('=');
-                    query.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.name()));
+                    query.append(fieldName)
+                         .append('=')
+                         .append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8));
 
                     if (itr.hasNext()) {
                         query.append('&');
@@ -89,18 +105,18 @@ public class VNPayService {
             String vnp_SecureHash = hmacSHA512(vnPayConfig.getVnpHashSecret(), hashData.toString());
             queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
             String paymentUrl = vnPayConfig.getVnpPayUrl() + "?" + queryUrl;
-            
-            log.info("Generated VNPay URL: " + paymentUrl);
+            log.info("Generated VNPay URL: {}", paymentUrl);
             return paymentUrl;
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Error encoding URL parameters", e);
+        } catch (Exception e) {
+            log.error("Error creating payment URL", e);
+            throw new RuntimeException("Error creating payment URL", e);
         }
     }
 
     private String hmacSHA512(final String key, final String data) {
         try {
             if (key == null || data == null) {
-                throw new NullPointerException();
+                throw new IllegalArgumentException("Key and data cannot be null");
             }
             final Mac hmac512 = Mac.getInstance("HmacSHA512");
             byte[] hmacKeyBytes = key.getBytes(StandardCharsets.UTF_8);
@@ -113,8 +129,9 @@ public class VNPayService {
                 sb.append(String.format("%02x", b & 0xff));
             }
             return sb.toString();
-        } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
-            return "";
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            log.error("Error generating HMAC-SHA512", e);
+            throw new RuntimeException("Error generating HMAC-SHA512", e);
         }
     }
 

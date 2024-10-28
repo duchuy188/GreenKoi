@@ -24,6 +24,11 @@ import com.koipond.backend.dto.ReviewDTO;
 import com.koipond.backend.model.Review;
 import com.koipond.backend.repository.ReviewRepository;
 import java.util.Optional;
+import static com.koipond.backend.model.MaintenanceRequest.RequestStatus;
+import static com.koipond.backend.model.MaintenanceRequest.MaintenanceStatus;
+import static com.koipond.backend.model.MaintenanceRequest.PaymentStatus;
+import static com.koipond.backend.model.MaintenanceRequest.PaymentMethod;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class MaintenanceRequestService {
@@ -35,9 +40,11 @@ public class MaintenanceRequestService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     @Autowired
     private ReviewRepository reviewRepository;
+    @Autowired
+    private VNPayService vnPayService;
 
     @Autowired
-    public MaintenanceRequestService(MaintenanceRequestRepository maintenanceRequestRepository, 
+    public MaintenanceRequestService(MaintenanceRequestRepository maintenanceRequestRepository,
                                      UserRepository userRepository,
                                      ProjectService projectService) {
         this.maintenanceRequestRepository = maintenanceRequestRepository;
@@ -47,16 +54,16 @@ public class MaintenanceRequestService {
 
     public MaintenanceRequestDTO createMaintenanceRequest(MaintenanceRequestDTO dto, String customerId) {
         logger.debug("Attempting to create maintenance request. DTO: {}, CustomerId: {}", dto, customerId);
-        
+
         Project project = projectService.getProjectById(dto.getProjectId());
         logger.debug("Project found: {}", project);
-        
+
         User customer = userRepository.findById(customerId)
             .orElseThrow(() -> {
                 logger.error("Customer not found with id: {}", customerId);
                 return new ResourceNotFoundException("Customer not found");
             });
-        
+
         // Kiểm tra quyền sở hữu dự án
         if (!project.getCustomer().getId().equals(customerId)) {
             logger.warn("Attempt to create maintenance request for unowned project. Project owner: {}, Requester: {}", project.getCustomer().getId(), customerId);
@@ -73,7 +80,8 @@ public class MaintenanceRequestService {
         request.setProject(project);
         request.setCreatedAt(LocalDateTime.now());
         request.setUpdatedAt(LocalDateTime.now());
-        request.setRequestStatus(MaintenanceRequest.RequestStatus.PENDING);
+        request.setRequestStatus(RequestStatus.PENDING);  // Sử dụng static import
+        request.setPaymentStatus(PaymentStatus.UNPAID);  // Thêm trạng thái thanh toán mặc định
         // Không set consultant ở đây
 
         request = maintenanceRequestRepository.save(request);
@@ -165,8 +173,8 @@ public class MaintenanceRequestService {
 
     public List<MaintenanceRequestDTO> getAssignedMaintenanceRequests(String staffId) {
         return maintenanceRequestRepository.findByAssignedToIdAndMaintenanceStatusIn(
-            staffId, List.of(MaintenanceRequest.MaintenanceStatus.ASSIGNED, 
-                             MaintenanceRequest.MaintenanceStatus.IN_PROGRESS, 
+            staffId, List.of(MaintenanceRequest.MaintenanceStatus.ASSIGNED,
+                             MaintenanceRequest.MaintenanceStatus.IN_PROGRESS,
                              MaintenanceRequest.MaintenanceStatus.SCHEDULED))
             .stream()
             .map(this::convertToDTO)
@@ -197,10 +205,10 @@ public class MaintenanceRequestService {
                 default:
                     throw new IllegalArgumentException("User does not have permission to cancel maintenance requests");
             }
-            
+
             request.setRequestStatus(MaintenanceRequest.RequestStatus.CANCELLED);
             request.setCancellationReason(cancellationReason);
-            
+
             // Notify customer if cancelled by staff
             if (!userRole.equals("ROLE_5")) {
                 notifyCustomerAboutCancellation(request);
@@ -217,7 +225,7 @@ public class MaintenanceRequestService {
     private MaintenanceRequest convertToEntity(MaintenanceRequestDTO dto) {
         MaintenanceRequest entity = new MaintenanceRequest();
         copyCommonFields(dto, entity);
-        
+
         if (dto.getCustomerId() != null) {
             entity.setCustomer(userRepository.findById(dto.getCustomerId()).orElse(null));
         }
@@ -229,18 +237,18 @@ public class MaintenanceRequestService {
             Project project = projectService.getProjectById(dto.getProjectId());
             entity.setProject(project);
         }
-        
+
         if (entity.getRequestStatus() == null) {
             entity.setRequestStatus(MaintenanceRequest.RequestStatus.PENDING);
         }
-        
+
         return entity;
     }
 
     private MaintenanceRequestDTO convertToDTO(MaintenanceRequest entity) {
         MaintenanceRequestDTO dto = new MaintenanceRequestDTO();
         copyCommonFields(entity, dto);
-        
+
         if (entity.getCustomer() != null) {
             dto.setCustomerId(entity.getCustomer().getId());
         }
@@ -253,7 +261,7 @@ public class MaintenanceRequestService {
         if (entity.getProject() != null) {
             dto.setProjectId(entity.getProject().getId());
         }
-        
+
         return dto;
     }
 
@@ -276,6 +284,13 @@ public class MaintenanceRequestService {
         target.setCompletionDate(source.getCompletionDate());
         target.setCancellationReason(source.getCancellationReason());
         target.setMaintenanceNotes(source.getMaintenanceNotes());
+        
+        // Thêm các trường payment mới
+        target.setPaymentStatus(source.getPaymentStatus());
+        target.setPaymentMethod(source.getPaymentMethod());
+        target.setDepositAmount(source.getDepositAmount());
+        target.setRemainingAmount(source.getRemainingAmount());
+        
         try {
             target.setMaintenanceImages(objectMapper.writeValueAsString(source.getMaintenanceImages()));
         } catch (JsonProcessingException e) {
@@ -297,8 +312,16 @@ public class MaintenanceRequestService {
         target.setCreatedAt(source.getCreatedAt());
         target.setUpdatedAt(source.getUpdatedAt());
         target.setMaintenanceNotes(source.getMaintenanceNotes());
+        
+        // Thêm các trường payment mới
+        target.setPaymentStatus(source.getPaymentStatus());
+        target.setPaymentMethod(source.getPaymentMethod());
+        target.setDepositAmount(source.getDepositAmount());
+        target.setRemainingAmount(source.getRemainingAmount());
+        
         try {
-            target.setMaintenanceImages(objectMapper.readValue(source.getMaintenanceImages(), new TypeReference<List<String>>() {}));
+            target.setMaintenanceImages(objectMapper.readValue(source.getMaintenanceImages(), 
+                new TypeReference<List<String>>() {}));
         } catch (JsonProcessingException e) {
             logger.error("Error parsing maintenance images JSON", e);
         }
@@ -364,24 +387,6 @@ public class MaintenanceRequestService {
         return convertToReviewDTO(savedReview);
     }
 
-    public List<ReviewDTO> getReviewsForMaintenanceRequest(String maintenanceRequestId) {
-        return reviewRepository.findByMaintenanceRequestId(maintenanceRequestId)
-            .stream()
-            .map(this::convertToReviewDTO)
-            .collect(Collectors.toList());
-    }
-
-    private ReviewDTO convertToReviewDTO(Review review) {
-        ReviewDTO dto = new ReviewDTO();
-        dto.setId(review.getId());
-        dto.setMaintenanceRequestId(review.getMaintenanceRequest().getId());
-        dto.setRating(review.getRating());
-        dto.setComment(review.getComment());
-        dto.setReviewDate(review.getReviewDate());
-        dto.setStatus(review.getStatus());
-        return dto;
-    }
-
     public ReviewDTO getReviewForMaintenanceRequest(String maintenanceRequestId) {
         return reviewRepository.findByMaintenanceRequestId(maintenanceRequestId)
             .map(this::convertToReviewDTO)
@@ -390,13 +395,6 @@ public class MaintenanceRequestService {
 
     public List<MaintenanceRequestDTO> getReviewingMaintenanceRequests() {
         return maintenanceRequestRepository.findByRequestStatus(MaintenanceRequest.RequestStatus.REVIEWING)
-            .stream()
-            .map(this::convertToDTO)
-            .collect(Collectors.toList());
-    }
-
-    public List<MaintenanceRequestDTO> getCompletedMaintenanceRequests() {
-        return maintenanceRequestRepository.findByMaintenanceStatus(MaintenanceRequest.MaintenanceStatus.COMPLETED)
             .stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());
@@ -435,5 +433,142 @@ public class MaintenanceRequestService {
 
         MaintenanceRequest updatedRequest = maintenanceRequestRepository.save(request);
         return convertToDTO(updatedRequest);
+    }
+
+    public MaintenanceRequestDTO confirmDepositCashPayment(String id, String consultantId) {
+        return updateMaintenanceRequest(id, request -> {
+            // Validate consultant
+            if (!request.getConsultant().getId().equals(consultantId)) {
+                throw new IllegalArgumentException("Only assigned consultant can confirm payment");
+            }
+
+            // Validate request status
+            if (request.getRequestStatus() != RequestStatus.CONFIRMED) {
+                throw new IllegalStateException("Can only make deposit payment for CONFIRMED requests");
+            }
+
+            // Validate payment status
+            if (request.getPaymentStatus() != PaymentStatus.UNPAID) {
+                throw new IllegalStateException("Request has already been paid");
+            }
+
+            // Calculate deposit amount (50%)
+            BigDecimal depositAmount = request.getAgreedPrice().multiply(BigDecimal.valueOf(0.5));
+            BigDecimal remainingAmount = request.getAgreedPrice().subtract(depositAmount);
+
+            // Update payment info
+            request.setPaymentMethod(PaymentMethod.CASH);
+            request.setPaymentStatus(PaymentStatus.DEPOSIT_PAID);
+            request.setDepositAmount(depositAmount);
+            request.setRemainingAmount(remainingAmount);
+        });
+    }
+
+    public MaintenanceRequestDTO confirmFinalCashPayment(String id, String consultantId) {
+        return updateMaintenanceRequest(id, request -> {
+            // Validate consultant
+            if (!request.getConsultant().getId().equals(consultantId)) {
+                throw new IllegalArgumentException("Only assigned consultant can confirm payment");
+            }
+
+            // Validate maintenance status
+            if (request.getMaintenanceStatus() != MaintenanceStatus.COMPLETED) {
+                throw new IllegalStateException("Can only make final payment for COMPLETED maintenance");
+            }
+
+            // Validate payment status
+            if (request.getPaymentStatus() != PaymentStatus.DEPOSIT_PAID) {
+                throw new IllegalStateException("Must pay deposit first");
+            }
+
+            // Update payment info
+            request.setPaymentMethod(PaymentMethod.CASH);
+            request.setPaymentStatus(PaymentStatus.FULLY_PAID);
+        });
+    }
+
+    public String createDepositVnpayPayment(String id, String customerId, HttpServletRequest httpRequest) {
+        MaintenanceRequest request = findMaintenanceRequestById(id);
+
+        // Validate customer
+        if (!request.getCustomer().getId().equals(customerId)) {
+            throw new IllegalArgumentException("Only request owner can make payment");
+        }
+
+        // Validate status
+        if (request.getRequestStatus() != RequestStatus.CONFIRMED) {
+            throw new IllegalStateException("Can only make deposit payment for CONFIRMED requests");
+        }
+
+        // Calculate deposit amount
+        BigDecimal depositAmount = request.getAgreedPrice().multiply(BigDecimal.valueOf(0.5));
+
+        // Create VNPay URL
+        return vnPayService.createPaymentUrl(
+            id,
+            depositAmount.longValue() * 100, // Convert to VND cents
+            "MAINTENANCE_DEPOSIT",
+            httpRequest
+        );
+    }
+
+    public String createFinalVnpayPayment(String id, String customerId, HttpServletRequest httpRequest) {
+        MaintenanceRequest request = findMaintenanceRequestById(id);
+
+        // Validate customer
+        if (!request.getCustomer().getId().equals(customerId)) {
+            throw new IllegalArgumentException("Only request owner can make payment");
+        }
+
+        // Validate status
+        if (request.getMaintenanceStatus() != MaintenanceStatus.COMPLETED) {
+            throw new IllegalStateException("Can only make final payment for COMPLETED maintenance");
+        }
+
+        // Get remaining amount
+        BigDecimal remainingAmount = request.getRemainingAmount();
+
+        // Create VNPay URL
+        return vnPayService.createPaymentUrl(
+            id,
+            remainingAmount.longValue() * 100, // Convert to VND cents
+            "MAINTENANCE_FINAL",
+            httpRequest
+        );
+    }
+
+    public MaintenanceRequestDTO processVnPayCallback(String id, String vnp_ResponseCode, String paymentType) {
+        return updateMaintenanceRequest(id, request -> {
+            if (!"00".equals(vnp_ResponseCode)) {
+                throw new IllegalStateException("Payment failed with response code: " + vnp_ResponseCode);
+            }
+
+            if ("MAINTENANCE_DEPOSIT".equals(paymentType)) {
+                // Process deposit payment
+                BigDecimal depositAmount = request.getAgreedPrice().multiply(BigDecimal.valueOf(0.5));
+                BigDecimal remainingAmount = request.getAgreedPrice().subtract(depositAmount);
+
+                request.setPaymentMethod(PaymentMethod.VNPAY);
+                request.setPaymentStatus(PaymentStatus.DEPOSIT_PAID);
+                request.setDepositAmount(depositAmount);
+                request.setRemainingAmount(remainingAmount);
+            } else if ("MAINTENANCE_FINAL".equals(paymentType)) {
+                // Process final payment
+                request.setPaymentMethod(PaymentMethod.VNPAY);
+                request.setPaymentStatus(PaymentStatus.FULLY_PAID);
+            }
+        });
+    }
+
+    private ReviewDTO convertToReviewDTO(Review review) {
+        ReviewDTO dto = new ReviewDTO();
+        dto.setId(review.getId());
+        dto.setMaintenanceRequestId(review.getMaintenanceRequest().getId());
+        dto.setCustomerId(review.getCustomer().getId());
+        dto.setRating(review.getRating());
+        dto.setComment(review.getComment());
+        dto.setReviewDate(review.getReviewDate());
+        dto.setStatus(review.getStatus());
+        return dto;
     }
 }

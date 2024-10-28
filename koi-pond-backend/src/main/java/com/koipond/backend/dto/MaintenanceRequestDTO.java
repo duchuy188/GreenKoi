@@ -28,4 +28,10 @@ public class MaintenanceRequestDTO {
     private LocalDateTime updatedAt;
     private String maintenanceNotes;
     private List<String> maintenanceImages;
+    
+    // Thêm các trường mới
+    private MaintenanceRequest.PaymentStatus paymentStatus;
+    private MaintenanceRequest.PaymentMethod paymentMethod;
+    private BigDecimal depositAmount;
+    private BigDecimal remainingAmount;
 }

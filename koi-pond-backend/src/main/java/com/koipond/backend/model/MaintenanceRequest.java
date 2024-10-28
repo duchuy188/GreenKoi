@@ -68,6 +68,19 @@ public class MaintenanceRequest {
     @Column(name = "maintenance_images", columnDefinition = "NVARCHAR(MAX)")
     private String maintenanceImages;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentStatus paymentStatus = PaymentStatus.UNPAID;
+    
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
+    
+    @Column(precision = 10, scale = 2)
+    private BigDecimal depositAmount;  // 50% của agreedPrice
+    
+    @Column(precision = 10, scale = 2)
+    private BigDecimal remainingAmount;  // 50% còn lại
+
     // Enum definitions
     public enum RequestStatus {
         PENDING, REVIEWING, CONFIRMED, CANCELLED
@@ -75,6 +88,17 @@ public class MaintenanceRequest {
 
     public enum MaintenanceStatus {
         ASSIGNED, SCHEDULED, IN_PROGRESS, COMPLETED
+    }
+
+    public enum PaymentStatus {
+        UNPAID,           // Chưa thanh toán
+        DEPOSIT_PAID,     // Đã thanh toán đặt cọc
+        FULLY_PAID        // Đã thanh toán đầy đủ
+    }
+    
+    public enum PaymentMethod {
+        CASH,            // Thanh toán tiền mặt
+        VNPAY           // Thanh toán online qua VNPay
     }
 
     @PrePersist

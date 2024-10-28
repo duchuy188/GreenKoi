@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import com.koipond.backend.security.CustomUserDetailsService.CustomUserDetails;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/maintenance-requests")
@@ -58,7 +59,7 @@ public class MaintenanceRequestController {
     @PreAuthorize("hasRole('ROLE_2')")
     @Operation(summary = "Confirm maintenance request", description = "Consultant confirms the maintenance request with agreed price. Only accessible by consultants.")
     public ResponseEntity<MaintenanceRequestDTO> confirmMaintenanceRequest(
-            @PathVariable String id, 
+            @PathVariable String id,
             @RequestBody Map<String, String> body) {
         String agreedPriceStr = body.get("agreedPrice");
         BigDecimal agreedPrice = new BigDecimal(agreedPriceStr);
@@ -70,7 +71,7 @@ public class MaintenanceRequestController {
     @PreAuthorize("hasRole('ROLE_1')")
     @Operation(summary = "Assign maintenance staff", description = "Manager assigns maintenance staff to a confirmed request. Only accessible by managers.")
     public ResponseEntity<MaintenanceRequestDTO> assignMaintenanceStaff(
-            @PathVariable String id, 
+            @PathVariable String id,
             @RequestBody Map<String, String> body) {
         String staffId = body.get("staffId");
         MaintenanceRequestDTO updatedRequest = maintenanceRequestService.assignMaintenanceStaff(id, staffId);
@@ -81,7 +82,7 @@ public class MaintenanceRequestController {
     @PreAuthorize("hasRole('ROLE_4')")
     @Operation(summary = "Schedule maintenance", description = "Schedule the maintenance. Only accessible by construction staff.")
     public ResponseEntity<MaintenanceRequestDTO> scheduleMaintenance(
-            @PathVariable String id, 
+            @PathVariable String id,
             @RequestBody Map<String, String> body) {
         String scheduledDate = body.get("scheduledDate");
         MaintenanceRequestDTO updatedRequest = maintenanceRequestService.scheduleMaintenance(id, scheduledDate);
@@ -219,6 +220,86 @@ public class MaintenanceRequestController {
         MaintenanceRequestDTO updatedDTO = maintenanceRequestService.updatePendingMaintenanceRequest(id, updatedRequest, customerId);
         return ResponseEntity.ok(updatedDTO);
     }
+
+    @PostMapping("/{id}/deposit/cash")
+    @PreAuthorize("hasRole('ROLE_2')")
+    @Operation(summary = "Confirm deposit cash payment", description = "Consultant confirms deposit cash payment for maintenance request")
+    public ResponseEntity<MaintenanceRequestDTO> confirmDepositCashPayment(
+            @PathVariable String id,
+            Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String consultantId = userDetails.getId();
+        MaintenanceRequestDTO updatedRequest = maintenanceRequestService.confirmDepositCashPayment(id, consultantId);
+        return ResponseEntity.ok(updatedRequest);
+    }
+
+    @PostMapping("/{id}/final/cash")
+    @PreAuthorize("hasRole('ROLE_2')")
+    @Operation(summary = "Confirm final cash payment", description = "Consultant confirms final cash payment for maintenance request")
+    public ResponseEntity<MaintenanceRequestDTO> confirmFinalCashPayment(
+            @PathVariable String id,
+            Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String consultantId = userDetails.getId();
+        MaintenanceRequestDTO updatedRequest = maintenanceRequestService.confirmFinalCashPayment(id, consultantId);
+        return ResponseEntity.ok(updatedRequest);
+    }
+
+    @PostMapping("/{id}/deposit/vnpay")
+    @PreAuthorize("hasRole('ROLE_5')")
+    @Operation(summary = "Create VNPay deposit payment URL", description = "Creates VNPay URL for deposit payment")
+    public ResponseEntity<Map<String, String>> createDepositVnpayPayment(
+            @PathVariable String id,
+            Authentication authentication,
+            HttpServletRequest request) {  // Thêm HttpServletRequest
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String customerId = userDetails.getId();
+        String paymentUrl = maintenanceRequestService.createDepositVnpayPayment(id, customerId, request);
+        return ResponseEntity.ok(Map.of("paymentUrl", paymentUrl));
+    }
+
+    @PostMapping("/{id}/final/vnpay")
+    @PreAuthorize("hasRole('ROLE_5')")
+    @Operation(summary = "Create VNPay final payment URL", description = "Creates VNPay URL for final payment")
+    public ResponseEntity<Map<String, String>> createFinalVnpayPayment(
+            @PathVariable String id,
+            Authentication authentication,
+            HttpServletRequest request) {  // Thêm HttpServletRequest
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String customerId = userDetails.getId();
+        String paymentUrl = maintenanceRequestService.createFinalVnpayPayment(id, customerId, request);
+        return ResponseEntity.ok(Map.of("paymentUrl", paymentUrl));
+    }
+
+    @GetMapping("/vnpay-return") 
+    @Operation(summary = "VNPay payment return", description = "Return endpoint for VNPay payment processing")
+    public ResponseEntity<MaintenanceRequestDTO> processVnPayReturn(
+        @RequestParam String vnp_Amount,
+        @RequestParam String vnp_BankCode,
+        @RequestParam String vnp_BankTranNo,
+        @RequestParam String vnp_CardType,
+        @RequestParam String vnp_OrderInfo,
+        @RequestParam String vnp_ResponseCode,
+        @RequestParam String vnp_TxnRef,
+        @RequestParam(required = false) String vnp_TransactionNo) {
+    
+    try {
+        // Extract request ID from vnp_TxnRef (format: requestId_timestamp)
+        String requestId = vnp_TxnRef.split("_")[0];
+        
+        // Xác định loại thanh toán từ OrderInfo
+        String paymentType = vnp_OrderInfo.contains("deposit") ? 
+            "MAINTENANCE_DEPOSIT" : "MAINTENANCE_FINAL";
+            
+        MaintenanceRequestDTO updatedRequest = maintenanceRequestService.processVnPayCallback(
+            requestId, vnp_ResponseCode, paymentType);
+            
+        return ResponseEntity.ok(updatedRequest);
+    } catch (Exception e) {
+        // Log error và return error response
+        return ResponseEntity.badRequest().build();
+    }
+}
 
     // Add more endpoints as needed
 }

@@ -81,7 +81,7 @@ public class ProjectService {
     public ProjectDTO createProject(CreateProjectRequest request, String consultantUsername) {
         User consultant = getUserByUsername(consultantUsername);
         User customer = getUserById(request.getCustomerId());
-        
+
         Project project = new Project();
         project.setName(request.getName());
         project.setDescription(request.getDescription());
@@ -110,10 +110,10 @@ public class ProjectService {
         log.info("Saving new project: {}", project);
         Project savedProject = projectRepository.save(project);
         log.info("Project saved successfully with ID: {}", savedProject.getId());
-        
+
         // Thêm dòng này
         createTasksForProject(savedProject.getId());
-        
+
         return convertToDTO(savedProject);
     }
 
@@ -175,7 +175,7 @@ public class ProjectService {
         }
 
         ProjectStatus status = getProjectStatusByName(newStatus);
-        
+
         if (!isValidStatusTransition(project.getStatus(), status)) {
             throw new IllegalStateException("Invalid status transition from " + project.getStatus().getName() + " to " + newStatus);
         }
@@ -202,9 +202,9 @@ public class ProjectService {
 
         User user = getUserByUsername(username);
         boolean isManager = user.getRoleId().equals("1");
-        
+
         if (!isManager && !project.getConsultant().getUsername().equals(username)) {
-            log.warn("Access denied for user {} to cancel project {}. IsManager: {}, Project Consultant: {}", 
+            log.warn("Access denied for user {} to cancel project {}. IsManager: {}, Project Consultant: {}",
                      username, id, isManager, project.getConsultant().getUsername());
             throw new AccessDeniedException("You don't have permission to cancel this project");
         }
@@ -309,7 +309,7 @@ public class ProjectService {
                 .stream()
                 .map(this::convertToTaskDTO)
                 .collect(Collectors.toList()));
-        
+
         return dto;
     }
 
@@ -317,8 +317,8 @@ public class ProjectService {
         return switch (currentStatus.getName()) {
             case "PENDING" -> newStatus.getName().equals("CANCELLED");
             case "APPROVED" -> newStatus.getName().equals("IN_PROGRESS");
-            case "IN_PROGRESS" -> newStatus.getName().equals("ON_HOLD") || 
-                                newStatus.getName().equals("TECHNICALLY_COMPLETED") || 
+            case "IN_PROGRESS" -> newStatus.getName().equals("ON_HOLD") ||
+                                newStatus.getName().equals("TECHNICALLY_COMPLETED") ||
                                 newStatus.getName().equals("MAINTENANCE");
             case "TECHNICALLY_COMPLETED" -> newStatus.getName().equals("COMPLETED");
             case "ON_HOLD" -> newStatus.getName().equals("IN_PROGRESS");
@@ -335,20 +335,20 @@ public class ProjectService {
                 project.setApprovalDate(LocalDate.now());
                 project.setCompletedStages(1);  // Đã hoàn thành stage đầu tiên
                 break;
-            
+
             case "IN_PROGRESS":
                 if (project.getStartDate() == null) {
                     project.setStartDate(LocalDate.now());
                 }
                 project.setCompletedStages(2);  // Đã hoàn thành stage thứ 2
                 break;
-            
+
             case "TECHNICALLY_COMPLETED":
                 project.setTechnicalCompletionDate(LocalDate.now());
                 project.setProgressPercentage(100);
                 project.setCompletedStages(project.getTotalStages() - 1);  // Hoàn thành tất cả trừ stage cuối
                 break;
-            
+
             case "COMPLETED":
                 project.setCompletionDate(LocalDate.now());
                 project.setCompletedStages(project.getTotalStages());  // Hoàn thành tất cả stages
@@ -358,7 +358,7 @@ public class ProjectService {
                     userRepository.save(constructor);
                 }
                 break;
-            
+
             case "CANCELLED":
                 project.setActive(false);
                 break;
@@ -379,7 +379,7 @@ public class ProjectService {
     public ProjectDTO assignConstructorToProject(String projectId, String constructorId, String managerUsername) {
         Project project = getProjectById(projectId);
         User constructor = getUserById(constructorId);
-        
+
         // Kiểm tra quyền manager
         User manager = getUserByUsername(managerUsername);
         if (!manager.getRoleId().equals("1")) {
@@ -395,29 +395,29 @@ public class ProjectService {
         if (!Project.PaymentStatus.DEPOSIT_PAID.equals(project.getPaymentStatus())) {
             throw new IllegalStateException("Project must be DEPOSIT_PAID before assigning constructor");
         }
-        
+
         // Kiểm tra constructor có phải role 4 không
         if (!constructor.getRoleId().equals("4")) {
             throw new IllegalStateException("Can only assign users with constructor role");
         }
-        
+
         // Kiểm tra constructor có đang bận không - Sửa lại kiểu boolean
         if (constructor.isHasActiveProject()) {  // Thay vì dùng getHasActiveProject()
             throw new IllegalStateException("Constructor is currently busy with another project");
         }
-        
+
         // Cập nhật project và constructor
         project.setConstructor(constructor);
         project.setUpdatedAt(LocalDateTime.now());
         constructor.setHasActiveProject(true);
-        
+
         // Chuyển trạng thái sang IN_PROGRESS
         ProjectStatus inProgressStatus = getProjectStatusByName("IN_PROGRESS");
         project.setStatus(inProgressStatus);
-        
+
         userRepository.save(constructor);
         Project updatedProject = projectRepository.save(project);
-        
+
         log.info("Constructor assigned successfully to project {}", projectId);
         return convertToDTO(updatedProject);
     }
@@ -426,32 +426,32 @@ public class ProjectService {
     public ProjectDTO completeProject(String projectId, String managerUsername) {
         log.info("Attempting to complete project with id: {}. Manager: {}", projectId, managerUsername);
         Project project = getProjectById(projectId);
-        
+
         User manager = getUserByUsername(managerUsername);
         if (!manager.getRoleId().equals("1")) {
             throw new AccessDeniedException("Only managers can complete projects");
         }
-        
+
         if (!Project.PaymentStatus.FULLY_PAID.equals(project.getPaymentStatus())) {
             throw new IllegalStateException("Project must be fully paid before it can be marked as completed");
         }
-        
+
         if (!"TECHNICALLY_COMPLETED".equals(project.getStatus().getName())) {
             throw new IllegalStateException("Project must be technically completed before it can be marked as completed");
         }
-        
+
         ProjectStatus completedStatus = getProjectStatusByName("COMPLETED");
         project.setStatus(completedStatus);
         project.setCompletionDate(LocalDate.now());
         project.setUpdatedAt(LocalDateTime.now());
-        
+
         // Giải phóng constructor
         User constructor = project.getConstructor();
         if (constructor != null) {
             constructor.setHasActiveProject(false);
             userRepository.save(constructor);
         }
-        
+
         Project updatedProject = projectRepository.save(project);
         log.info("Project completed successfully: {}", updatedProject.getId());
         return convertToDTO(updatedProject);
@@ -462,10 +462,10 @@ public class ProjectService {
         log.info("Creating tasks for project with id: {}", projectId);
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + projectId));
-        
+
         List<TaskTemplate> templates = taskTemplateRepository.findAllByOrderByOrderIndexAsc();
         log.info("Found {} task templates", templates.size());
-        
+
         for (TaskTemplate template : templates) {
             Task task = new Task();
             task.setProject(project);
@@ -490,7 +490,7 @@ public class ProjectService {
 
         User user = getUserByUsername(username);
         log.info("User role: {}", user.getRoleId());
-        
+
         // Kiểm tra quyền truy cập
         if (!user.getRoleId().equals("1") && !user.getRoleId().equals("4")) {
             log.warn("Access denied for user {} with role {} to view tasks for project {}", username, user.getRoleId(), projectId);
@@ -508,7 +508,7 @@ public class ProjectService {
         log.info("User {} with role {} is accessing tasks for project {}", username, user.getRoleId(), projectId);
         List<Task> tasks = taskRepository.findByProjectIdOrderByOrderIndexAsc(projectId);
         log.info("Found {} tasks for project {}", tasks.size(), projectId);
-        
+
         return tasks.stream()
             .map(task -> {
                 TaskDTO dto = convertToTaskDTO(task);
@@ -552,43 +552,43 @@ public class ProjectService {
         User customer = getUserByUsername(customerUsername);
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + projectId));
-        
+
         if (!project.getCustomer().getId().equals(customer.getId())) {
             log.warn("Customer {} attempted to access project {} which they don't own", customerUsername, projectId);
             throw new AccessDeniedException("You don't have permission to view this project");
         }
-        
+
         ProjectDTO dto = convertToCustomerProjectDTO(project);
-        
+
         // Add review information if exists
         reviewRepository.findByProjectId(projectId).ifPresent(review -> {
             ReviewDTO reviewDTO = convertToReviewDTO(review);
             dto.setReview(reviewDTO);
         });
-        
+
         return dto;
     }
 
     private ProjectDTO convertToCustomerProjectDTO(Project project) {
         ProjectDTO dto = convertToDTO(project);
-        
+
         // Thêm thông tin về các task
         List<TaskDTO> taskDTOs = taskRepository.findByProjectIdOrderByOrderIndexAsc(project.getId()).stream()
                 .map(this::convertToTaskDTO)
                 .collect(Collectors.toList());
         dto.setTasks(taskDTOs);
-        
+
         // Thêm các trường mới
         dto.setProgressPercentage(project.getProgressPercentage());
         dto.setPaymentStatus(project.getPaymentStatus());
         dto.setEstimatedCompletionDate(project.getEstimatedCompletionDate());
         dto.setTotalStages(project.getTotalStages());
         dto.setCompletedStages(project.getCompletedStages());
-        
+
         return dto;
     }
 
-   
+
     public List<ProjectDTO> getCompletedProjectsByCustomer(String customerId) {
         log.info("Fetching completed projects for customer: {}", customerId);
         return projectRepository.findByCustomerIdAndStatus_Name(customerId, "COMPLETED").stream()
@@ -596,7 +596,7 @@ public class ProjectService {
                 .collect(Collectors.toList());
     }
 
-  
+
     public boolean isProjectCompletedAndOwnedByCustomer(String projectId, String customerId) {
         log.info("Checking if project {} is completed and owned by customer {}", projectId, customerId);
         return projectRepository.existsByIdAndCustomerIdAndStatus_Name(projectId, customerId, "COMPLETED");
@@ -693,37 +693,50 @@ public class ProjectService {
     public String createPaymentUrl(String projectId, HttpServletRequest request) {
         Project project = getProjectById(projectId);
         long amount;
+        String paymentType;
 
         if (project.getPaymentStatus() == Project.PaymentStatus.UNPAID) {
             // Nếu chưa thanh toán, lấy số tiền đặt cọc
-            amount = project.getDepositAmount().longValue();
+            amount = project.getDepositAmount().longValue() * 100; // Nhân 100 vì VNPay yêu cầu
+            paymentType = "PROJECT_DEPOSIT";
         } else if (project.getPaymentStatus() == Project.PaymentStatus.DEPOSIT_PAID 
                    && "TECHNICALLY_COMPLETED".equals(project.getStatus().getName())) {
             // Nếu đã đặt cọc và hoàn thành kỹ thuật, lấy số tiền còn lại
-            amount = project.getRemainingAmount().longValue();
+            amount = project.getRemainingAmount().longValue() * 100;
+            paymentType = "PROJECT_FINAL";
         } else {
             throw new IllegalStateException("Invalid payment state");
         }
 
-        String paymentUrl = vnPayService.createPaymentUrl(projectId, amount, request);
-        return paymentUrl;
+        return vnPayService.createPaymentUrl(projectId, amount, paymentType, request);
     }
 
     @Transactional
     public void processPaymentResult(String projectId, String vnp_ResponseCode) {
         log.info("Processing payment result for project: {}, response code: {}", projectId, vnp_ResponseCode);
         Project project = getProjectById(projectId);
-        
+
         if ("00".equals(vnp_ResponseCode)) {
-            if (Project.PaymentStatus.DEPOSIT_PAID.equals(project.getPaymentStatus())) {
+            if (project.getPaymentStatus() == Project.PaymentStatus.UNPAID) {
+                // Nếu là thanh toán đặt cọc
+                project.setPaymentStatus(Project.PaymentStatus.DEPOSIT_PAID);
+                // Chuyển trạng thái dự án sang APPROVED
+                ProjectStatus approvedStatus = getProjectStatusByName("APPROVED");
+                project.setStatus(approvedStatus);
+                updateProjectFieldsBasedOnStatus(project, approvedStatus);
+                log.info("Deposit payment successful for project: {}. Status updated to APPROVED", projectId);
+            } else if (project.getPaymentStatus() == Project.PaymentStatus.DEPOSIT_PAID) {
+                // Nếu là thanh toán đầy đủ và đã TECHNICALLY_COMPLETED
+                if (!"TECHNICALLY_COMPLETED".equals(project.getStatus().getName())) {
+                    throw new IllegalStateException("Project must be technically completed before final payment");
+                }
                 project.setPaymentStatus(Project.PaymentStatus.FULLY_PAID);
-                // Bỏ phần tự động chuyển sang COMPLETED
-                log.info("Full payment successful for project: {}", projectId);
+                log.info("Full payment successful for project: {}, waiting for manager approval", projectId);
             }
         } else {
             log.warn("Payment failed for project: {}. VNPay response code: {}", projectId, vnp_ResponseCode);
         }
-        
+
         project.setUpdatedAt(LocalDateTime.now());
         projectRepository.save(project);
     }
@@ -732,23 +745,23 @@ public class ProjectService {
     public ProjectDTO markProjectAsTechnicallyCompleted(String projectId, String constructorUsername) {
         log.info("Marking project as technically completed: {}. Constructor: {}", projectId, constructorUsername);
         Project project = getProjectById(projectId);
-        
+
         User constructor = getUserByUsername(constructorUsername);
         if (!constructor.getId().equals(project.getConstructor().getId())) {
             throw new AccessDeniedException("Only the assigned constructor can mark the project as technically completed");
         }
-        
+
         if (!taskService.areAllTasksCompleted(projectId)) {
             throw new IllegalStateException("Cannot mark project as technically completed. Not all tasks are completed.");
         }
-        
+
         ProjectStatus technicallyCompletedStatus = getProjectStatusByName("TECHNICALLY_COMPLETED");
         project.setStatus(technicallyCompletedStatus);
         project.setTechnicalCompletionDate(LocalDate.now());
         project.setProgressPercentage(100);
         project.setCompletedStages(project.getTotalStages() - 1);  // Hoàn thành tất cả trừ stage cuối
         project.setUpdatedAt(LocalDateTime.now());
-        
+
         Project updatedProject = projectRepository.save(project);
         return convertToDTO(updatedProject);
     }
@@ -757,12 +770,12 @@ public class ProjectService {
     public ProjectDTO updatePaymentStatus(String projectId, Project.PaymentStatus newStatus, String consultantUsername) {
         log.info("Updating payment status for project: {} to {}. Consultant: {}", projectId, newStatus, consultantUsername);
         Project project = getProjectById(projectId);
-        
+
         // Kiểm tra quyền
         if (!project.getConsultant().getUsername().equals(consultantUsername)) {
             throw new AccessDeniedException("Only assigned consultant can update payment status");
         }
-        
+
         // Kiểm tra logic chuyển trạng thái
         switch (project.getPaymentStatus()) {
             case UNPAID:
@@ -773,7 +786,7 @@ public class ProjectService {
                 ProjectStatus approvedStatus = getProjectStatusByName("APPROVED");
                 project.setStatus(approvedStatus);
                 break;
-                
+
             case DEPOSIT_PAID:
                 if (newStatus != Project.PaymentStatus.FULLY_PAID) {
                     throw new IllegalStateException("From DEPOSIT_PAID, can only change to FULLY_PAID");
@@ -782,14 +795,14 @@ public class ProjectService {
                     throw new IllegalStateException("Project must be technically completed before marking as fully paid");
                 }
                 break;
-                
+
             case FULLY_PAID:
                 throw new IllegalStateException("Cannot change payment status once fully paid");
         }
-        
+
         project.setPaymentStatus(newStatus);
         project.setUpdatedAt(LocalDateTime.now());
-        
+
         Project updatedProject = projectRepository.save(project);
         log.info("Payment status updated to {} for project {}", newStatus, projectId);
         return convertToDTO(updatedProject);

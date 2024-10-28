@@ -183,6 +183,17 @@ public class SecurityConfig {
                         // New rule for completed maintenance requests
                         .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/completed").hasAnyAuthority("ROLE_1", "ROLE_4")
 
+                        // VNPay callback endpoint must be public
+                        .requestMatchers("/api/maintenance-requests/vnpay-callback").permitAll()
+
+                        // Cash payment endpoints (for consultants)
+                        .requestMatchers(HttpMethod.POST, "/api/maintenance-requests/*/deposit/cash").hasAuthority("ROLE_2")
+                        .requestMatchers(HttpMethod.POST, "/api/maintenance-requests/*/final/cash").hasAuthority("ROLE_2")
+
+                        // VNPay payment endpoints (for customers)
+                        .requestMatchers(HttpMethod.POST, "/api/maintenance-requests/*/deposit/vnpay").hasAuthority("ROLE_5")
+                        .requestMatchers(HttpMethod.POST, "/api/maintenance-requests/*/final/vnpay").hasAuthority("ROLE_5")
+
                         // Catch-all rule
                         .anyRequest().authenticated();
 

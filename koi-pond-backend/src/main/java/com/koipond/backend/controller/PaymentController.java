@@ -3,6 +3,7 @@ package com.koipond.backend.controller;
 import com.koipond.backend.dto.PaymentUrlResponse;
 import com.koipond.backend.dto.ErrorResponse;
 import com.koipond.backend.service.ProjectService;
+import com.koipond.backend.service.MaintenanceRequestService;
 import com.koipond.backend.exception.ResourceNotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,10 +26,13 @@ public class PaymentController {
 
     private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
     private final ProjectService projectService;
+    private final MaintenanceRequestService maintenanceRequestService;
 
     @Autowired
-    public PaymentController(ProjectService projectService) {
+    public PaymentController(ProjectService projectService, 
+                           MaintenanceRequestService maintenanceRequestService) {
         this.projectService = projectService;
+        this.maintenanceRequestService = maintenanceRequestService;
     }
 
     @PostMapping("/create-payment/{projectId}")
@@ -62,20 +66,34 @@ public class PaymentController {
     public ResponseEntity<?> vnpayReturn(@RequestParam Map<String, String> queryParams) {
         String vnp_ResponseCode = queryParams.get("vnp_ResponseCode");
         String vnp_TxnRef = queryParams.get("vnp_TxnRef");
-        
-        // Tách lấy projectId từ vnp_TxnRef (bỏ phần timestamp)
-        String projectId = vnp_TxnRef.split("_")[0];
-        
-        logger.info("Processing VNPay return for project: {}, response code: {}", projectId, vnp_ResponseCode);
+        String vnp_OrderInfo = queryParams.get("vnp_OrderInfo");
+
+        // Tách lấy ID từ vnp_TxnRef (bỏ phần timestamp)
+        String id = vnp_TxnRef.split("_")[0];
+
+        logger.info("Processing VNPay return - ID: {}, OrderInfo: {}, ResponseCode: {}", 
+            id, vnp_OrderInfo, vnp_ResponseCode);
+
         try {
-            projectService.processPaymentResult(projectId, vnp_ResponseCode);
-            return ResponseEntity.ok("Payment processed successfully");
+            // Xác định loại thanh toán từ OrderInfo
+            if (vnp_OrderInfo.contains("project")) {
+                projectService.processPaymentResult(id, vnp_ResponseCode);
+                return ResponseEntity.ok("Project payment processed successfully");
+            } else if (vnp_OrderInfo.contains("bao tri")) {
+                String paymentType = vnp_OrderInfo.contains("dat coc") ? 
+                    "MAINTENANCE_DEPOSIT" : "MAINTENANCE_FINAL";
+                    
+                maintenanceRequestService.processVnPayCallback(id, vnp_ResponseCode, paymentType);
+                return ResponseEntity.ok("Maintenance payment processed successfully");
+            } else {
+                throw new IllegalArgumentException("Invalid payment type in OrderInfo");
+            }
         } catch (ResourceNotFoundException e) {
-            logger.error("Project not found: {}", projectId, e);
+            logger.error("Resource not found: {}", id, e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse("Project not found: " + e.getMessage()));
+                    .body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
-            logger.error("Error processing payment for project: {}", projectId, e);
+            logger.error("Error processing payment for ID: {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ErrorResponse("Error processing payment: " + e.getMessage()));
         }
