@@ -11,7 +11,7 @@ import {
   Input,
   message,
 } from "antd";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../../config/axios";
 
 const { Title, Paragraph } = Typography;
@@ -21,6 +21,7 @@ const Blog = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [post, setPost] = useState(null);
+  const [latestPosts, setLatestPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
@@ -38,75 +39,22 @@ const Blog = () => {
       }
     };
 
+    const fetchLatestPosts = async () => {
+      try {
+        const response = await api.get("/api/blog/posts/approved");
+        const sortedPosts = response.data
+          .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
+          .slice(0, 5);
+        setLatestPosts(sortedPosts);
+      } catch (error) {
+        console.error("Error fetching latest posts:", error);
+        message.error("Không thể tải bài viết mới nhất. Vui lòng thử lại.");
+      }
+    };
+
     fetchPostDetails();
+    fetchLatestPosts();
   }, [id]);
-
-  const showModal = () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      Modal.confirm({
-        title: "Đăng nhập",
-        content: "Bạn cần đăng nhập để gửi yêu cầu",
-        okText: "Ok",
-        cancelText: "Hủy",
-        onOk: () => navigate("/login"),
-      });
-    } else {
-      setIsModalVisible(true);
-    }
-  };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-    form.resetFields();
-  };
-
-  const onFinish = async (values) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        message.error("Bạn phải đăng nhập để gửi yêu cầu.");
-        navigate("/login");
-        return;
-      }
-
-      const consultationRequest = {
-        designId: id,
-        customerName: values.customerName,
-        customerPhone: values.customerPhone,
-        customerAddress: values.customerAddress,
-        designName: post.title,
-        designDescription: post.content,
-        notes: values.notes,
-      };
-
-      const response = await api.post(
-        "/api/ConsultationRequests",
-        consultationRequest,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status === 201 || response.status === 200) {
-        message.success("Yêu cầu tư vấn đã được gửi thành công!");
-        setIsModalVisible(false);
-        form.resetFields();
-      } else {
-        throw new Error("Unexpected response status");
-      }
-    } catch (error) {
-      console.error("Error submitting consultation request:", error);
-      if (error.response && error.response.status === 401) {
-        message.error("Không có quyền. Vui lòng đăng nhập lại.");
-        navigate("/login");
-      } else {
-        message.error("Gửi yêu cầu tư vấn thất bại. Vui lòng thử lại.");
-      }
-    }
-  };
 
   if (loading) {
     return <p>Loading...</p>;
@@ -118,59 +66,94 @@ const Blog = () => {
 
   return (
     <Layout style={{ backgroundColor: "#f0f2f5" }}>
-      <Content style={{ position: "relative" }}>
-        <img
-          src={post.coverImageUrl}
-          alt={post.title}
-          style={{
-            width: "100%",
-            height: "75vh",
-            objectFit: "cover",
-            marginTop: "-6%",
-          }}
-        />
-        <div
-          style={{
-            marginTop: "-15%",
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            padding: "20px",
-            borderRadius: "10px",
-          }}
-        >
-          <Title style={{ color: "#FFFFFF" }} level={1}>
-            {post.title}
-          </Title>
+      <Content>
+        <div style={{ position: "relative" }}>
+          {post.coverImageUrl && (
+            <img
+              src={post.coverImageUrl}
+              alt={post.title}
+              style={{
+                width: "100%",
+                height: "75vh",
+                objectFit: "cover",
+                marginTop: "-6%",
+              }}
+            />
+          )}
+          <div
+            style={{
+              position: "absolute",
+              top: "40%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              padding: "10px 20px",
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              borderRadius: "4px",
+              maxWidth: "80%",
+            }}
+          >
+            <Title
+              level={1}
+              style={{
+                color: "#fff",
+                textAlign: "center",
+                margin: 0,
+                fontSize: "2em",
+              }}
+            >
+              {post.title}
+            </Title>
+          </div>
         </div>
 
-        {/* Nội dung chi tiết bài viết */}
         <Row gutter={[16, 16]} style={{ padding: "50px 0" }}>
           <Col span={16}>
             <Card>
               <Typography>
                 <Title level={2}>Nội dung bài viết</Title>
-                {/* Sử dụng dangerouslySetInnerHTML để hiển thị nội dung HTML */}
                 <div dangerouslySetInnerHTML={{ __html: post.content }} />
                 <Paragraph>
-                  <strong>
-                    Ngày xuất bản:{" "}
-                    {new Date(post.publishedAt).toLocaleDateString()}
-                  </strong>
+                  <strong>Ngày xuất bản:</strong>{" "}
+                  {new Intl.DateTimeFormat("vi-VN").format(
+                    new Date(post.publishedAt)
+                  )}
                 </Paragraph>
               </Typography>
             </Card>
           </Col>
           <Col span={8}>
-            <Card title={post.title}>
-              <Paragraph>
-                <strong>
-                  Ngày xuất bản:{" "}
-                  {new Date(post.publishedAt).toLocaleDateString()}
-                </strong>
-              </Paragraph>
+            <Card>
+            <Title level={3}>Bài viết mới nhất</Title>
+              {latestPosts.map((latestPost) => (
+                <Col span={24} style={{ paddingLeft: 8 }} key={latestPost.id}>
+                  <Link
+                    to={`/blog/${latestPost.id}`}
+                    className="project-card"
+                    style={{ textDecoration: "none" }}
+                  >
+                    {latestPost.coverImageUrl && (
+                      <img
+                        src={latestPost.coverImageUrl}
+                        alt={latestPost.title}
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          objectFit: "cover",
+                          marginBottom: 8,
+                        }}
+                      />
+                    )}
+                    <Paragraph style={{ marginBottom: 4, marginTop: 10 }}>
+                      <strong>{latestPost.title}</strong>
+                    </Paragraph>
+                  </Link>
+                  <small style={{ color: "inherit" }}>
+                    {new Intl.DateTimeFormat("vi-VN").format(
+                      new Date(latestPost.publishedAt)
+                    )}
+                  </small>
+                </Col>
+              ))}
             </Card>
           </Col>
         </Row>

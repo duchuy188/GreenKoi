@@ -143,32 +143,44 @@ const ProjectDetails = () => {
 
   return (
     <Layout style={{ backgroundColor: "#f0f2f5" }}>
-      <Content style={{ position: "relative" }}>
-        <img
-          src={project.imageUrl}
-          alt={project.name}
-          style={{
-            width: "100%",
-            height: "75vh",
-            objectFit: "cover",
-            marginTop: "-6%",
-          }}
-        />
-        <div
-          style={{
-            marginTop: "-15%",
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            padding: "20px",
-            borderRadius: "10px",
-          }}
-        >
-          <Title style={{ color: "#FFFFFF" }} level={1}>
-            {project.name}
-          </Title>
+      <Content>
+        <div style={{ position: "relative" }}>
+          {project.imageUrl && (
+            <img
+              src={project.imageUrl}
+              alt={project.name}
+              style={{
+                width: "100%",
+                height: "75vh",
+                objectFit: "cover",
+                marginTop: "-6%",
+              }}
+            />
+          )}
+          <div
+            style={{
+              position: "absolute",
+              top: "40%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              padding: "10px 20px",
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              borderRadius: "4px",
+              maxWidth: "80%",
+            }}
+          >
+            <Title
+              level={1}
+              style={{
+                color: "#fff",
+                textAlign: "center",
+                margin: 0,
+                fontSize: "2em",
+              }}
+            >
+              {project.name}
+            </Title>
+          </div>
         </div>
 
         {/* Nội dung chi tiết dự án */}
@@ -187,13 +199,13 @@ const ProjectDetails = () => {
             <Card title={project.name}>
               <Typography>
                 <Paragraph>
-                  <strong>Hình dạng: {project.shape}</strong>
+                  <strong>Hình dạng:</strong> {project.shape}
                 </Paragraph>
                 <Paragraph>
-                  <strong>Kích thước: {project.dimensions}</strong>
+                  <strong>Kích thước:</strong> {project.dimensions}
                 </Paragraph>
                 <Paragraph>
-                  <strong>Đặc điểm: {project.features}</strong>
+                  <strong>Đặc điểm:</strong> {project.features}
                 </Paragraph>
               </Typography>
               <Button
