@@ -169,6 +169,7 @@ CREATE TABLE maintenance_requests (
     id NVARCHAR(36) PRIMARY KEY,
     customer_id NVARCHAR(36),
     project_id NVARCHAR(36),
+    consultant_id NVARCHAR(36),
     description NVARCHAR(MAX),
     attachments NVARCHAR(MAX),
     request_status NVARCHAR(20) NOT NULL,
@@ -181,11 +182,20 @@ CREATE TABLE maintenance_requests (
     cancellation_reason NVARCHAR(MAX),
     maintenance_notes NVARCHAR(MAX),  
     maintenance_images NVARCHAR(MAX),
+    payment_status NVARCHAR(20) NOT NULL DEFAULT 'UNPAID',
+    payment_method NVARCHAR(20),
+    deposit_amount DECIMAL(10, 2),
+    remaining_amount DECIMAL(10, 2),
     created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     FOREIGN KEY (customer_id) REFERENCES users(id),
     FOREIGN KEY (project_id) REFERENCES projects(id),
-    FOREIGN KEY (assigned_to) REFERENCES users(id)
+    FOREIGN KEY (consultant_id) REFERENCES users(id),
+    FOREIGN KEY (assigned_to) REFERENCES users(id),
+    CONSTRAINT CHK_maintenance_payment_status CHECK (payment_status IN ('UNPAID', 'DEPOSIT_PAID', 'FULLY_PAID')),
+    CONSTRAINT CHK_maintenance_payment_method CHECK (payment_method IN ('CASH', 'VNPAY')),
+    CONSTRAINT CHK_maintenance_request_status CHECK (request_status IN ('PENDING', 'REVIEWING', 'CONFIRMED', 'CANCELLED')),
+    CONSTRAINT CHK_maintenance_status CHECK (maintenance_status IN ('ASSIGNED', 'SCHEDULED', 'IN_PROGRESS', 'COMPLETED'))
 );
 
 
