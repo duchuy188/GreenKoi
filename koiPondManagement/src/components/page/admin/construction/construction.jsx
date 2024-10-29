@@ -126,6 +126,7 @@ const ProjectTasks = () => {
       title: 'Project ID',
       dataIndex: 'projectId',
       key: 'projectId',
+      hidden: true,
     },
     {
       title: 'Name',

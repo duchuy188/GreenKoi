@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../config/axios';
 import './Project.css';
 
 export default function ProjectPage() {
   const [projects, setProjects] = useState([]);
+  const navigate = useNavigate();
 
   const fetchApprovedPondDesigns = async () => {
     try {
@@ -26,17 +27,34 @@ export default function ProjectPage() {
     fetchApprovedPondDesigns();
   }, []);
 
+  const handleProjectClick = (e, projectId) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      toast.warning("Vui lòng đăng nhập để xem chi tiết dự án");
+      navigate('/duan');
+      return;
+    }
+    navigate(`/duan/${projectId}`);
+  };
+
   return (
     <div className="project-gallery">
       {projects.map((project) => (
-        <Link to={`/duan/${project.id}`} key={project.id} className="project-card">
+        <div
+          key={project.id}
+          className="project-card"
+          onClick={(e) => handleProjectClick(e, project.id)}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="project-image-container">
             <img src={project.imageUrl} alt={project.name} className="project-image" />
             <div className="project-overlay">
               <h2 className="project-title" style={{ color: "white" }}>{project.name}</h2>
             </div>
           </div>
-        </Link>
+        </div>
       ))}
     </div>
   );

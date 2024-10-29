@@ -37,7 +37,7 @@ const MaintenanceRequest = () => {
     try {
       setLoading(true);
       const response = await api.get(`/api/maintenance-requests/${statusFilter.toLowerCase()}`);
-      console.log("API response:", response.data);
+      //console.log("API response:", response.data);
       setMaintenanceRequests(response.data);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);

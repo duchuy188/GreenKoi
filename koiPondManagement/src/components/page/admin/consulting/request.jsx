@@ -28,7 +28,7 @@ const RequestConsulting = () => {
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [editOrderModalVisible, setEditOrderModalVisible] = useState(false);
   const [editOrderForm] = Form.useForm();
-  const [statusFilter, setStatusFilter] = useState("PENDING");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [expandedRows, setExpandedRows] = useState({});
 
   useEffect(() => {
@@ -51,12 +51,12 @@ const RequestConsulting = () => {
     try {
       setLoading(true);
       const response = await api.get("/api/ConsultationRequests");
-      console.log("Raw consultation requests:", response.data);
+      //console.log("Raw consultation requests:", response.data);
       if (Array.isArray(response.data)) {
         const requests = response.data
           .filter(request => request.status !== "CANCELLED")
           .map((request) => {
-            console.log("Individual request:", request);
+           // console.log("Individual request:", request);
             return request;
           })
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); 
@@ -110,7 +110,7 @@ const RequestConsulting = () => {
   };
 
   const handleCreateOrder = (record) => {
-    console.log("Full record for creating order:", record);
+    //console.log("Full record for creating order:", record);
 
     if (!record.customerId) {
       console.error("Missing customerId in record:", record);
@@ -154,7 +154,7 @@ const RequestConsulting = () => {
         consultantId: values.consultantId || null,
       };
 
-      console.log("Project data being sent:", projectData);
+      //console.log("Project data being sent:", projectData);
 
       const response = await api.post("/api/projects", projectData);
       if (response.data) {
@@ -180,7 +180,7 @@ const RequestConsulting = () => {
       await api.put(
         `/api/ConsultationRequests/${id}/status?newStatus=${newStatus}`
       );
-      console.log(`Consultation status updated to ${newStatus}`);
+      //console.log(`Consultation status updated to ${newStatus}`);
     } catch (error) {
       console.error("Error updating consultation status:", error);
       message.error("Failed to update consultation status");
@@ -368,13 +368,14 @@ const RequestConsulting = () => {
         />
         <Select
           value={statusFilter}
-          style={{ width: 120 }}
+          style={{ width: 120 }}  
           onChange={handleStatusFilterChange}
         >
+          <Select.Option value="ALL">Tất cả</Select.Option>
           <Select.Option value="PENDING">Đang chờ</Select.Option>
           <Select.Option value="IN_PROGRESS">Đang thực hiện</Select.Option>
           <Select.Option value="COMPLETED">Đã hoàn thành</Select.Option>
-          <Select.Option value="ALL">Tất cả</Select.Option>
+          
         </Select>
       </Space>
       <Table
