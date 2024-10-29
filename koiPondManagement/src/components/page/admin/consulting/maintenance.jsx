@@ -37,7 +37,7 @@ const MaintenanceRequest = () => {
     try {
       setLoading(true);
       const response = await api.get(`/api/maintenance-requests/${statusFilter.toLowerCase()}`);
-      //console.log("API response:", response.data);
+      console.log("API response:", response.data);
       setMaintenanceRequests(response.data);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
@@ -98,18 +98,25 @@ const MaintenanceRequest = () => {
 
   const handleUpdateMaintenanceRequest = async (values) => {
     try {
+      const remainingAmount = values.agreedPrice - values.depositAmount;
+
       const response = await api.patch(`/api/maintenance-requests/${selectedRecord.id}/confirm`, {
         agreedPrice: values.agreedPrice,
-        requestStatus: 'CONFIRMED'  // Add this line to update the status
+        paymentStatus: values.paymentStatus,
+        paymentMethod: values.paymentMethod,
+        depositAmount: values.depositAmount,
+        remainingAmount: remainingAmount,
+        requestStatus: 'CONFIRMED'
       });
+
       if (response.status === 200) {
-        message.success("Cập nhật giá đã thỏa thuận thành công");
+        message.success("Cập nhật thành công");
         setIsModalVisible(false);
         fetchMaintenanceRequests();
       }
     } catch (error) {
       console.error("Error updating maintenance request:", error);
-      toast.error("Không thể cập nhật giá đã thỏa thuận");
+      toast.error("Không thể cập nhật");
     }
   };
 
@@ -141,6 +148,21 @@ const MaintenanceRequest = () => {
     setIsCancelModalVisible(false);
     setCancellationReason('');
     setCancellingRequestId(null);
+  };
+
+  const handleUpdatePaymentStatus = async (values) => {
+    try {
+      const response = await api.patch(`/api/maintenance-requests/${selectedRecord.id}/payment-status`, {
+        paymentStatus: values.paymentStatus
+      });
+      if (response.status === 200) {
+        message.success("Cập nhật trạng thái thanh toán thành công");
+        fetchMaintenanceRequests();
+      }
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      toast.error("Không thể cập nhật trạng thái thanh toán");
+    }
   };
 
   const columns = [
@@ -183,14 +205,33 @@ const MaintenanceRequest = () => {
     { title: "Ngày cập nhật", dataIndex: "updatedAt", key: "updatedAt", render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss') },
     { title: "Trạng thái bảo trì", dataIndex: "maintenanceStatus", key: "maintenanceStatus", hidden: true },
     { title: "Ngày lên lịch", dataIndex: "scheduledDate", key: "scheduledDate", hidden: true },
+    { 
+      title: "Trạng thái thanh toán", 
+      dataIndex: "paymentStatus", 
+      key: "paymentStatus",
+      render: (status) => {
+        switch (status) {
+          case "UNPAID":
+            return "Chưa thanh toán";
+          case "DEPOSIT_PAID":
+            return "Đã cọc";
+          case "FULLY_PAID":
+            return "Đã thanh toán";
+          default:
+            return status;
+        }
+      }
+    },
     {
       title: "Actions",
       key: "actions",
       render: (_, record) => (
         <Space size="middle">
-          <Button onClick={() => handleViewMaintenanceDetails(record)}>
-            View Details
-          </Button>
+          {record.requestStatus !== "PENDING" && (
+            <Button onClick={() => handleViewMaintenanceDetails(record)}>
+              View Details
+            </Button>
+          )}
           {record.requestStatus === "PENDING" && (
             <Button onClick={() => handleStartReview(record.id)}>
               Start Review
@@ -203,6 +244,7 @@ const MaintenanceRequest = () => {
           )}
         </Space>
       ),
+      hidden: statusFilter === "CANCELLED"
     },
     { 
       title: "Cancellation Reason", 
@@ -218,27 +260,34 @@ const MaintenanceRequest = () => {
 
     const commonFields = (
       <>
-        <Descriptions.Item label="ID">{selectedRecord.id}</Descriptions.Item>
-        <Descriptions.Item label="Customer ID">{selectedRecord.customerId}</Descriptions.Item>
-        <Descriptions.Item label="Project ID">{selectedRecord.projectId}</Descriptions.Item>
-        <Descriptions.Item label="Description">{selectedRecord.description}</Descriptions.Item>
-        <Descriptions.Item label="Request Status">{selectedRecord.requestStatus}</Descriptions.Item>
-        <Descriptions.Item label="Created At">{selectedRecord.createdAt}</Descriptions.Item>
-        <Descriptions.Item label="Updated At">{selectedRecord.updatedAt}</Descriptions.Item>
-        <Descriptions.Item label="Attachments">{selectedRecord.attachments}</Descriptions.Item>
+        <Descriptions.Item label="Mã yêu cầu">{selectedRecord.id}</Descriptions.Item>
+        <Descriptions.Item label="Mã khách hàng">{selectedRecord.customerId}</Descriptions.Item>
+        <Descriptions.Item label="Mã dự án">{selectedRecord.projectId}</Descriptions.Item>
+        <Descriptions.Item label="Mô tả">{selectedRecord.description}</Descriptions.Item>
+        <Descriptions.Item label="Trạng thái yêu cầu">{selectedRecord.requestStatus}</Descriptions.Item>
+        <Descriptions.Item label="Ngày tạo">{selectedRecord.createdAt}</Descriptions.Item>
+        <Descriptions.Item label="Ngày cập nhật">{selectedRecord.updatedAt}</Descriptions.Item>
+        <Descriptions.Item label="Hình ảnh đính kèm">{selectedRecord.attachments}</Descriptions.Item>
+        <Descriptions.Item label="Trạng thái thanh toán">
+          {selectedRecord.paymentStatus === "UNPAID" ? "Chưa thanh toán" :
+           selectedRecord.paymentStatus === "DEPOSIT_PAID" ? "Đã cọc" :
+           selectedRecord.paymentStatus === "FULLY_PAID" ? "Đã thanh toán" :
+           selectedRecord.paymentStatus}
+        </Descriptions.Item>
+        <Descriptions.Item label="Phương thức thanh toán">
+          {selectedRecord.paymentMethod === "CASH" ? "Tiền mặt" : 
+           selectedRecord.paymentMethod === "BANK" ? "Ngân hàng" : 
+           selectedRecord.paymentMethod}
+        </Descriptions.Item>
+        <Descriptions.Item label="Số tiền đặt cọc">{selectedRecord.depositAmount?.toLocaleString()} VND</Descriptions.Item>
+        <Descriptions.Item label="Số tiền còn lại">{selectedRecord.remainingAmount?.toLocaleString()} VND</Descriptions.Item>
         {selectedRecord.requestStatus === "CANCELLED" && (
-          <Descriptions.Item label="Cancellation Reason">{selectedRecord.cancellationReason}</Descriptions.Item>
+          <Descriptions.Item label="Lý do hủy">{selectedRecord.cancellationReason}</Descriptions.Item>
         )}
       </>
     );
 
-    if (selectedRecord.requestStatus === "PENDING") {
-      return (
-        <Descriptions column={1} bordered>
-          {commonFields}
-        </Descriptions>
-      );
-    } else if (selectedRecord.requestStatus === "REVIEWING" || selectedRecord.requestStatus === "CANCELLED") {
+    if (selectedRecord.requestStatus === "REVIEWING" || selectedRecord.requestStatus === "CANCELLED") {
       return (
         <Form
           form={form}
@@ -249,56 +298,87 @@ const MaintenanceRequest = () => {
             scheduledDate: selectedRecord.scheduledDate ? moment(selectedRecord.scheduledDate) : null,
           }}
         >
-          <Form.Item name="id" label="ID" hidden>
+          <Form.Item name="id" label="Mã yêu cầu" hidden>
             <Input disabled />
           </Form.Item>
-          <Form.Item name="customerId" label="Customer ID" hidden>
+          <Form.Item name="customerId" label="Mã khách hàng" hidden>
             <Input disabled />
           </Form.Item>
-          <Form.Item name="projectId" label="Project ID" hidden>
+          <Form.Item name="projectId" label="Mã dự án" hidden>
             <Input disabled />
           </Form.Item>
-          <Form.Item name="description" label="Description">
+          <Form.Item name="description" label="Mô tả">
             <Input.TextArea disabled />
           </Form.Item>
-          <Form.Item name="requestStatus" label="Request Status">
+          <Form.Item name="requestStatus" label="Trạng thái yêu cầu">
             <Input disabled />
           </Form.Item>
-          <Form.Item name="maintenanceStatus" label="Maintenance Status" hidden>
+          <Form.Item name="maintenanceStatus" label="Trạng thái bảo trì" hidden>
             <Input disabled />
           </Form.Item>
-          <Form.Item name="scheduledDate" label="Scheduled Date" hidden>
+          <Form.Item name="scheduledDate" label="Ngày lên lịch" hidden>
             <DatePicker disabled />
           </Form.Item>
           <Form.Item 
             name="agreedPrice" 
-            label="Agreed Price"
-            rules={[{ required: true, message: 'Please input the agreed price!' }]}
+            label="Giá đã thỏa thuận"
+            rules={[{ required: true, message: 'Vui lòng nhập giá đã thỏa thuận!' }]}
           >
-            <Input type="number" disabled={selectedRecord.requestStatus !== "REVIEWING"} />
+            <Input type="number" />
           </Form.Item>
-          <Form.Item name="assignedTo" label="Assigned To" hidden>
+          <Form.Item name="assignedTo" label="Người được giao" hidden>
             <Input/>
           </Form.Item>
-          <Form.Item name="maintenanceNotes" label="Maintenance Notes" hidden>
+          <Form.Item name="maintenanceNotes" label="Ghi chú bảo trì" hidden>
             <Input.TextArea/>
           </Form.Item>
-          <Form.Item name="createdAt" label="Created At">
+          <Form.Item name="createdAt" label="Ngày tạo">
             <Input disabled />
           </Form.Item>
-          <Form.Item name="updatedAt" label="Updated At">
+          <Form.Item name="updatedAt" label="Ngày cập nhật">
             <Input disabled />
           </Form.Item>
-          <Form.Item name="attachments" label="Attachments">
+          <Form.Item name="attachments" label="Hình ảnh đính kèm">
+            <Input disabled />
+          </Form.Item>
+          <Form.Item 
+            name="paymentStatus" 
+            label="Trạng thái thanh toán"
+            rules={[{ required: true, message: 'Vui lòng chọn trạng thái thanh toán!' }]}
+          >
+            <Select>
+              <Select.Option value="UNPAID">Chưa thanh toán</Select.Option>
+              <Select.Option value="DEPOSIT_PAID">Đã cọc</Select.Option>
+              <Select.Option value="FULLY_PAID">Đã thanh toán</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item 
+            name="paymentMethod" 
+            label="Phương thức thanh toán"
+            rules={[{ required: true, message: 'Vui lòng chọn phương thức thanh toán!' }]}
+          >
+            <Select>
+              <Select.Option value="CASH">Tiền mặt</Select.Option>
+              <Select.Option value="BANK">Ngân hàng</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item 
+            name="depositAmount" 
+            label="Số tiền đặt cọc"
+            rules={[{ required: true, message: 'Vui lòng nhập số tiền đặt cọc!' }]}
+          >
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item name="remainingAmount" label="Số tiền còn lại">
             <Input disabled />
           </Form.Item>
           {selectedRecord.requestStatus === "REVIEWING" && (
             <Button type="primary" htmlType="submit">
-              Update Agreed Price
+              Cập nhật giá thỏa thuận
             </Button>
           )}
           {selectedRecord.requestStatus === "CANCELLED" && (
-            <Form.Item name="cancellationReason" label="Cancellation Reason">
+            <Form.Item name="cancellationReason" label="Lý do hủy">
               <Input.TextArea disabled />
             </Form.Item>
           )}

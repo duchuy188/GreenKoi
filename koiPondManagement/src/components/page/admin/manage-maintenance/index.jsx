@@ -27,14 +27,17 @@ const ManageMaintenance = () => {
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [form] = Form.useForm();
   const [editingRequest, setEditingRequest] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [isAssignModalVisible, setIsAssignModalVisible] = useState(false);
   const [staffList, setStaffList] = useState([]);
   const [selectedStaffId, setSelectedStaffId] = useState(null);
 
-  // Fetch maintenance requests and staff list on mount and whenever request status changes.
+  const paymentStatusOptions = [
+    { value: 'UNPAID', label: 'Chưa thanh toán' },
+    { value: 'DEPOSIT_PAID', label: 'Đã cọc' },
+    { value: 'FULLY_PAID', label: 'Đã thanh toán' }
+  ];
+
   useEffect(() => {
     fetchMaintenanceRequests();
     fetchStaffList();
@@ -50,7 +53,16 @@ const ManageMaintenance = () => {
         endpoint = "/api/maintenance-requests/completed";
       }
       const response = await api.get(endpoint);
-      setMaintenanceRequests(response.data);
+      
+      const formattedData = response.data.map(request => ({
+        ...request,
+        paymentStatus: request.paymentStatus || "UNPAID",
+        paymentMethod: request.paymentMethod || "CASH",
+        depositAmount: request.depositAmount || 0,
+        remainingAmount: request.remainingAmount || 0
+      }));
+      
+      setMaintenanceRequests(formattedData);
     } catch (error) {
       message.error(`Không thể tải ${requestStatus.toLowerCase()} yêu cầu.`);
     } finally {
@@ -126,7 +138,7 @@ const ManageMaintenance = () => {
     { title: "Tư vấn viên", dataIndex: "consultantId", key: "consultantId" },
     { title: "Mô tả", dataIndex: "description", key: "description" },
     { title: "Trạng thái yêu cầu", dataIndex: "requestStatus", key: "requestStatus" },
-    { title: "Trạng thái bảo trì", dataIndex: "maintenanceStatus", key: "maintenanceStatus" },
+    { title: "Trạng thái bảo trì", dataIndex: "maintenanceStatus", key: "maintenanceStatus", hidden: requestStatus === "CONFIRMED" },
     {
       title: "Ngày tạo",
       dataIndex: "createdAt",
@@ -160,6 +172,53 @@ const ManageMaintenance = () => {
       hidden: true,
       render: (date) => moment(date).format("DD-MM-YYYY") || "N/A",
     },
+    { 
+      title: "Trạng thái thanh toán", 
+      dataIndex: "paymentStatus", 
+      key: "paymentStatus",
+      render: (status) => {
+        const statusMap = {
+          UNPAID: 'Chưa thanh toán',
+          DEPOSIT_PAID: 'Đã cọc',
+          FULLY_PAID: 'Đã thanh toán'
+        };
+        return statusMap[status] || status;
+      }
+    },
+    { 
+      title: "Phương thức thanh toán", 
+      dataIndex: "paymentMethod", 
+      key: "paymentMethod",
+      render: (method) => {
+        const methods = {
+          CASH: "Tiền mặt",
+          BANK_TRANSFER: "Chuyển khoản",
+        };
+        return methods[method] || method;
+      }
+    },
+    { 
+      title: "Tiền đặt cọc", 
+      dataIndex: "depositAmount", 
+      key: "depositAmount",
+      render: (amount) => new Intl.NumberFormat('vi-VN', { 
+        style: 'currency', 
+        currency: 'VND',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(amount || 0)
+    },
+    { 
+      title: "Số tiền còn lại", 
+      dataIndex: "remainingAmount", 
+      key: "remainingAmount",
+      render: (amount) => new Intl.NumberFormat('vi-VN', { 
+        style: 'currency', 
+        currency: 'VND',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(amount || 0)
+    },
     {
       title: "Hành động",
       key: "actions",
@@ -180,7 +239,7 @@ const ManageMaintenance = () => {
           )}
         </>
       ),
-          hidden: requestStatus === "COMPLETED",
+      hidden: requestStatus === "COMPLETED",
     },
   ];
 
