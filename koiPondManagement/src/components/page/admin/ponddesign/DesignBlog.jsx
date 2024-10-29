@@ -19,7 +19,6 @@ function DesignBlog() {
   useEffect(() => {
     if (location.state && location.state.design) {
       const design = location.state.design;
-      console.log("Received design data:", design); // Thêm log để debug
       setDesignData(design);
       setDescriptionData(design.content || "");
       form.setFieldsValue({
@@ -89,19 +88,13 @@ function DesignBlog() {
         type: "BLOG",
       };
 
-      console.log("=== DEBUG INFO ===");
-      console.log("Request Data:", designValues);
-      console.log("Design ID:", designData?.id);
-
       let response;
       if (designData && designData.id) {
         // Update existing blog
         const updateUrl = `/api/blog/drafts/${designData.id}`;
-        console.log("PUT Request URL:", updateUrl);
 
         try {
           response = await api.put(updateUrl, designValues);
-          console.log("Update Response:", response);
 
           if (response.data) {
             message.success("Cập nhật bài viết thành công");
@@ -116,10 +109,8 @@ function DesignBlog() {
       } else {
         // Create new blog
         const createUrl = "/api/blog/drafts";
-        console.log("POST Request URL:", createUrl);
 
         response = await api.post(createUrl, designValues);
-        console.log("Create Response:", response);
 
         if (response.data) {
           message.success("Tạo bài viết thành công");

@@ -4,9 +4,18 @@ import {
   UserOutlined,
   CommentOutlined,
   LogoutOutlined,
-  DownOutlined
+  DownOutlined,
 } from "@ant-design/icons";
-import { Breadcrumb, Layout, Menu, Button, Dropdown, Modal, Avatar, Space } from "antd";
+import {
+  Breadcrumb,
+  Layout,
+  Menu,
+  Button,
+  Dropdown,
+  Modal,
+  Avatar,
+  Space,
+} from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../components/redux/features/useSlice";
@@ -43,32 +52,23 @@ const items = [
       <Link to="/dashboard/orderlist">Quản lý đơn hàng</Link>,
       "orderlist"
     ),
-    getItem(
-      <Link to="/dashboard/browsepond">Quản lý Blog</Link>,
-      "browsepond"
-    ),
+    getItem(<Link to="/dashboard/browsepond">Quản lý Blog</Link>, "browsepond"),
     getItem(
       <Link to="/dashboard/maintenance-manager">Quản lý bảo trì</Link>,
       "maintenance"
     ),
   ]),
   getItem("Nhân Viên Thiết Kế", "ponddesigns", <UserOutlined />, [
-  getItem(
-    <Link to="/dashboard/ponddesign">Tạo Thiết Kế Hồ</Link>,
-    "ponddesign",
-  ),
-  getItem(
-    <Link to="/dashboard/designproject">Bảng Thiết Kế</Link>,
-    "designproject",
-  ),
-  getItem(
-    <Link to="/dashboard/designblog">Tạo Blog</Link>,
-    "designblog",
-  ),
-  getItem(
-    <Link to="/dashboard/blogproject">Bảng Blog</Link>,
-    "blogproject",
-  ),
+    getItem(
+      <Link to="/dashboard/ponddesign">Tạo Thiết Kế Hồ</Link>,
+      "ponddesign"
+    ),
+    getItem(
+      <Link to="/dashboard/designproject">Bảng Thiết Kế</Link>,
+      "designproject"
+    ),
+    getItem(<Link to="/dashboard/designblog">Tạo Blog</Link>, "designblog"),
+    getItem(<Link to="/dashboard/blogproject">Bảng Blog</Link>, "blogproject"),
   ]),
   getItem("Nhân viên tư vấn", "nhanvientuvan", <CommentOutlined />, [
     getItem(
@@ -90,11 +90,13 @@ const items = [
       "construction-tasks"
     ),
     getItem(
-        <Link to="/dashboard/construction/main">Bảo trì</Link>,
+      <Link to="/dashboard/construction/main">Bảo trì</Link>,
       "construction-main"
     ),
     getItem(
-      <Link to="/dashboard/construction/reviewcomplete">Xem bảo trì hoàn thành</Link>,
+      <Link to="/dashboard/construction/reviewcomplete">
+        Xem bảo trì hoàn thành
+      </Link>,
       "construction-reviewcomplete"
     ),
   ]),
@@ -127,38 +129,49 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user = JSON.parse(localStorage.getItem("user"));
     if (!user || user.roleId === 5) {
-      navigate('/');
+      navigate("/");
     }
   }, [navigate]);
 
   const isAllowed = (path) => {
     const roleId = Number(user.roleId);
     // Allow access to /dashboard/category for all roles
-    if (path.includes('category')) {
+    if (path.includes("category")) {
       return true;
     }
 
-    if (path.includes('usermanagement') || path.includes('ponddesigncolumns') || path.includes('orderlist') || path.includes('browsepond') || path.includes('maintenance-manager')) {
-      console.log('Checking manager access:', roleId === 1);
+    if (
+      path.includes("usermanagement") ||
+      path.includes("ponddesigncolumns") ||
+      path.includes("orderlist") ||
+      path.includes("browsepond") ||
+      path.includes("maintenance-manager")
+    ) {
+      console.log("Checking manager access:", roleId === 1);
       return roleId === 1; // Manager
     }
-    if (path.includes('ponddesign') || path.includes('designproject') || path.includes('designblog') || path.includes('blogproject')) {
+    if (
+      path.includes("ponddesign") ||
+      path.includes("designproject") ||
+      path.includes("designblog") ||
+      path.includes("blogproject")
+    ) {
       return roleId === 3; // Designer
     }
-    if (path.includes('nhanvientuvan')) {
+    if (path.includes("nhanvientuvan")) {
       return roleId === 2; // Consultant
     }
-    if (path.includes('construction'))  {
+    if (path.includes("construction")) {
       return roleId === 4; // Constructor
     }
-   
+
     return false;
   };
 
   useEffect(() => {
-    console.log('Is allowed:', isAllowed(location.pathname));
+    console.log("Is allowed:", isAllowed(location.pathname));
   }, [location.pathname, user.roleId]);
 
   const handleViewProfile = () => {
@@ -181,7 +194,7 @@ const Dashboard = () => {
   );
 
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem('user'));
+    const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser) {
       setUsername(storedUser.username || storedUser.fullName || "User");
     }
@@ -191,44 +204,48 @@ const Dashboard = () => {
     if (user.avatar) {
       return <Avatar src={user.avatar} />;
     }
-    return <Avatar style={{ backgroundColor: '#f56a00' }}>{username.charAt(0).toUpperCase()}</Avatar>;
+    return (
+      <Avatar style={{ backgroundColor: "#f56a00" }}>
+        {username.charAt(0).toUpperCase()}
+      </Avatar>
+    );
   };
 
   const getDefaultOpenKeys = (roleId) => {
     switch (roleId) {
       case 1: // Manager
-        return ['management'];
+        return ["management"];
       case 2: // Consultant
-        return ['nhanvientuvan'];
+        return ["nhanvientuvan"];
       case 3: // Designer
-        return ['ponddesigns'];
+        return ["ponddesigns"];
       case 4: // Construction
-        return ['construction'];
+        return ["construction"];
       default:
         return [];
     }
   };
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user = JSON.parse(localStorage.getItem("user"));
     if (user) {
       const roleId = Number(user.roleId);
       setOpenKeys(getDefaultOpenKeys(roleId));
       switch (roleId) {
         case 1: // Manager
-          navigate('/dashboard/usermanagement');
+          navigate("/dashboard/usermanagement");
           break;
         case 2: // Consultant
-          navigate('/dashboard/nhanvientuvan/yeucau');
+          navigate("/dashboard/nhanvientuvan/yeucau");
           break;
         case 3: // Designer
-          navigate('/dashboard/ponddesign');
+          navigate("/dashboard/ponddesign");
           break;
         case 4: // Construction
-          navigate('/dashboard/construction/tasks');
+          navigate("/dashboard/construction/tasks");
           break;
         default:
-          navigate('/dashboard');
+          navigate("/dashboard");
       }
     }
   }, [navigate]);
@@ -244,7 +261,7 @@ const Dashboard = () => {
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
         style={{
-          backgroundColor: "#003366", 
+          backgroundColor: "#003366",
         }}
       >
         <div
@@ -253,7 +270,7 @@ const Dashboard = () => {
             height: 32,
             margin: 16,
             background: "rgba(255, 255, 255, 0.2)",
-            color: "#fff", 
+            color: "#fff",
             textAlign: "center",
             fontSize: "18px",
           }}
@@ -265,8 +282,8 @@ const Dashboard = () => {
           items={items}
           theme="dark"
           style={{
-            backgroundColor: "#003366", 
-            color: "#fff", 
+            backgroundColor: "#003366",
+            color: "#fff",
           }}
           openKeys={openKeys}
           onOpenChange={setOpenKeys}
@@ -283,11 +300,11 @@ const Dashboard = () => {
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
           }}
         >
-          <Dropdown overlay={profileMenu} trigger={['click']}>
+          <Dropdown overlay={profileMenu} trigger={["click"]}>
             <a onClick={(e) => e.preventDefault()}>
               <Space>
                 {getAvatarContent()}
-                <DownOutlined style={{ fontSize: '12px', color: '#8c8c8c' }} />
+                <DownOutlined style={{ fontSize: "12px", color: "#8c8c8c" }} />
               </Space>
             </a>
           </Dropdown>
@@ -296,15 +313,16 @@ const Dashboard = () => {
           style={{
             margin: "16px",
             padding: "24px",
-            backgroundColor: "#fff", 
-            borderRadius: 8, 
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)", 
+            backgroundColor: "#fff",
+            borderRadius: 8,
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
           }}
         >
           <Breadcrumb
             style={{
               marginBottom: "16px",
-              color: "#003366", 
+              color: "#003366",
+              display: "none",
             }}
             items={breadcrumbItems}
           />
@@ -312,8 +330,8 @@ const Dashboard = () => {
             style={{
               minHeight: 360,
               padding: "24px",
-              backgroundColor: "#f0f2f5", 
-              borderRadius: 8, 
+              backgroundColor: "#f0f2f5",
+              borderRadius: 8,
             }}
           >
             {isAllowed(location.pathname) ? <Outlet /> : <AccessDenied />}
@@ -322,17 +340,18 @@ const Dashboard = () => {
         <Footer
           style={{
             textAlign: "center",
-            backgroundColor: "#003366", 
-            color: "#fff", 
+            backgroundColor: "#003366",
+            color: "#fff",
             padding: "12px 0",
           }}
         >
-          GreenKoi ©{new Date().getFullYear()} Created by Your Company
+          GreenKoi ©{new Date().getFullYear()} Mang sắc màu vào cuộc sống với hồ
+          cá koi
         </Footer>
       </Layout>
       <Modal
         title="Hồ sơ người dùng"
-        visible={isProfileModalVisible}
+        open={isProfileModalVisible}
         onCancel={handleCloseProfileModal}
         footer={null}
         width={800}

@@ -69,7 +69,7 @@ function BlogProject() {
           content: blog.content,
           imageUrl: blog.coverImageUrl,
           status: blog.status,
-          type: "BLOG"  // Thêm type
+          type: "BLOG", // Thêm type
         },
       },
     });
@@ -386,7 +386,7 @@ function BlogProject() {
 
       {/* Bảng Pending có thanh search và filter */}
       <div>
-        <h1>Bài viết ã gửi</h1>
+        <h1>Bài viết đã gửi</h1>
         <Space style={{ marginBottom: 16 }}>
           <Select
             value={statusFilter}
