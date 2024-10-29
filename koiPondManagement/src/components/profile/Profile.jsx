@@ -21,10 +21,10 @@ import {
   UserOutlined,
   ShoppingOutlined,
 } from "@ant-design/icons";
-import moment from 'moment';
-import ProfileInfo from './ProfileInfo';
-import ConsultationRequests from './ConsultationRequests';
-import MaintenanceRequests from './MaintenanceRequests';
+import moment from "moment";
+import ProfileInfo from "./ProfileInfo";
+import ConsultationRequests from "./ConsultationRequests";
+import MaintenanceRequests from "./MaintenanceRequests";
 
 function Profile() {
   const [profileData, setProfileData] = useState(null);
@@ -72,7 +72,6 @@ function Profile() {
         localStorage.setItem("customerId", profileInfo.id);
       }
 
-      console.log("Final profile info:", profileInfo);
       setProfileData(profileInfo);
     } catch (err) {
       console.error("Error in fetchProfileData:", err);
@@ -152,18 +151,30 @@ function Profile() {
             </div>
           </div>
           <div className="col-lg-8 pb-5">
-            {activeTab === "1" && <ProfileInfo profileData={profileData} setProfileData={setProfileData} />}
+            {activeTab === "1" && (
+              <ProfileInfo
+                profileData={profileData}
+                setProfileData={setProfileData}
+              />
+            )}
             {activeTab === "2" && (
               <div>
                 <h3>Yêu cầu của tôi</h3>
-                <Tabs defaultActiveKey="design">
-                  <Tabs.TabPane tab="Yêu cầu thiết kế và xây dựng" key="design">
-                    <ConsultationRequests />
-                  </Tabs.TabPane>
-                  <Tabs.TabPane tab="Yêu cầu bảo trì" key="maintenance">
-                    <MaintenanceRequests />
-                  </Tabs.TabPane>
-                </Tabs>
+                <Tabs
+                  defaultActiveKey="design"
+                  items={[
+                    {
+                      key: "design",
+                      label: "Yêu cầu thiết kế và xây dựng",
+                      children: <ConsultationRequests />,
+                    },
+                    {
+                      key: "maintenance",
+                      label: "Yêu cầu bảo trì",
+                      children: <MaintenanceRequests />,
+                    },
+                  ]}
+                />
               </div>
             )}
           </div>

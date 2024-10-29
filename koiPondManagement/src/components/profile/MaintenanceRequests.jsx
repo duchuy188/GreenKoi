@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, Popconfirm, Modal, Descriptions, message, Image } from "antd";
+import {
+  Table,
+  Button,
+  Popconfirm,
+  Modal,
+  Descriptions,
+  message,
+  Image,
+} from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import api from "/src/components/config/axios";
-import moment from 'moment';
+import moment from "moment";
 
 function MaintenanceRequests() {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
@@ -21,19 +29,21 @@ function MaintenanceRequests() {
         throw new Error("No customer ID found");
       }
 
-      const response = await api.get(`/api/maintenance-requests/customer/${customerId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log("Maintenance requests:", response.data);
-      
+      const response = await api.get(
+        `/api/maintenance-requests/customer/${customerId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
       const formattedData = response.data
-        .filter(item => item.requestStatus !== "CANCELLED")
-        .map(item => ({
+        .filter((item) => item.requestStatus !== "CANCELLED")
+        .map((item) => ({
           ...item,
-          attachments: item.attachments || []
+          attachments: item.attachments || [],
         }))
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      
+
       setMaintenanceRequests(formattedData);
     } catch (err) {
       console.error("Error fetching maintenance requests:", err);
@@ -44,11 +54,15 @@ function MaintenanceRequests() {
   const handleMaintenanceCancel = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      await api.patch(`/api/maintenance-requests/${id}/cancel`, {}, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await api.patch(
+        `/api/maintenance-requests/${id}/cancel`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       message.success("Yêu cầu bảo trì đã được hủy thành công");
       fetchMaintenanceRequests();
     } catch (err) {
@@ -67,39 +81,37 @@ function MaintenanceRequests() {
       title: "Hình Ảnh",
       dataIndex: "attachments",
       key: "attachments",
-      render: (attachments) => (
-        attachments && typeof attachments === 'string' ? (
-          <Image
-            width={50}
-            src={attachments}
-            alt="Attachment"
-          />
-        ) : null
-      ),
+      render: (attachments) =>
+        attachments && typeof attachments === "string" ? (
+          <Image width={50} src={attachments} alt="Attachment" />
+        ) : null,
     },
-    { 
-      title: "Ngày Yêu Cầu", 
-      dataIndex: "createdAt", 
+    {
+      title: "Ngày Yêu Cầu",
+      dataIndex: "createdAt",
       key: "createdAt",
-      render: (text) => moment(text).format('DD/MM/YYYY')
+      render: (text) => moment(text).format("DD/MM/YYYY"),
     },
-    { 
-      title: "Trạng Thái", 
-      dataIndex: "requestStatus", 
-      key: "requestStatus" 
+    {
+      title: "Trạng Thái",
+      dataIndex: "requestStatus",
+      key: "requestStatus",
     },
-    { 
-      title: "Ghi Chú", 
-      dataIndex: "description", 
-      key: "description" 
+    {
+      title: "Ghi Chú",
+      dataIndex: "description",
+      key: "description",
     },
-    { 
-      title: "Hành Động", 
-      key: "action", 
-      render: (_, record) => (
+    {
+      title: "Hành Động",
+      key: "action",
+      render: (_, record) =>
         record.requestStatus === "PENDING" ? (
           <span>
-            <Button onClick={() => handleViewDetails(record)} style={{ marginRight: '10px' }}>
+            <Button
+              onClick={() => handleViewDetails(record)}
+              style={{ marginRight: "10px" }}
+            >
               Xem Chi Tiết
             </Button>
             <Popconfirm
@@ -114,10 +126,11 @@ function MaintenanceRequests() {
             </Popconfirm>
           </span>
         ) : (
-          <Button onClick={() => handleViewDetails(record)}>Xem Chi Tiết</Button>
-        )
-      ),
-    }
+          <Button onClick={() => handleViewDetails(record)}>
+            Xem Chi Tiết
+          </Button>
+        ),
+    },
   ];
 
   const renderDetailModal = () => {
@@ -131,18 +144,30 @@ function MaintenanceRequests() {
         footer={[
           <Button key="close" onClick={() => setDetailModalVisible(false)}>
             Đóng
-          </Button>
+          </Button>,
         ]}
       >
         <Descriptions column={1}>
-          <Descriptions.Item label="Mã Dự Án">{selectedRequest.projectId}</Descriptions.Item>
-          <Descriptions.Item label="Hình Ảnh">{selectedRequest.attachments}</Descriptions.Item>
-          <Descriptions.Item label="Ngày Yêu Cầu">{moment(selectedRequest.createdAt).format('DD/MM/YYYY')}</Descriptions.Item>
-          <Descriptions.Item label="Mô Tả">{selectedRequest.description}</Descriptions.Item>
-          <Descriptions.Item label="Trạng Thái Yêu Cầu">{selectedRequest.requestStatus}</Descriptions.Item>
-          
+          <Descriptions.Item label="Mã Dự Án">
+            {selectedRequest.projectId}
+          </Descriptions.Item>
+          <Descriptions.Item label="Hình Ảnh">
+            {selectedRequest.attachments}
+          </Descriptions.Item>
+          <Descriptions.Item label="Ngày Yêu Cầu">
+            {moment(selectedRequest.createdAt).format("DD/MM/YYYY")}
+          </Descriptions.Item>
+          <Descriptions.Item label="Mô Tả">
+            {selectedRequest.description}
+          </Descriptions.Item>
+          <Descriptions.Item label="Trạng Thái Yêu Cầu">
+            {selectedRequest.requestStatus}
+          </Descriptions.Item>
+
           {selectedRequest.requestStatus === "CONFIRMED" && (
-            <Descriptions.Item label="Giá Đã Chốt">{selectedRequest.agreedPrice}</Descriptions.Item>
+            <Descriptions.Item label="Giá Đã Chốt">
+              {selectedRequest.agreedPrice}
+            </Descriptions.Item>
           )}
         </Descriptions>
       </Modal>

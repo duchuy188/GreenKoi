@@ -55,16 +55,27 @@
   position: relative;
 }
 
-/* Cập nhật style cho nav-indicator */
+/* Thay đổi style cho nav-indicator từ thanh ngang thành mũi tên */
 .nav-indicator {
   position: absolute;
-  bottom: -2px;
-  height: 3px;
-  background-color: #000000; /* Đảm bảo màu đen */
+  bottom: -10px;
+  height: 10px;
+  width: 20px !important;
+  background-color: transparent;
   transition: 0.3s ease-in-out;
   display: flex;
   justify-content: center;
-  width: 100%;
+  
+  /* Tạo mũi tên bằng pseudo element */
+  &::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid #000;
+  }
 }
 
 .nav-indicator .anticon {
@@ -85,7 +96,7 @@
 
 .navbar-nav .nav-item .nav-link:hover,
 .navbar-nav .nav-item .nav-link.active {
-  color: #FFDAB9;
+  color: rgb(255, 218, 185);
   text-shadow: 1px 1px 4px rgba(0,0,0,0.4); 
 }
 
@@ -101,7 +112,7 @@
 }
 
 .btn-login:hover {
-  background-color: #FFDAB9; 
+  background-color: rgb(255, 218, 185);
   color: #1a9855;
 }
 
@@ -115,5 +126,10 @@
 
 .collapse {
   padding: 1rem 0;
+}
+
+/* Thêm style cho các nav-link chính */
+.navbar-nav .nav-item .nav-link.main-link {
+  position: relative;
 }
 

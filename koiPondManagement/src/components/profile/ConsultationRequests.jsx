@@ -33,7 +33,6 @@ function ConsultationRequests() {
           },
         }
       );
-      console.log("Consultation requests:", response.data);
       const filteredRequests = response.data.filter(
         (request) => request.status !== "CANCELLED"
       );
@@ -154,7 +153,7 @@ function ConsultationRequests() {
       <Table dataSource={consultationRequests} columns={columns} rowKey="id" />
       <Modal
         title="Chỉnh sửa yêu cầu tư vấn"
-        visible={!!editingRequest}
+        open={!!editingRequest}
         onCancel={() => setEditingRequest(null)}
         footer={null}
       >
