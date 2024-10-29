@@ -28,4 +28,9 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
     List<MaintenanceRequest> findByAssignedToIdAndMaintenanceStatusIn(String assignedToId, List<MaintenanceRequest.MaintenanceStatus> statuses);
 
     List<MaintenanceRequest> findByMaintenanceStatus(MaintenanceRequest.MaintenanceStatus status);
+
+    List<MaintenanceRequest> findByMaintenanceStatusAndPaymentStatusIn(
+        MaintenanceRequest.MaintenanceStatus maintenanceStatus, 
+        List<MaintenanceRequest.PaymentStatus> paymentStatuses
+    );
 }

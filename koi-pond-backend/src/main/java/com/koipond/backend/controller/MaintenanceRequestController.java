@@ -301,5 +301,14 @@ public class MaintenanceRequestController {
     }
 }
 
+    @GetMapping("/completed-unpaid")
+    @PreAuthorize("hasRole('ROLE_2')")
+    @Operation(summary = "Get completed maintenance requests that need payment confirmation", 
+              description = "Retrieves completed maintenance requests that need payment confirmation. Only accessible by consultants.")
+    public ResponseEntity<List<MaintenanceRequestDTO>> getCompletedUnpaidRequests() {
+        List<MaintenanceRequestDTO> requests = maintenanceRequestService.getCompletedUnpaidRequests();
+        return ResponseEntity.ok(requests);
+    }
+
     // Add more endpoints as needed
 }

@@ -169,6 +169,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/cancelled").hasAnyAuthority("ROLE_1", "ROLE_2", "ROLE_5")
                         .requestMatchers(HttpMethod.POST, "/api/maintenance-requests/*/review").hasAuthority("ROLE_5")
                         .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/*/review").hasAnyAuthority("ROLE_1", "ROLE_2", "ROLE_4", "ROLE_5")
+                        .requestMatchers(HttpMethod.GET, "/api/maintenance-requests/completed-unpaid").hasAuthority("ROLE_2")
 
                         // Project review endpoints
                         .requestMatchers(HttpMethod.POST, "/api/projects/*/reviews").hasAnyAuthority("ROLE_1", "ROLE_2", "ROLE_4", "ROLE_5")

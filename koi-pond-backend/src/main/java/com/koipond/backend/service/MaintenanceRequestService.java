@@ -80,9 +80,9 @@ public class MaintenanceRequestService {
         request.setProject(project);
         request.setCreatedAt(LocalDateTime.now());
         request.setUpdatedAt(LocalDateTime.now());
-        request.setRequestStatus(RequestStatus.PENDING);  // Sử dụng static import
-        request.setPaymentStatus(PaymentStatus.UNPAID);  // Thêm trạng thái thanh toán mặc định
-        // Không set consultant ở đây
+        request.setRequestStatus(RequestStatus.PENDING);
+        request.setPaymentStatus(PaymentStatus.UNPAID);
+
 
         request = maintenanceRequestRepository.save(request);
         logger.info("Maintenance request created successfully. Request ID: {}", request.getId());
@@ -570,5 +570,14 @@ public class MaintenanceRequestService {
         dto.setReviewDate(review.getReviewDate());
         dto.setStatus(review.getStatus());
         return dto;
+    }
+
+    public List<MaintenanceRequestDTO> getCompletedUnpaidRequests() {
+        return maintenanceRequestRepository.findByMaintenanceStatusAndPaymentStatusIn(
+                MaintenanceStatus.COMPLETED,
+                List.of(PaymentStatus.UNPAID, PaymentStatus.DEPOSIT_PAID))
+            .stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
     }
 }
