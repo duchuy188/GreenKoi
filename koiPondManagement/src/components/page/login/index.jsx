@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Form, Input, Row, Col, Card } from "antd";
 import { GoogleOutlined } from "@ant-design/icons";
@@ -9,10 +9,12 @@ import { login } from "../../redux/features/useSlice";
 import { getAuth, signInWithPopup } from "firebase/auth";
 import { googleProvider } from "../../config/firebase";
 import { GoogleAuthProvider } from "firebase/auth/web-extension";
+import ReCAPTCHA from "react-google-recaptcha";
 
 function LoginPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const recaptchaRef = useRef(null);
 
   const handleLoginGoogle = () => {
     const auth = getAuth();
@@ -45,7 +47,16 @@ function LoginPage() {
 
   const handleLogin = async (values) => {
     try {
-      const response = await api.post("/api/auth/login", values);
+      const recaptchaValue = recaptchaRef.current.getValue();
+      if (!recaptchaValue) {
+        toast.error("Vui lòng xác thực reCAPTCHA!");
+        return;
+      }
+
+      const response = await api.post("/api/auth/login", {
+        ...values,
+        recaptchaToken: recaptchaValue
+      });
       const { token, roleId, ...userData } = response.data;
 
       localStorage.setItem("token", token);
@@ -87,6 +98,8 @@ function LoginPage() {
       } else {
         toast.error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.");
       }
+      // Reset reCAPTCHA after error
+      recaptchaRef.current.reset();
     }
   };
 
@@ -155,6 +168,16 @@ function LoginPage() {
                 ]}
               >
                 <Input.Password placeholder="Mật khẩu" size="large" />
+              </Form.Item>
+
+              <Form.Item>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey="6Lc9km8qAAAAAAyctYyCl8BSTikQFuuVmWWeXg3f"
+                    onChange={() => {}}
+                  />
+                </div>
               </Form.Item>
 
               <Form.Item>
