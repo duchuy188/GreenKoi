@@ -3,7 +3,7 @@ import { Card, Row, Col, Button, Modal, message, Rate, Input, Form, DatePicker }
 import { useNavigate } from 'react-router-dom';
 import api from '/src/components/config/axios';
 import moment from 'moment';
-
+import './OrdersCustomer.css';
 
 const OrdersCustomer = () => {
   const [orders, setOrders] = useState([]);
@@ -109,56 +109,61 @@ const OrdersCustomer = () => {
   };
 
   return (
-    <div className="container py-4 bg-light">
-      <h1 className="text-center mb-4 fw-bold text-dark">
-        <i className="fas fa-shopping-cart me-2"></i>Đơn Hàng Của Tôi
-      </h1>
-      <div className="row g-3">
-        {orders.map(order => (
-          <div className="col-12 col-md-6 col-lg-4" key={order.id}>
-            <div className="card h-100 shadow-sm border-0 rounded-3">
-              <div className="card-header bg-warning text-dark py-2">
-                <h6 className="card-title mb-0 fw-bold">
-                  <i className="fas fa-project-diagram me-2"></i>
-                  {order.name || `Project for ${order.customerName}`}
-                </h6>
-              </div>
-              <div className="card-body p-3">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <small className="text-muted">
-                    <i className="fas fa-hashtag me-1"></i>Mã Đơn: {order.id}
-                  </small>
-                  <span className="badge bg-orange text-white">
-                    <i className="fas fa-info-circle me-1"></i>{order.statusName}
-                  </span>
+    <div className="orders-container">
+      <div className="d-flex justify-content-center align-items-center mb-4">
+        <h1 className="text-center fw-bold text-dark">
+          <i className="fas fa-shopping-cart me-2"></i>Dự Án Của Tôi
+        </h1>
+      </div>
+
+      <div className="container container-width">
+        <div className="row g-4 mx-0">
+          {orders.map(order => (
+            <div className="col-12" key={order.id}>
+              <div className="card shadow-sm border-0 rounded-3 mx-2">
+                <div className="card-header bg-warning text-dark py-2">
+                  <h6 className="card-title mb-0 fw-bold badge-project">
+                    <i className="fas fa-project-diagram me-2"></i>
+                    {order.name || `Project for ${order.customerName}`}
+                  </h6>
                 </div>
-                <p className="card-text mb-1">
-                  <i className="fas fa-dollar-sign me-2 text-warning"></i>
-                  <strong>Tổng Giá:</strong> ${order.totalPrice || '0.00'}
-                </p>
-                <p className="card-text mb-1">
-                  <i className="fas fa-calendar-alt me-2 text-warning"></i>
-                  <small className="text-muted">Bắt Đầu: {moment(order.startDate).format('DD/MM/YYYY')}</small>
-                </p>
-                <p className="card-text mb-1">
-                  <i className="fas fa-calendar-check me-2 text-warning"></i>
-                  <small className="text-muted">Kết Thúc: {moment(order.endDate).format('DD/MM/YYYY')}</small>
-                </p>
-              </div>
-              <div className="card-footer bg-transparent border-top-0 pt-0">
-                <button className="btn btn-warning btn-sm w-100 text-dark mb-2" onClick={() => handleViewDetails(order)}>
-                  <i className="fas fa-eye me-2"></i>Xem Chi Tiết
-                </button>
-                <button className="btn btn-info btn-sm w-100 text-dark mb-2" onClick={() => handleRequestMaintenance(order)}>
-                  <i className="fas fa-tools me-2"></i>Yêu Cầu Bảo Trì
-                </button>
-                <button className="btn btn-success btn-sm w-100 text-dark" onClick={() => handleReview(order)}>
-                  <i className="fas fa-star me-2"></i>Đánh Giá
-                </button>
+                <div className="card-body p-3">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <small className="text-muted">
+                      <i className="fas fa-hashtag me-1"></i>Mã Đơn: {order.id}
+                    </small>
+                    <span className="badge bg-danger text-white">
+                      <i className="fas fa-info-circle me-1"></i>{order.statusName}
+                    </span>
+                  </div>
+                  <p className="card-text mb-1">
+                    <i className="fas fa-dollar-sign me-2 text-warning"></i>
+                    <strong>Tổng Giá:</strong> {(order.totalPrice || 0).toLocaleString('vi-VN')}đ
+                  </p>
+                  <p className="card-text mb-1">
+                    <i className="fas fa-calendar-alt me-2 text-warning"></i>
+                    <small className="text-muted">Bắt Đầu: {moment(order.startDate).format('DD/MM/YYYY')}</small>
+                  </p>
+                  <p className="card-text mb-1">
+                    <i className="fas fa-calendar-check me-2 text-warning"></i>
+                    <small className="text-muted">Kết Thúc: {moment(order.endDate).format('DD/MM/YYYY')}</small>
+                  </p>
+                </div>
+                <div className="card-footer bg-transparent border-top-0 pt-0">
+                  <button className="btn btn-warning btn-sm w-100 text-dark mb-2" onClick={() => handleViewDetails(order)}>
+                    <i className="fas fa-eye me-2"></i>Xem Chi Tiết
+                  </button>
+                  <button className="btn btn-info btn-sm w-100 text-dark mb-2" onClick={() => handleRequestMaintenance(order)}>
+                    <i className="fas fa-tools me-2"></i>Yêu Cầu Bảo Trì
+                  </button>
+                  <button className="btn btn-success btn-sm w-100 text-dark" onClick={() => handleReview(order)}>
+                    <i className="fas fa-star me-2"></i>Đánh Giá
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       <Modal

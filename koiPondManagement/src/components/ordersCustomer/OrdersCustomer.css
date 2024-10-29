@@ -1,0 +1,38 @@
+/* OrdersCustomer.css */
+
+.card-header {
+  width: 250px !important; /* Tăng width nếu cần */
+  padding: 1rem !important;
+}
+
+.card-header h6 {
+  font-size: 1.1rem !important; /* Tăng font size */
+  font-weight: bold !important;
+  white-space: nowrap !important; /* Ngăn text xuống dòng */
+}
+
+/* Style cho badge project */
+.badge-project {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+  padding: 12px 20px !important; /* Tăng padding */
+  font-size: 1rem !important; /* Tăng font size */
+  border-radius: 4px !important;
+  display: inline-block !important;
+  font-weight: 600 !important;
+}
+
+.badge.bg-orange {
+  background-color: #dc3545 !important; /* Màu đỏ của Bootstrap */
+  /* hoặc #ff0000 cho màu đỏ thuần */
+  color: white !important;
+  padding: 8px 16px !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  border-radius: 4px !important;
+}
+
+/* Thêm hiệu ứng hover nếu muốn */
+.badge.bg-orange:hover {
+  background-color: #c82333 !important;
+}
