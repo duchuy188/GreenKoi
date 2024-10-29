@@ -102,7 +102,7 @@ const Orders = () => {
   const paymentStatusOptions = [
     { value: 'UNPAID', label: 'Chưa thanh toán' },
     { value: 'DEPOSIT_PAID', label: 'Đã cọc' },
-    { value: 'PAID', label: 'Đã thanh toán' },
+    { value: 'FULLY_PAID', label: 'Đã thanh toán' },
   ];
 
   const updatePaymentStatus = async (id, newStatus) => {

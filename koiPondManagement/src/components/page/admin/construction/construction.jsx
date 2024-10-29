@@ -18,7 +18,7 @@ const ProjectTasks = () => {
     try {
       setLoading(true);
       const response = await api.get('/api/projects/constructor');
-      console.log('Project Info:', response.data);
+      //console.log('Project Info:', response.data);
       if (response.data && Array.isArray(response.data) && response.data.length > 0) {
         const project = response.data[0]; // Lấy dự án đầu tiên trong mảng
         setProjectInfo(project);
@@ -41,7 +41,7 @@ const ProjectTasks = () => {
   const fetchProjectTasks = async (projectId) => {
     try {
       const response = await api.get(`/api/projects/${projectId}/project-tasks`);
-      console.log('Project Tasks:', response.data);
+      //console.log('Project Tasks:', response.data);
       setTasks(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching project tasks:', error);
@@ -50,8 +50,19 @@ const ProjectTasks = () => {
     }
   };
 
-  const updateTaskStatus = async (taskId, newPercentage) => {
+  const canUpdateTask = (currentIndex) => {
+    if (currentIndex === 0) return true;
+    const previousTask = tasks[currentIndex - 1];
+    return previousTask?.completionPercentage === 100;
+  };
+
+  const updateTaskStatus = async (taskId, newPercentage, currentIndex) => {
     try {
+      if (!canUpdateTask(currentIndex)) {
+        message.warning('Please complete the previous task first');
+        return;
+      }
+
       let newStatus;
       if (newPercentage === 0) {
         newStatus = 'pending';
@@ -67,7 +78,7 @@ const ProjectTasks = () => {
         return;
       }
 
-      console.log('Sending data:', { newStatus, completionPercentage: newPercentage });
+      //console.log('Sending data:', { newStatus, completionPercentage: newPercentage });
       await api.patch(`/api/tasks/${taskId}/status?newStatus=${newStatus}&completionPercentage=${newPercentage}`);
 
       // Refresh tasks after update
@@ -82,11 +93,34 @@ const ProjectTasks = () => {
     }
   };
 
+  const markTechnicallyCompleted = async () => {
+    try {
+      if (!projectInfo?.id) {
+        message.error('Project ID not found');
+        return;
+      }
+      
+      // Kiểm tra xem tất cả các task đã hoàn thành chưa
+      const allTasksCompleted = tasks.every(task => task.completionPercentage === 100);
+      if (!allTasksCompleted) {
+        message.warning('All tasks must be completed before marking project as technically completed');
+        return;
+      }
+
+      await api.patch(`/api/projects/${projectInfo.id}/mark-technically-completed`);
+      message.success('Project marked as technically completed');
+      await fetchConstructorProject(); // Refresh project data
+    } catch (error) {
+      console.error('Error marking project as technically completed:', error);
+      message.error('Failed to mark project as technically completed');
+    }
+  };
+
   const columns = [
     {
-      title: 'Task ID',
-      dataIndex: 'id',
-      key: 'id',
+      title: 'STT',
+      key: 'index',
+      render: (_, __, index) => index + 1,
     },
     {
       title: 'Project ID',
@@ -117,11 +151,14 @@ const ProjectTasks = () => {
       title: 'Completion Percentage',
       dataIndex: 'completionPercentage',
       key: 'completionPercentage',
-      render: (percentage, record) => (
+      render: (percentage, record, index) => (
         <Space>
           <Progress percent={percentage || 0} size="small" />
           {record.status !== 'COMPLETED' && (
-            <Button onClick={() => updateTaskStatus(record.id, Math.min((percentage || 0) + 25, 100))}>
+            <Button 
+              onClick={() => updateTaskStatus(record.id, Math.min((percentage || 0) + 25, 100), index)}
+              disabled={!canUpdateTask(index)}
+            >
               Update
             </Button>
           )}
@@ -160,6 +197,16 @@ const ProjectTasks = () => {
           <Text>Status: {projectInfo.statusName || 'N/A'}</Text>
           <Text>Start Date: {projectInfo.startDate ? moment(projectInfo.startDate).format('YYYY-MM-DD') : 'N/A'}</Text>
           <Text>End Date: {projectInfo.endDate ? moment(projectInfo.endDate).format('YYYY-MM-DD') : 'N/A'}</Text>
+          
+          {tasks.length > 0 && tasks.every(task => task.completionPercentage === 100) && (
+            <Button 
+              type="primary"
+              onClick={markTechnicallyCompleted}
+              style={{ marginTop: 16 }}
+            >
+              Mark as Technically Completed
+            </Button>
+          )}
         </Card>
       )}
       <Table

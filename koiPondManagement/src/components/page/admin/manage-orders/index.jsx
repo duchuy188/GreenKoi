@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Table, message, Button, Popconfirm, Card, Row, Col, Switch, Typography, Tag, Space, Progress, Modal, Select, Tooltip, Rate } from 'antd';
+import { Table, message, Button, Popconfirm, Card, Row, Col, Switch, Typography, Tag, Space, Progress, Modal, Select, Tooltip, Rate, Input, Empty } from 'antd';
 import api from "../../../config/axios";
 import moment from 'moment';
 import { CalendarOutlined, DollarOutlined, FileTextOutlined, UserOutlined, StarOutlined } from '@ant-design/icons';
+import './assignModal.css';
 
 const { Text, Title } = Typography;
 const { Option } = Select;
@@ -18,6 +19,9 @@ const OrdersList = () => {
   const [constructors, setConstructors] = useState([]);
   const [projectReviews, setProjectReviews] = useState({});
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
+  const [searchConstructor, setSearchConstructor] = useState('');
+  const [selectedConstructor, setSelectedConstructor] = useState(null);
+  const [assignedConstructors, setAssignedConstructors] = useState([]);
 
   useEffect(() => {
     fetchOrders();
@@ -39,6 +43,11 @@ const OrdersList = () => {
           fetchProjectReview(order.id);
         }
       }
+      // Lấy danh sách nhà thầu đã được phân công
+      const assignedConstructorIds = sortedOrders
+        .filter(order => order.constructorId)
+        .map(order => order.constructorId);
+      setAssignedConstructors(assignedConstructorIds);
     } catch (error) {
       console.error('Error fetching orders:', error);
       message.error("Không thể tải đơn hàng");
@@ -64,7 +73,7 @@ const OrdersList = () => {
   const fetchProjectReview = async (projectId) => {
     try {
       const response = await api.get(`/api/projects/${projectId}/reviews`);
-      console.log(`Review for project ${projectId}:`, response.data); // Log để kiểm tra
+      console.log(`Review for project ${projectId}:`, response.data); // Log ể kiểm tra
       setProjectReviews(prevReviews => ({
         ...prevReviews,
         [projectId]: response.data
@@ -172,13 +181,16 @@ const OrdersList = () => {
           const updatedOrders = prevOrders.map(order => 
             order.id === id ? {...order, statusId: 'PS6', statusName: 'COMPLETED'} : order
           );
-          // Re-sort the orders to maintain the newest-first order
           return updatedOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         });
       }
     } catch (error) {
       console.error('Error completing project:', error);
-      message.error("Không thể hoàn thành dự án");
+      if (error.response?.status === 400) {
+        message.error("Dự án phải được thanh toán đầy đủ trước khi đánh dấu hoàn thành");
+      } else {
+        message.error("Không thể hoàn thành dự án");
+      }
     }
   };
 
@@ -411,7 +423,7 @@ const OrdersList = () => {
               <Text strong><UserOutlined /> Nhà thầu:</Text>
               <Text>{order.constructorId ? `${order.constructorName || 'Đã phân công'}` : 'Chưa phân công'}</Text>
               
-              <Text strong><StarOutlined /> Đánh giá của khách hàng:</Text>
+              <Text strong><StarOutlined /> Đnh giá của khách hàng:</Text>
               {order.statusId === 'PS6' ? (
                 projectReviews[order.id] ? (
                   <>
@@ -444,6 +456,87 @@ const OrdersList = () => {
     }
   };
 
+  // Lọc danh sách nhà thầu theo tìm kiếm
+  const filteredConstructors = constructors.filter(constructor => {
+    const isAssigned = assignedConstructors.includes(constructor.id);
+    const matchesSearch = constructor.name.toLowerCase().includes(searchConstructor.toLowerCase());
+    return !isAssigned && matchesSearch;
+  });
+
+  // Cập nhật Modal phân công
+  const renderAssignModal = () => (
+    <Modal
+      title={
+        <div className="assign-modal-title">
+          Phân công nhà thầu
+        </div>
+      }
+      visible={isAssignModalVisible}
+      onCancel={() => {
+        setIsAssignModalVisible(false);
+        setSelectedConstructor(null);
+        setSearchConstructor('');
+      }}
+      onOk={() => {
+        if (!selectedConstructor) {
+          message.warning('Vui lòng chọn nhà thầu');
+          return;
+        }
+        handleAssignConstructor();
+      }}
+      okText="Xác nhận phân công"
+      cancelText="Hủy"
+      width={500}
+    >
+      <div className="assign-modal-content">
+        <Input.Search
+          placeholder="Tìm kiếm nhà thầu..."
+          className="search-box"
+          value={searchConstructor}
+          onChange={(e) => setSearchConstructor(e.target.value)}
+          allowClear
+        />
+        
+        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          {filteredConstructors.length > 0 ? (
+            filteredConstructors.map(constructor => (
+              <div
+                key={constructor.id}
+                className={`constructor-item ${selectedConstructor?.id === constructor.id ? 'selected' : ''}`}
+                onClick={() => {
+                  setSelectedConstructor(constructor);
+                  setSelectedConstructorId(constructor.id);
+                }}
+              >
+                <div className="constructor-avatar">
+                  {constructor.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="constructor-info">
+                  <Typography.Text strong>{constructor.name}</Typography.Text>
+                  <br />
+                  <Typography.Text type="secondary">
+                    Chưa có dự án nào
+                  </Typography.Text>
+                </div>
+                {selectedConstructor?.id === constructor.id && (
+                  <Tag color="blue">Đã chọn</Tag>
+                )}
+              </div>
+            ))
+          ) : (
+            <Empty
+              description={
+                searchConstructor
+                  ? "Không tìm thấy nhà thầu phù hợp"
+                  : "Không có nhà thầu"
+              }
+            />
+          )}
+        </div>
+      </div>
+    </Modal>
+  );
+
   return (
     <div>
       <h1>Danh sách đơn hàng</h1>
@@ -466,23 +559,7 @@ const OrdersList = () => {
       ) : (
         renderCardView()
       )}
-      <Modal
-        title="Phân công nhà thầu"
-        visible={isAssignModalVisible}
-        onOk={handleAssignConstructor}
-        onCancel={() => setIsAssignModalVisible(false)}
-      >
-        <Select
-          style={{ width: '100%' }}
-          placeholder="Chọn một nhà thầu"
-          onChange={(value) => setSelectedConstructorId(value)}
-          loading={constructors.length === 0}
-        >
-          {constructors.map(constructor => (
-            <Option key={constructor.id} value={constructor.id}>{constructor.name}</Option>
-          ))}
-        </Select>
-      </Modal>
+      {renderAssignModal()}
     </div>
   );
 };
