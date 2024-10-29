@@ -99,6 +99,26 @@ const Orders = () => {
     }));
   };
 
+  const paymentStatusOptions = [
+    { value: 'UNPAID', label: 'Chưa thanh toán' },
+    { value: 'DEPOSIT_PAID', label: 'Đã cọc' },
+    { value: 'PAID', label: 'Đã thanh toán' },
+  ];
+
+  const updatePaymentStatus = async (id, newStatus) => {
+    try {
+      console.log('Updating payment status:', id, newStatus); // Debug log
+      await api.patch(`/api/projects/${id}/payment-status`, { 
+        paymentStatus: newStatus  // Đổi tên parameter thành paymentStatus
+      });
+      message.success("Cập nhật trạng thái thanh toán thành công!");
+      fetchOrders();
+    } catch (err) {
+      console.error('Error updating payment status:', err);
+      message.error(err.response?.data?.message || "Lỗi cập nhật trạng thái thanh toán.");
+    }
+  };
+
   const columns = [
     {
       title: 'STT',
@@ -197,6 +217,31 @@ const Orders = () => {
       key: 'createdAt',
       width: 150,
       render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss'),
+    },
+    {
+      title: 'Thanh toán',
+      dataIndex: 'paymentStatus',
+      key: 'paymentStatus',
+      width: 150,
+      render: (paymentStatus, record) => {
+        const menu = (
+          <Menu onClick={({ key }) => updatePaymentStatus(record.id, key)}>
+            {paymentStatusOptions.map(status => (
+              <Menu.Item key={status.value}>{status.label}</Menu.Item>
+            ))}
+          </Menu>
+        );
+
+        const currentStatus = paymentStatusOptions.find(s => s.value === paymentStatus)?.label || 'Chưa thanh toán';
+
+        return (
+          <Dropdown overlay={menu}>
+            <Button>
+              {currentStatus} <DownOutlined />
+            </Button>
+          </Dropdown>
+        );
+      },
     },
     {
       title: 'Hành động',
