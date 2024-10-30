@@ -366,6 +366,44 @@ const OrdersList = () => {
         );  
       },
     },
+    {
+      title: 'Trạng thái thanh toán',
+      key: 'paymentStatus',
+      render: (_, record) => {
+        // Kiểm tra trạng thái thanh toán từ record
+        if (record.paymentStatus === 'FULLY_PAID') {
+          return (
+            <Space direction="vertical">
+              <Tag color="green">Đã thanh toán</Tag>
+            
+              <Text>{`${record.totalPrice.toLocaleString()} VND`}</Text>
+            </Space>
+          );
+        }
+
+        if (record.paymentStatus === 'DEPOSIT_PAID') {
+          const paidAmount = record.depositAmount || 0;
+          const totalAmount = record.totalPrice || 0;
+          const paymentPercentage = (paidAmount / totalAmount) * 100;
+
+          return (
+            <Space direction="vertical">
+              <Tag color="orange">Đã đặt cọc</Tag>
+              
+              <Text>{`${paidAmount.toLocaleString()} / ${totalAmount.toLocaleString()} VND`}</Text>
+            </Space>
+          );
+        }
+
+        // UNPAID or default case
+        return (
+          <Space direction="vertical">
+            <Tag color="red">Chưa thanh toán</Tag>
+            <Text>{`0 / ${record.totalPrice.toLocaleString()} VND`}</Text>
+          </Space>
+        );
+      },
+    },
   ];
 
   const renderCardView = () => (
