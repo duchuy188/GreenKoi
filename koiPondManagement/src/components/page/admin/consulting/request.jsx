@@ -396,9 +396,9 @@ const RequestConsulting = () => {
         <Form form={form} onFinish={handleUpdateStatus}>
           <Form.Item name="status" label="Status" rules={[{ required: true }]}>
             <Select>
-              <Select.Option value="PENDING">đang chờ</Select.Option>
-              <Select.Option value="IN_PROGRESS">đang thực hiện</Select.Option>
-              <Select.Option value="COMPLETED">đã hoàn thành</Select.Option>
+              <Select.Option value="PENDING">Đang chờ</Select.Option>
+              <Select.Option value="IN_PROGRESS">Đang thực hiện</Select.Option>
+              <Select.Option value="COMPLETED">Đã hoàn thành</Select.Option>
             </Select>
           </Form.Item>
           <Form.Item>

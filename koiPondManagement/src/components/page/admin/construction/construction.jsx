@@ -58,6 +58,11 @@ const ProjectTasks = () => {
 
   const updateTaskStatus = async (taskId, newPercentage, currentIndex) => {
     try {
+      if (projectInfo?.statusName === 'COMPLETED' || projectInfo?.status === 'PS6') {
+        message.warning('Cannot update tasks - project is already completed');
+        return;
+      }
+
       if (!canUpdateTask(currentIndex)) {
         message.warning('Please complete the previous task first');
         return;
@@ -95,6 +100,11 @@ const ProjectTasks = () => {
 
   const markTechnicallyCompleted = async () => {
     try {
+      if (projectInfo?.statusName === 'COMPLETED' || projectInfo?.status === 'PS6') {
+        message.warning('Project is already completed');
+        return;
+      }
+
       if (!projectInfo?.id) {
         message.error('Project ID not found');
         return;
