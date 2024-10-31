@@ -1,0 +1,130 @@
+input::placeholder {
+    color: rgb(255, 255, 255) !important;
+  }
+  
+  .ant-input-password {
+    background: transparent !important;
+  }
+  
+  .ant-input-password input {
+    background: transparent !important;
+    color: rgb(241, 237, 237) !important;
+  }
+  
+  .ant-input:focus::placeholder {
+    opacity: 0.5;
+  }
+  
+ 
+  .ant-input:focus,
+  .ant-input-password:focus {
+    box-shadow: none !important;
+  }
+
+  
+  .signup-background {
+    min-height: 100vh;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('/img/images3.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .signup-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .signup-container {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .signup-form-container {
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 8px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 900px;
+  }
+
+ 
+  .signup-input {
+    background: transparent !important;
+    border-radius: 4px !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    transition: all 0.3s ease;
+  }
+
+  .signup-input:hover,
+  .signup-input:focus {
+    border-color: #808080 !important;
+  }
+
+  .signup-input .ant-input {
+    background: transparent !important;
+    color: white !important;
+  }
+
+  .signup-input .anticon {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .signup-btn {
+    background: linear-gradient(45deg, #808080, #A9A9A9) !important;
+    border: none !important;
+    height: 45px !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .signup-btn:hover {
+    background: linear-gradient(45deg, #A9A9A9, #808080) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(128, 128, 128, 0.3) !important;
+  }
+
+
+  .signup-links a {
+    color: rgba(255, 255, 255, 0.8) !important;
+    transition: all 0.3s ease !important;
+    text-decoration: none !important;
+  }
+
+  .signup-links a:hover {
+    color: #808080 !important;
+  }
+
+  .signup-form-container {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+  } 

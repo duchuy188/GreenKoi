@@ -3,7 +3,6 @@ import {
   Form,
   Input,
   Button,
-  message,
   Card,
   Table,
   Tooltip,
@@ -18,6 +17,7 @@ import api from "../../../config/axios";
 import { RiDeleteBin2Fill } from "react-icons/ri";
 import { FaEdit } from "react-icons/fa";
 import { BsUpload } from "react-icons/bs";
+import { toast } from "react-toastify";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -67,7 +67,7 @@ function BlogProject() {
           id: blog.id,
           title: blog.title,
           content: blog.content,
-          imageUrl: blog.coverImageUrl,
+          coverImageUrl: blog.coverImageUrl,
           status: blog.status,
           type: "BLOG", // Thêm type
         },
@@ -80,7 +80,7 @@ function BlogProject() {
       setLoading(true);
       if (blogData) {
         await api.put(`/api/blog/drafts/${blogData.id}`, values);
-        message.success("Cập nhật bài viết thành công");
+        toast.success("Cập nhật bài viết thành công");
         setBlogData(null);
       } else {
         message.error("Không thể tạo bài viết mới. Chỉ cho phép cập nhật.");
@@ -89,7 +89,7 @@ function BlogProject() {
       form.resetFields();
       fetchBlogs();
     } catch (err) {
-      message.error(
+      toast.error(
         "Cập nhật bài viết thất bại: " +
           (err.response?.data?.message || err.message)
       );
@@ -102,10 +102,10 @@ function BlogProject() {
     try {
       setLoading(true);
       await api.delete(`/api/blog/drafts/${id}`);
-      message.success("Xóa nháp thành công");
+      toast.success("Xóa nháp thành công");
       fetchBlogs();
     } catch (err) {
-      message.error(
+      toast.error(
         "Xóa nháp thất bại: " + (err.response?.data?.message || err.message)
       );
     } finally {
@@ -117,10 +117,10 @@ function BlogProject() {
     try {
       setLoading(true);
       await api.post(`/api/blog/drafts/${id}/submit`);
-      message.success("Gửi nháp thành công");
+      toast.success("Gửi nháp thành công");
       fetchBlogs();
     } catch (err) {
-      message.error(
+      toast.error(
         "Gửi nháp thất bại: " + (err.response?.data?.message || err.message)
       );
     } finally {

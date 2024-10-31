@@ -1,8 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Table, message, Modal, Form, Input, DatePicker, InputNumber, Button, Popconfirm, Dropdown, Menu } from 'antd';
+import React, { useState, useEffect } from "react";
+import {
+  Table,
+  Modal,
+  Form,
+  Input,
+  DatePicker,
+  InputNumber,
+  Button,
+  Popconfirm,
+  Dropdown,
+  Menu,
+  Tooltip,
+  Space,
+} from "antd";
 import api from "../../../config/axios";
-import moment from 'moment';
-import { EditOutlined, DownOutlined, EllipsisOutlined } from '@ant-design/icons';
+import moment from "moment";
+import {
+  EditOutlined,
+  DownOutlined,
+  EllipsisOutlined,
+} from "@ant-design/icons";
+import { toast } from "react-toastify";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -11,6 +29,13 @@ const Orders = () => {
   const [editingOrder, setEditingOrder] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
+  const [selectedDescription, setSelectedDescription] = useState("");
+  const [isShowingDetail, setIsShowingDetail] = useState(false);
+  const [descriptionModalVisible, setDescriptionModalVisible] = useState(false);
+
+  const createMarkup = (htmlContent) => {
+    return { __html: htmlContent };
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -19,16 +44,14 @@ const Orders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/projects/consultant');
-      //console.log('Fetched orders:', response.data);
-      // Sort orders by createdAt in descending order and filter out COMPLETED (PS6) orders
+      const response = await api.get("/api/projects/consultant");
       const sortedOrders = response.data
-        .filter(order => order.statusId !== 'PS6')
+        .filter((order) => order.statusId !== "PS6")
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setOrders(sortedOrders);
     } catch (error) {
-      console.error('Error fetching orders:', error);
-      message.error("Failed to load orders");
+      console.error("Error fetching orders:", error);
+      toast.error("Không thể tải danh sách đơn hàng");
     } finally {
       setLoading(false);
     }
@@ -44,120 +67,127 @@ const Orders = () => {
     setIsModalVisible(true);
   };
   const statusOptions = [
-    { value: 'PENDING', label: 'Chờ duyệt' },
-    { value: 'APPROVED', label: 'Đã duyệt' },
-    { value: 'PLANNING', label: 'Đang lên kế hoạch' },
-    { value: 'IN_PROGRESS', label: 'Đang thực hiện' },
-    { value: 'ON_HOLD', label: 'Tạm dừng' },
-    { value: 'CANCELLED', label: 'Đã hủy' },
-    { value: 'MAINTENANCE', label: 'Bảo trì' },
-    { value: 'TECHNICALLY_COMPLETED', label: 'Đã hoàn thành kỹ thuật' },
+    { value: "PENDING", label: "Chờ duyệt" },
+    { value: "APPROVED", label: "Đã duyệt" },
+    { value: "PLANNING", label: "Đang lên kế hoạch" },
+    { value: "IN_PROGRESS", label: "Đang thực hiện" },
+    { value: "ON_HOLD", label: "Tạm dừng" },
+    { value: "CANCELLED", label: "Đã hủy" },
+    { value: "MAINTENANCE", label: "Bảo trì" },
+    { value: "TECHNICALLY_COMPLETED", label: "Đã hoàn thành kỹ thuật" },
 
     // Add more statuses as needed
   ];
   const handleUpdate = async (values) => {
     try {
-      // Update general information
       await api.put(`/api/projects/${editingOrder.id}`, {
         name: values.name,
         description: values.description,
         totalPrice: values.totalPrice,
         depositAmount: values.depositAmount,
-        startDate: values.startDate.format('YYYY-MM-DD'),
-        endDate: values.endDate.format('YYYY-MM-DD'),
+        startDate: values.startDate.format("YYYY-MM-DD"),
+        endDate: values.endDate.format("YYYY-MM-DD"),
         customerId: values.customerId,
         consultantId: values.consultantId,
       });
 
-      // Update status if changed
       if (values.statusId !== editingOrder.statusId) {
         await updateOrderStatus(editingOrder.id, values.statusId);
       }
 
-      message.success('Order updated successfully');
+      toast.success("Cập nhật đơn hàng thành công");
       setIsModalVisible(false);
-      fetchOrders(); // Refresh the orders list
+      fetchOrders();
     } catch (error) {
-      console.error('Error updating order:', error);
-      message.error(`Failed to update order: ${error.response?.data?.message || error.message}`);
+      console.error("Error updating order:", error);
+      toast.error(
+        `Không thể cập nhật đơn hàng: ${
+          error.response?.data?.message || error.message
+        }`
+      );
     }
   };
 
   const updateOrderStatus = async (id, newStatus) => {
     try {
       await api.patch(`/api/projects/${id}/status`, { newStatus });
-      message.success("Order status updated successfully!");
-      fetchOrders(); // Refresh the orders list
+      toast.success("Cập nhật trạng thái đơn hàng thành công!");
+      fetchOrders();
     } catch (err) {
-      message.error(err.response?.data?.message || "Error updating order status.");
+      toast.error(
+        err.response?.data?.message || "Lỗi khi cập nhật trạng thái đơn hàng"
+      );
     }
   };
 
   const toggleDescription = (recordId) => {
-    setExpandedRows(prev => ({
+    setExpandedRows((prev) => ({
       ...prev,
-      [recordId]: !prev[recordId]
+      [recordId]: !prev[recordId],
     }));
   };
 
   const paymentStatusOptions = [
-    { value: 'UNPAID', label: 'Chưa thanh toán' },
-    { value: 'DEPOSIT_PAID', label: 'Đã cọc' },
-    { value: 'FULLY_PAID', label: 'Đã thanh toán' },
+    { value: "UNPAID", label: "Chưa thanh toán" },
+    { value: "DEPOSIT_PAID", label: "Đã cọc" },
+    { value: "FULLY_PAID", label: "Đã thanh toán" },
   ];
 
   const updatePaymentStatus = async (id, newStatus) => {
     try {
-    //  console.log('Updating payment status:', id, newStatus); // Debug log
-      await api.patch(`/api/projects/${id}/payment-status`, { 
-        paymentStatus: newStatus  // Đổi tên parameter thành paymentStatus
+      await api.patch(`/api/projects/${id}/payment-status`, {
+        paymentStatus: newStatus,
       });
-      message.success("Cập nhật trạng thái thanh toán thành công!");
+      toast.success("Cập nhật trạng thái thanh toán thành công!");
       fetchOrders();
     } catch (err) {
-      console.error('Error updating payment status:', err);
-      message.error(err.response?.data?.message || "Lỗi cập nhật trạng thái thanh toán.");
+      console.error("Error updating payment status:", err);
+      toast.error(
+        err.response?.data?.message || "Lỗi khi cập nhật trạng thái thanh toán"
+      );
     }
   };
 
   const columns = [
     {
-      title: 'STT',
-      key: 'stt',
+      title: "STT",
+      key: "stt",
       render: (_, __, index) => index + 1,
       width: 60,
     },
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
       hidden: true, // This will hide the column
     },
     {
-      title: 'Tên',
-      dataIndex: 'name',
-      key: 'name',
+      title: "Tên",
+      dataIndex: "name",
+      key: "name",
       width: 150,
     },
     {
-      title: 'Mô tả',
-      dataIndex: 'description',
-      key: 'description',
+      title: "Mô tả",
+      dataIndex: "description",
+      key: "description",
       width: 200,
       render: (text, record) => {
         if (!text) return null;
-        const isExpanded = expandedRows[record.id];
-        const shortText = text.slice(0, 10);
+        const shortText = text.slice(0, 50) + "...";
         return (
           <>
-            {isExpanded ? text : shortText}
-            {text.length > 100 && (
-              <Button 
-                type="link" 
-                onClick={() => toggleDescription(record.id)}
+            <span>{shortText}</span>
+            {text.length > 50 && (
+              <Button
+                type="link"
+                onClick={() => {
+                  setSelectedDescription(text);
+                  setDescriptionModalVisible(true);
+                }}
                 icon={<EllipsisOutlined />}
               >
-                {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+                Xem thêm
               </Button>
             )}
           </>
@@ -165,78 +195,80 @@ const Orders = () => {
       },
     },
     {
-      title: 'Tổng giá',
-      dataIndex: 'totalPrice',
-      key: 'totalPrice',
+      title: "Tổng giá",
+      dataIndex: "totalPrice",
+      key: "totalPrice",
       width: 100,
     },
     {
-      title: 'Tiền cọc',
-      dataIndex: 'depositAmount',
-      key: 'depositAmount',
+      title: "Tiền cọc",
+      dataIndex: "depositAmount",
+      key: "depositAmount",
       width: 100,
     },
     {
-      title: 'Ngày BĐ',
-      dataIndex: 'startDate',
-      key: 'startDate',
+      title: "Ngày bắt đầu",
+      dataIndex: "startDate",
+      key: "startDate",
       width: 100,
     },
     {
-      title: 'Ngày KT',
-      dataIndex: 'endDate',
-      key: 'endDate',
+      title: "Ngày kết thúc",
+      dataIndex: "endDate",
+      key: "endDate",
       width: 100,
     },
     {
-      title: 'Khách hàng',
-      dataIndex: 'customerId',
-      key: 'customerId',
+      title: "Khách hàng",
+      dataIndex: "customerId",
+      key: "customerId",
       width: 150,
       hidden: true,
     },
     {
-      title: 'NV TV',
-      dataIndex: 'consultantId',
-      key: 'consultantId',
+      title: "NV TV",
+      dataIndex: "consultantId",
+      key: "consultantId",
       width: 100,
       hidden: true,
     },
     {
-      title: 'Trạng thái',
-      dataIndex: 'statusName',
-      key: 'statusName',
+      title: "Trạng thái",
+      dataIndex: "statusName",
+      key: "statusName",
       width: 120,
       render: (statusName) => {
-        const status = statusOptions.find(s => s.value === statusName);
+        const status = statusOptions.find((s) => s.value === statusName);
         return status ? status.label : statusName;
       },
     },
     {
-      title: 'Ngày tạo',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
+      title: "Ngày tạo",
+      dataIndex: "createdAt",
+      key: "createdAt",
       width: 150,
-      render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss'),
+      render: (date) => moment(date).format("YYYY-MM-DD HH:mm:ss"),
     },
     {
-      title: 'Thanh toán',
-      dataIndex: 'paymentStatus',
-      key: 'paymentStatus',
+      title: "Thanh toán",
+      dataIndex: "paymentStatus",
+      key: "paymentStatus",
       width: 150,
       render: (paymentStatus, record) => {
-        const menu = (
-          <Menu onClick={({ key }) => updatePaymentStatus(record.id, key)}>
-            {paymentStatusOptions.map(status => (
-              <Menu.Item key={status.value}>{status.label}</Menu.Item>
-            ))}
-          </Menu>
-        );
+        const menuItems = {
+          items: paymentStatusOptions.map((status) => ({
+            key: status.value,
+            label: status.label,
+          })),
+          onClick: ({ key }) => updatePaymentStatus(record.id, key),
+        };
 
-        const currentStatus = paymentStatusOptions.find(s => s.value === paymentStatus)?.label || 'Chưa thanh toán';
+        const currentStatus =
+          paymentStatusOptions.find((s) => s.value === paymentStatus)?.label ||
+          "Chưa thanh toán";
 
         return (
-          <Dropdown overlay={menu}>
+          <Dropdown menu={menuItems}>
             <Button>
               {currentStatus} <DownOutlined />
             </Button>
@@ -245,26 +277,28 @@ const Orders = () => {
       },
     },
     {
-      title: 'Hành động',
-      key: 'actions',
+      title: "Hành động",
+      key: "actions",
       width: 100,
       render: (_, record) => {
-        const menu = (
-          <Menu onClick={({ key }) => updateOrderStatus(record.id, key)}>
-            {statusOptions.map(status => (
-              <Menu.Item key={status.value}>{status.label}</Menu.Item>
-            ))}
-          </Menu>
-        );
+        const menuItems = {
+          items: statusOptions.map((status) => ({
+            key: status.value,
+            label: status.label,
+          })),
+          onClick: ({ key }) => updateOrderStatus(record.id, key),
+        };
 
         return (
           <>
-            <Button 
-              icon={<EditOutlined />} 
-              onClick={() => handleEdit(record)} 
-              style={{ marginRight: 8 }}
-            />
-            <Dropdown overlay={menu}>
+            <Tooltip title="Chỉnh sửa đơn hàng">
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(record)}
+                style={{ marginRight: 8 }}
+              />
+            </Tooltip>
+            <Dropdown menu={menuItems}>
               <Button icon={<DownOutlined />} />
             </Dropdown>
           </>
@@ -277,35 +311,81 @@ const Orders = () => {
     <div>
       <h1>Đơn hàng của khách hàng</h1>
       <Table
-        columns={columns.filter(column => !column.hidden)}
+        columns={columns.filter((column) => !column.hidden)}
         dataSource={orders}
         loading={loading}
         rowKey="id"
-        pagination={{ defaultSortOrder: 'descend' }}
+        pagination={{ defaultSortOrder: "descend" }}
       />
       <Modal
-        title="Edit Order"
-        visible={isModalVisible}
+        title="Chỉnh sửa đơn hàng"
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
       >
         <Form form={form} onFinish={handleUpdate} layout="vertical">
-          <Form.Item name="name" label="Name" rules={[{ required: true }]}>
-            <Input readOnly/>
+          <Form.Item
+            name="name"
+            label="Tên khách hàng"
+            rules={[{ required: true }]}
+          >
+            <Input readOnly />
           </Form.Item>
-          <Form.Item name="description" label="Description">
-            <Input.TextArea readOnly/>
+          <Form.Item name="description" label="Mô tả">
+            <Space direction="vertical" style={{ width: "100%" }}>
+              {!isShowingDetail ? (
+                <Button type="primary" onClick={() => setIsShowingDetail(true)}>
+                  Xem chi tiết
+                </Button>
+              ) : (
+                <>
+                  <div
+                    dangerouslySetInnerHTML={createMarkup(
+                      form.getFieldValue("description")
+                    )}
+                    style={{
+                      border: "1px solid #d9d9d9",
+                      borderRadius: "2px",
+                      padding: "10px",
+                      minHeight: "200px",
+                      maxHeight: "400px",
+                      overflowY: "auto",
+                      backgroundColor: "#fff",
+                      fontSize: "14px",
+                      lineHeight: "1.6",
+                    }}
+                  />
+                  <Button onClick={() => setIsShowingDetail(false)}>
+                    Thu gọn
+                  </Button>
+                </>
+              )}
+            </Space>
           </Form.Item>
-          <Form.Item name="totalPrice" label="Total Price" rules={[{ required: true }]}>
+          <Form.Item
+            name="totalPrice"
+            label="Tổng giá tiền"
+            rules={[{ required: true }]}
+          >
             <InputNumber min={0} />
           </Form.Item>
-          <Form.Item name="depositAmount" label="Deposit Amount">
+          <Form.Item name="depositAmount" label="Số tiền gửi">
             <InputNumber min={0} />
           </Form.Item>
-          <Form.Item name="startDate" label="Start Date" rules={[{ required: true }]} readOnly>
+          <Form.Item
+            name="startDate"
+            label="Ngày bắt đầu"
+            rules={[{ required: true }]}
+            readOnly
+          >
             <DatePicker readOnly />
           </Form.Item>
-          <Form.Item name="endDate" label="End Date" rules={[{ required: true }]} readOnly>
+          <Form.Item
+            name="endDate"
+            label="Ngày kết thúc"
+            rules={[{ required: true }]}
+            readOnly
+          >
             <DatePicker readOnly />
           </Form.Item>
           <Form.Item name="customerId" label="Customer ID" hidden>
@@ -314,15 +394,44 @@ const Orders = () => {
           <Form.Item name="consultantId" label="Consultant ID" hidden>
             <Input />
           </Form.Item>
-          <Form.Item name="createdAt" label="Created At" readOnly>
-            <Input readOnly/>
+          <Form.Item name="createdAt" label="Được tạo ngày" readOnly>
+            <Input readOnly />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
-              Update Order
+              Cập nhật đơn hàng
             </Button>
           </Form.Item>
         </Form>
+      </Modal>
+      <Modal
+        title="Mô tả thiết kế"
+        open={descriptionModalVisible}
+        onCancel={() => setDescriptionModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setDescriptionModalVisible(false)}>
+            Đóng
+          </Button>,
+        ]}
+        width={700}
+        maskClosable={true}
+        centered
+        styles={{
+          body: {
+            maxHeight: "80vh",
+            overflowY: "auto",
+          },
+        }}
+      >
+        <div
+          style={{
+            padding: "20px",
+            fontSize: "14px",
+            lineHeight: "1.6",
+            color: "rgba(0, 0, 0, 0.85)",
+          }}
+          dangerouslySetInnerHTML={createMarkup(selectedDescription)}
+        />
       </Modal>
     </div>
   );

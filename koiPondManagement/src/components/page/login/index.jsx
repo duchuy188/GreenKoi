@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Form, Input, Row, Col, Card } from "antd";
-import { GoogleOutlined } from "@ant-design/icons";
+import { GoogleOutlined, UserOutlined, LockOutlined, HomeOutlined, UserAddOutlined } from "@ant-design/icons";
 import { toast } from "react-toastify";
 import api from "../../config/axios";
 import { useDispatch } from "react-redux";
@@ -10,6 +10,7 @@ import { getAuth, signInWithPopup } from "firebase/auth";
 import { googleProvider } from "../../config/firebase";
 import { GoogleAuthProvider } from "firebase/auth/web-extension";
 import ReCAPTCHA from "react-google-recaptcha";
+import './login.css';
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -104,42 +105,19 @@ function LoginPage() {
   };
 
   return (
-    <Row className="min-h-screen">
-      {/* Left section - Image (2/3) */}
-      <Col xs={0} sm={0} md={16} style={{ height: "100vh" }}>
-        <img
-          src="img\images3.jpg"
-          alt="Login"
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-          }}
-        />
-      </Col>
+    <div className="auth-background">
+      <div className="auth-overlay"></div>
+      <div className="auth-container">
+        <div className="auth-form-container">
+          {/* Left section - Image */}
+          <div className="auth-image-section">
+            <div className="auth-image-content text-white">           
+              <p className="mb-8">Welcome Back! Please Login To Your Account</p>
+            </div>
+          </div>
 
-      {/* Right section - Login Form (1/3) */}
-      <Col xs={24} sm={24} md={8}>
-        <div
-          style={{
-            padding: "24px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            minHeight: "100vh",
-          }}
-        >
-          <Card>
-            <h1
-              style={{
-                textAlign: "center",
-                fontSize: "24px",
-                marginBottom: "24px",
-              }}
-            >
-              Đăng nhập
-            </h1>
-
+          {/* Right section - Form */}
+          <div className="auth-form-section">
             <Form
               name="login"
               initialValues={{ remember: true }}
@@ -148,30 +126,30 @@ function LoginPage() {
             >
               <Form.Item
                 name="username"
-                rules={[
-                  {
-                    required: true,
-                    message: "Vui lòng nhập tên đăng nhập của bạn!",
-                  },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập của bạn!" }]}
               >
-                <Input placeholder="Tên đăng nhập" size="large" />
+                <Input 
+                  prefix={<UserOutlined className="text-gray-400" />}
+                  placeholder="Tên đăng nhập" 
+                  size="large"
+                  className="auth-input"
+                />
               </Form.Item>
 
               <Form.Item
                 name="password"
-                rules={[
-                  {
-                    required: true,
-                    message: "Vui lòng nhập mật khẩu của bạn!",
-                  },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập mật khẩu của bạn!" }]}
               >
-                <Input.Password placeholder="Mật khẩu" size="large" />
+                <Input.Password 
+                  prefix={<LockOutlined className="text-gray-400" />}
+                  placeholder="Mật khẩu" 
+                  size="large"
+                  className="auth-input"
+                />
               </Form.Item>
 
               <Form.Item>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                <div className="recaptcha-container">
                   <ReCAPTCHA
                     ref={recaptchaRef}
                     sitekey="6Lc9km8qAAAAAAyctYyCl8BSTikQFuuVmWWeXg3f"
@@ -181,53 +159,24 @@ function LoginPage() {
               </Form.Item>
 
               <Form.Item>
-                <Button type="primary" htmlType="submit" block size="large">
+                <Button type="primary" htmlType="submit" block size="large" className="login-btn">
                   Đăng nhập
                 </Button>
               </Form.Item>
 
-              <Form.Item>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: "20px",
-                  }}
-                >
-                  <Link to="/register">Đăng ký tài khoản</Link>
-                  <Link to="/">Quay Về trang chủ</Link>
-                </div>
-              </Form.Item>
+              <div className="auth-links text-center mt-4">
+                <Link to="/register" className="me-4 hover:text-primary">
+                  <UserAddOutlined className="mr-1" />
+                  Đăng ký tài khoản
+                </Link>
+                <Link to="/" className="hover:text-primary">
+                  <HomeOutlined className="mr-1" />
+                  Quay về trang chủ
+                </Link>
+              </div>
 
-              <div
-                style={{
-                  position: "relative",
-                  textAlign: "center",
-                  margin: "16px 0",
-                }}
-              >
-                <span
-                  style={{
-                    backgroundColor: "#fff",
-                    padding: "0 8px",
-                    color: "#999",
-                    position: "relative",
-                    zIndex: 1,
-                  }}
-                >
-                  Hoặc
-                </span>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    top: "50%",
-                    height: 1,
-                    backgroundColor: "#f0f0f0",
-                    zIndex: 0,
-                  }}
-                />
+              <div className="divider">
+                <span className="divider-text">Hoặc</span>
               </div>
 
               <Form.Item>
@@ -236,15 +185,16 @@ function LoginPage() {
                   size="large"
                   icon={<GoogleOutlined />}
                   onClick={handleLoginGoogle}
+                  className="google-btn"
                 >
                   Đăng nhập bằng Google
                 </Button>
               </Form.Item>
             </Form>
-          </Card>
+          </div>
         </div>
-      </Col>
-    </Row>
+      </div>
+    </div>
   );
 }
 

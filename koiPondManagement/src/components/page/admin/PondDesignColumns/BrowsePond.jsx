@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Button, message, Card, Table, Modal, Input, Tag } from "antd";
+import {
+  Button,
+  Card,
+  Table,
+  Modal,
+  Input,
+  Tag,
+  Popconfirm,
+  Select,
+} from "antd";
+import { toast } from "react-toastify";
 import api from "../../../config/axios";
 
 const { TextArea } = Input;
@@ -8,14 +18,16 @@ function BrowsePond() {
   const [posts, setPosts] = useState([]);
   const [approvedPosts, setApprovedPosts] = useState([]);
   const [postsLoading, setPostsLoading] = useState(false);
-  const [submitModalVisible, setSubmitModalVisible] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
-  const [actionType, setActionType] = useState("");
   const [isContentModalVisible, setIsContentModalVisible] = useState(false);
   const [currentContent, setCurrentContent] = useState("");
   const [rejectReason, setRejectReason] = useState("");
   // Add refresh trigger state
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  // Add back these states for reject modal
+  const [submitModalVisible, setSubmitModalVisible] = useState(false);
+  // Thêm state mới cho filter
+  const [activeFilter, setActiveFilter] = useState("all");
 
   const fetchPosts = async () => {
     setPostsLoading(true);
@@ -23,7 +35,7 @@ function BrowsePond() {
       const response = await api.get("/api/blog/posts/pending");
       setPosts(response.data);
     } catch (err) {
-      message.error(
+      toast.error(
         "Không thể lấy bài viết blog đang chờ: " +
           (err.response?.data?.message || err.message)
       );
@@ -38,7 +50,7 @@ function BrowsePond() {
       const response = await api.get("/api/blog/posts/approved/all");
       setApprovedPosts(response.data);
     } catch (err) {
-      message.error(
+      toast.error(
         "Không thể lấy bài viết blog đã duyệt: " +
           (err.response?.data?.message || err.message)
       );
@@ -58,37 +70,35 @@ function BrowsePond() {
     fetchApprovedPosts();
   }, [refreshTrigger]); // Add refreshTrigger as dependency
 
-  const openActionModal = (post, action) => {
-    setSelectedPost(post);
-    setActionType(action);
-    setRejectReason("");
-    setSubmitModalVisible(true);
-  };
-
   const openContentModal = (content) => {
     setCurrentContent(content);
     setIsContentModalVisible(true);
   };
 
-  const handleBlogAction = async () => {
-    if (!selectedPost) return;
+  // Add function to open reject modal
+  const openRejectModal = (post) => {
+    setSelectedPost(post);
+    setRejectReason("");
+    setSubmitModalVisible(true);
+  };
+
+  // Modify handleBlogAction for reject case
+  const handleBlogAction = async (post, action, reason = "") => {
     try {
-      if (actionType === "approve") {
-        await api.post(`/api/blog/posts/${selectedPost.id}/approve`);
-        message.success("Duyệt blog thành công");
-      } else if (actionType === "reject") {
-        // Sửa lại body request khi reject
+      if (action === "approve") {
+        await api.post(`/api/blog/posts/${post.id}/approve`);
+        toast.success("Duyệt blog thành công");
+      } else if (action === "reject") {
         await api.post(`/api/blog/posts/${selectedPost.id}/reject`, {
-          reason: rejectReason, // Gửi reason thay vì additionalProps
+          reason: rejectReason,
         });
-        message.success("Từ chối blog thành công");
+        toast.success("Từ chối blog thành công");
+        setSubmitModalVisible(false);
       }
       refreshData();
-      setSubmitModalVisible(false);
-      setSelectedPost(null);
     } catch (err) {
-      message.error(
-        `Không thể ${actionType} blog: ` +
+      toast.error(
+        `Không thể ${action} blog: ` +
           (err.response?.data?.message || err.message)
       );
     }
@@ -97,10 +107,10 @@ function BrowsePond() {
   const handleDeletePost = async (postId) => {
     try {
       await api.delete(`/api/blog/posts/${postId}`);
-      message.success("Xóa blog thành công");
-      refreshData(); // Trigger refresh after delete
+      toast.success("Ẩn bài viết thành công");
+      refreshData();
     } catch (err) {
-      message.error(
+      toast.error(
         "Không thể xóa bài viết blog: " +
           (err.response?.data?.message || err.message)
       );
@@ -110,10 +120,10 @@ function BrowsePond() {
   const handleRestorePost = async (postId) => {
     try {
       await api.post(`/api/blog/posts/${postId}/restore`);
-      message.success("Khôi phục blog thành công");
-      refreshData(); // Trigger refresh after restore
+      toast.success("Khôi phục blog thành công");
+      refreshData();
     } catch (err) {
-      message.error(
+      toast.error(
         "Không thể khôi phục bài viết blog: " +
           (err.response?.data?.message || err.message)
       );
@@ -195,17 +205,16 @@ function BrowsePond() {
       key: "actions",
       render: (text, record) => (
         <>
-          <Button
-            type="primary"
-            onClick={() => openActionModal(record, "approve")}
+          <Popconfirm
+            title="Xác nhận"
+            description="Bạn có chấp nhận thiết kế blog này không?"
+            onConfirm={() => handleBlogAction(record, "approve")}
+            okText="Đồng ý"
+            cancelText="Hủy"
           >
-            Chấp Nhận
-          </Button>
-          <Button
-            type="primary"
-            danger
-            onClick={() => openActionModal(record, "reject")}
-          >
+            <Button type="primary">Chấp Nhận</Button>
+          </Popconfirm>
+          <Button type="primary" danger onClick={() => openRejectModal(record)}>
             Không chấp nhận
           </Button>
         </>
@@ -225,7 +234,7 @@ function BrowsePond() {
               danger
               onClick={() => handleDeletePost(record.id)}
             >
-              Xóa
+              Ẩn bài viết
             </Button>
           ) : (
             <Button
@@ -241,11 +250,23 @@ function BrowsePond() {
     },
   ];
 
+  // Thêm hàm lọc data
+  const getFilteredApprovedPosts = () => {
+    switch (activeFilter) {
+      case "active":
+        return approvedPosts.filter((post) => post.active);
+      case "inactive":
+        return approvedPosts.filter((post) => !post.active);
+      default:
+        return approvedPosts;
+    }
+  };
+
   return (
     <div style={{ maxWidth: 1500, margin: "0 0 0 -30px", padding: 24 }}>
       <Card className="mb-8">
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Chờ duyệt Blog </h2>
+          <h1>Chờ duyệt Blog</h1>
           <Table
             columns={columns}
             dataSource={posts}
@@ -258,10 +279,22 @@ function BrowsePond() {
 
       <Card className="mt-8">
         <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4"> Quản lý Blog</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h1>Quản lý Blog</h1>
+            <Select
+              defaultValue="all"
+              style={{ width: 200 }}
+              onChange={(value) => setActiveFilter(value)}
+              options={[
+                { value: "all", label: "Tất cả trạng thái" },
+                { value: "active", label: "Đang hoạt động" },
+                { value: "inactive", label: "Không hoạt động" },
+              ]}
+            />
+          </div>
           <Table
             columns={approvedColumns}
-            dataSource={approvedPosts}
+            dataSource={getFilteredApprovedPosts()}
             rowKey="id"
             loading={postsLoading}
             pagination={{ pageSize: 5 }}
@@ -269,27 +302,25 @@ function BrowsePond() {
         </div>
       </Card>
 
-      {/* Action confirmation modal */}
+      {/* Add back the reject modal */}
       <Modal
-        title={actionType === "approve" ? "Approve Blog" : "Từ chối"}
+        title="Từ chối"
         open={submitModalVisible}
-        onOk={handleBlogAction}
+        onOk={() => handleBlogAction(selectedPost, "reject")}
         onCancel={() => setSubmitModalVisible(false)}
         okText="Xác nhận"
         cancelText="Hủy"
         okButtonProps={{
-          disabled: actionType === "reject" && !rejectReason.trim(),
+          disabled: !rejectReason.trim(),
         }}
       >
-        {actionType === "reject" && (
-          <TextArea
-            placeholder="Nhập lý do từ chối..."
-            value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
-            rows={4}
-            required
-          />
-        )}
+        <TextArea
+          placeholder="Nhập lý do từ chối..."
+          value={rejectReason}
+          onChange={(e) => setRejectReason(e.target.value)}
+          rows={4}
+          required
+        />
       </Modal>
 
       {/* Content modal */}

@@ -7,7 +7,8 @@ function PondDesignColumns() {
   const [pondDesigns, setPondDesigns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isRejectModalVisible, setIsRejectModalVisible] = useState(false);
-  const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
+  const [isDescriptionModalVisible, setIsDescriptionModalVisible] =
+    useState(false);
   const [selectedDesignId, setSelectedDesignId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [currentDescription, setCurrentDescription] = useState("");
@@ -19,7 +20,9 @@ function PondDesignColumns() {
       if (Array.isArray(response.data)) {
         setPondDesigns(response.data);
       } else {
-        toast.error("Không thể tải thiết kế hồ. Cấu trúc dữ liệu không mong đợi.");
+        toast.error(
+          "Không thể tải thiết kế hồ. Cấu trúc dữ liệu không mong đợi."
+        );
         setPondDesigns([]);
       }
     } catch (err) {
@@ -36,7 +39,9 @@ function PondDesignColumns() {
       toast.success("Chấp thuận thiết kế hồ thành công!");
       fetchPendingPondDesigns();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Lỗi khi chấp thuận thiết kế hồ.");
+      toast.error(
+        err.response?.data?.message || "Lỗi khi chấp thuận thiết kế hồ."
+      );
     }
   };
 
@@ -49,7 +54,9 @@ function PondDesignColumns() {
       setRejectionReason("");
       fetchPendingPondDesigns();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Lỗi khi từ chối thiết kế hồ.");
+      toast.error(
+        err.response?.data?.message || "Lỗi khi từ chối thiết kế hồ."
+      );
     }
   };
 
@@ -73,7 +80,12 @@ function PondDesignColumns() {
   };
 
   const PondDesignColumns = [
-    { title: "ID", dataIndex: "id", key: "id", render: (text, record, index) => index + 1},
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+      render: (text, record, index) => index + 1,
+    },
     { title: "Tên Hồ", dataIndex: "name", key: "name" },
     {
       title: "Mô tả",
@@ -159,6 +171,7 @@ function PondDesignColumns() {
 
   return (
     <div>
+      <h1>Quản lý thiết kế hồ</h1>
       <Table
         dataSource={pondDesigns}
         columns={PondDesignColumns}
@@ -186,9 +199,10 @@ function PondDesignColumns() {
         title="Mô tả chi tiết"
         open={isDescriptionModalVisible}
         onOk={() => setIsDescriptionModalVisible(false)}
+        onCancel={() => setIsDescriptionModalVisible(false)}
         closable={true}
         okText="Đóng"
-        cancelButtonProps={{ style: { display: 'none' } }}
+        cancelButtonProps={{ style: { display: "none" } }}
       >
         <div dangerouslySetInnerHTML={{ __html: currentDescription }} />
       </Modal>
