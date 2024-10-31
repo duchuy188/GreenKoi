@@ -1,0 +1,48 @@
+.maintenance-statistics {
+  padding: 20px;
+}
+
+.maintenance-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.maintenance-stat-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.maintenance-stat-section h3 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.stat-items {
+  display: grid;
+  gap: 15px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.stat-item h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.stat-item span {
+  font-size: 16px;
+  font-weight: bold;
+  color: #2196f3;
+} 

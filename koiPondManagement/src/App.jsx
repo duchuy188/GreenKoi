@@ -43,6 +43,8 @@ import Maintenance from "./components/page/admin/manage-maintenance";
 import MaintenanceRequest from "./components/page/admin/consulting/maintenance";
 import ConstrucMain from "./components/page/admin/construction/construc-main";
 import ConstrucReviewComplete from "./components/page/admin/construction/construc-reviewcomplete";
+import Statistics from "./components/page/admin/manage-dashboard/statistics/Statistics";
+
 function App() {
   const router = createBrowserRouter([
     {
@@ -120,7 +122,10 @@ function App() {
               path: "usermanagement",
               element: <UserManagement/>,
             },
-           // pond design
+            {
+              path: "statistics",
+              element: <Statistics />,
+            },
             {
               path: "ponddesign",
               element: <PondDesign/>,
@@ -201,6 +206,7 @@ function App() {
             //   path: "sevice",
             //   element: <Sevice />,
             // },
+            
           ],
         },
       ],

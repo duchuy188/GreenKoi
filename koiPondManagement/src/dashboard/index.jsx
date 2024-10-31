@@ -5,6 +5,7 @@ import {
   CommentOutlined,
   LogoutOutlined,
   DownOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
 import {
   Breadcrumb,
@@ -34,12 +35,11 @@ function getItem(label, key, icon, children) {
 }
 
 const items = [
-  // getItem(
-  //   <Link to="/dashboard/category">Category</Link>,
-  //   "category",
-  //   <PieChartOutlined />
-  // ),
+  getItem("Trang chủ", "dashboard", <HomeOutlined />, [
+    getItem(<Link to="/dashboard/statistics">Thống kê</Link>, "statistics"),
+  ]),
   getItem("Quản lý", "management", <UserOutlined />, [
+    
     getItem(
       <Link to="/dashboard/usermanagement">Quản lý tài khoản</Link>,
       "usermanagement"
@@ -137,18 +137,12 @@ const Dashboard = () => {
 
   const isAllowed = (path) => {
     const roleId = Number(user.roleId);
-    // Allow access to /dashboard/category for all roles
-    if (path.includes("category")) {
-      return true;
-    }
-
-    if (
-      path.includes("usermanagement") ||
-      path.includes("ponddesigncolumns") ||
-      path.includes("orderlist") ||
-      path.includes("browsepond") ||
-      path.includes("maintenance-manager")
-    ) {
+    if (path.includes("statistics") || 
+        path.includes("usermanagement") || 
+        path.includes("orderlist") || 
+        path.includes("ponddesigncolumns") || 
+        path.includes("browsepond") || 
+        path.includes("maintenance-manager")) {
       console.log("Checking manager access:", roleId === 1);
       return roleId === 1; // Manager
     }
@@ -230,7 +224,10 @@ const Dashboard = () => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user) {
       const roleId = Number(user.roleId);
-      setOpenKeys(getDefaultOpenKeys(roleId));
+
+      if (roleId === 1) {
+        navigate("/dashboard/statistics");
+      }
       switch (roleId) {
         case 1: // Manager
           navigate("/dashboard/usermanagement");
