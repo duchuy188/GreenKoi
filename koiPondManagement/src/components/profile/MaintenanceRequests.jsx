@@ -139,7 +139,7 @@ function MaintenanceRequests() {
     return (
       <Modal
         title="Chi tiết yêu cầu bảo trì"
-        visible={detailModalVisible}
+        open={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={[
           <Button key="close" onClick={() => setDetailModalVisible(false)}>
