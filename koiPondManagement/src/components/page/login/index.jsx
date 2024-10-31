@@ -81,17 +81,21 @@ function LoginPage() {
       if (err.response) {
         if (
           err.response.status === false &&
-          err.response.data.message === "Tài khoản bị chặn"
+          err.response.data.message === "Account is blocked"
         ) {
           toast.error(
-            "Tài khoản của bạn đã bị chặn. Vui lòng liên hệ với quản trị viên."
+            "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên."
+          );
+        } else if (err.response.data.message === "Account is blocked. Please contact the administrator.") {
+          toast.error(
+            "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên."
           );
         } else if (err.response.data.message === "Authentication failed: Incorrect password") {
           toast.error("Vui lòng kiểm tra tên tài khoản, mật khẩu");
         } else {
           toast.error(
             err.response.data.message ||
-              "Đăng nhập không thành công. Vui lòng kiểm tra thông tin đăng nhập của bạn."
+            "Đăng nhập không thành công. Vui lòng kiểm tra thông tin đăng nhập của bạn."
           );
         }
       } else if (err.request) {
@@ -109,14 +113,14 @@ function LoginPage() {
       <div className="auth-overlay"></div>
       <div className="auth-container">
         <div className="auth-form-container">
-          {/* Left section - Image */}
+          {/* Phần bên trái - Hình ảnh */}
           <div className="auth-image-section">
             <div className="auth-image-content text-white">           
-              <p className="mb-8">Welcome Back! Please Login To Your Account</p>
+              <p className="mb-8">Chào bạn! Vui lòng đăng nhập vào tài khoản của bạn</p>
             </div>
           </div>
 
-          {/* Right section - Form */}
+          {/* Phần bên phi - Form đăng nhập */}
           <div className="auth-form-section">
             <Form
               name="login"
