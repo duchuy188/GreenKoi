@@ -15,6 +15,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "../../../config/firebase"; // Đường dẫn đến file firebase.js
 import api from "../../../config/axios";
 import { useLocation, useNavigate } from "react-router-dom"; // Thêm useNavigate
+import { toast } from "react-toastify";
 
 function PondDesign() {
   const [form] = Form.useForm();
@@ -92,17 +93,17 @@ function PondDesign() {
 
       if (pondData) {
         await api.put(`/api/pond-designs/${pondData.id}`, pondValues); // Sửa dấu backtick
-        message.success("Cập nhật thiết kế hồ thành công");
+        toast.success("Cập nhật thiết kế hồ thành công");
         navigate("/dashboard/designproject");
       } else {
         await api.post("/api/pond-designs", pondValues);
-        message.success("Tạo thiết kế hồ thành công");
+        toast.success("Tạo thiết kế hồ thành công");
         navigate("/dashboard/ponddesign");
       }
       form.resetFields();
       setDescriptionData(""); // Reset CKEditor
     } catch (err) {
-      message.error(
+      toast.error(
         "Không thể " +
           (pondData ? "cập nhật" : "tạo") +
           " thiết kế hồ: " +

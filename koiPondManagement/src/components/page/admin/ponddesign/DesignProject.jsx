@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../../config/axios";
 import { RiDeleteBin2Fill } from "react-icons/ri";
 import { FaEdit } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -55,7 +56,7 @@ function DesignProject() {
       setLoading(true);
       if (pondData) {
         await api.put(`/api/pond-designs/${pondData.id}`, values); // Sửa dấu backtick
-        message.success("Cập nhật thiết kế hồ thành công");
+        toast.success("Cập nhật thiết kế hồ thành công");
         setPondData(null);
         setIsEditModalVisible(false);
       } else {
@@ -65,7 +66,7 @@ function DesignProject() {
       form.resetFields();
       fetchDesignerPonds();
     } catch (err) {
-      message.error(
+      toast.error(
         "Cập nhật thiết kế hồ thất bại: " +
           (err.response?.data?.message || err.message)
       );
@@ -79,10 +80,10 @@ function DesignProject() {
     try {
       setLoading(true);
       await api.delete(`/api/pond-designs/${id}`); // Sửa dấu backtick
-      message.success("Xóa thiết kế hồ thành công");
+      toast.success("Xóa thiết kế hồ thành công");
       fetchDesignerPonds();
     } catch (err) {
-      message.error(
+      toast.error(
         "Xóa thiết kế hồ thất bại: " +
           (err.response?.data?.message || err.message)
       );
