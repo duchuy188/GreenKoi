@@ -1,13 +1,23 @@
 import { useEffect, useState } from 'react';
 import axios from '../../../../../config/axios';
+import { Doughnut } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend
+} from 'chart.js';
 import './UserStatistics.css';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const UserStatistics = () => {
   const [userStats, setUserStats] = useState({
     totalUsers: 0,
     customerCount: 0,
-    designerCount: 0,
-    constructorCount: 0
+    constructorCount: 0,
+    consultantCount: 0,
+    designerCount: 0
   });
 
   useEffect(() => {
@@ -23,39 +33,61 @@ const UserStatistics = () => {
     fetchUserStats();
   }, []);
 
-  return (
-    <div className="user-statistics">
-      {/* Thống kê tổng quan */}
-      <div className="stat-overview">
-        <div className="stat-card">
-          <h3>Người dùng</h3>
-          <p>Tổng số: {userStats.totalUsers}</p>
-          <p>Khách hàng: {userStats.customerCount}</p>
-          <p>Thiết kế: {userStats.designerCount}</p>
-          <p>Thi công: {userStats.constructorCount}</p>
-        </div>
-      </div>
+  const chartData = {
+    labels: ['Khách hàng', 'Nhà thầu', 'Tư vấn viên', 'Thiết kế'],
+    datasets: [{
+      data: [
+        userStats.customerCount,
+        userStats.constructorCount,
+        userStats.consultantCount,
+        userStats.designerCount
+      ],
+      backgroundColor: [
+        '#36A2EB',
+        '#FF6384',
+        '#FFCE56',
+        '#4BC0C0'
+      ],
+      borderWidth: 1,
+      borderColor: 'white',
+      cutout: '70%'
+    }]
+  };
 
-      {/* Biểu đồ phân bố */}
-      <div className="stat-charts">
-        {/* Biểu đồ cột theo độ tuổi */}
-        <div className="chart age-distribution">
-          <h3>Phân bố theo độ tuổi</h3>
-          <div className="bar-chart">
-            <div className="bar-group">
-              <div className="bar-item"></div>
-              <div className="bar-item"></div>
-              <div className="bar-item"></div>
-              <div className="bar-item"></div>
-              <div className="bar-item"></div>
-              <div className="bar-item"></div>
-              <div className="bar-item"></div>
-              <div className="bar-item"></div>
-              <div className="bar-item"></div>
-              <div className="bar-item"></div>
-            </div>
-          </div>
+  const options = {
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: {
+          usePointStyle: true,
+          padding: 15,
+          font: {
+            size: 12
+          }
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return ` ${context.label}: ${context.raw}`;
+          }
+        }
+      }
+    },
+    maintainAspectRatio: false,
+    layout: {
+      padding: 10
+    }
+  };
+
+  return (
+    <div className="user-statistics-card">
+      <div className="chart-wrapper">
+        <div className="total-count">
+          <span className="count-value">{userStats.totalUsers}</span>
+          <span className="count-label">Sessions</span>
         </div>
+        <Doughnut data={chartData} options={options} />
       </div>
     </div>
   );

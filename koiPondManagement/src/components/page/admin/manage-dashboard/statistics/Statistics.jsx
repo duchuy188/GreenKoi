@@ -48,24 +48,25 @@ const Statistics = () => {
   }, []);
 
   return (
-    <div className="statistics-container">
-      <div className="stats-grid">
-        <div className="stat-card">
+    <div className="dashboard-statistics-container">
+      <div className="dashboard-stats-grid">
+        <div className="dashboard-stat-card info">
+          <h3>Người dùng</h3>
+          <p>Tổng số: {stats.totalUsers}</p>
+          <p>Khách hàng: {stats.customerCount}</p>
+          <p>Tư vấn viên: {stats.consultantCount}</p>
+          <p>Thiết kế: {stats.designerCount}</p>
+          <p>Thi công: {stats.constructorCount}</p>
+        </div>
+
+        <div className="dashboard-stat-card primary">
           <h3>Dự án</h3>
           <p>Tổng số: {stats.totalProjects}</p>
           <p>Đang thực hiện: {stats.ongoingProjects}</p>
           <p>Đã hoàn thành: {stats.completedProjects}</p>
         </div>
 
-        <div className="stat-card">
-          <h3>Người dùng</h3>
-          <p>Tổng số: {stats.totalUsers}</p>
-          <p>Khách hàng: {stats.customerCount}</p>
-          <p>Thiết kế: {stats.designerCount}</p>
-          <p>Thi công: {stats.constructorCount}</p>
-        </div>
-
-        <div className="stat-card">
+        <div className="dashboard-stat-card success">
           <h3>Thiết kế</h3>
           <p>Tổng số: {stats.totalDesigns}</p>
           <p>Đang chờ: {stats.pendingDesigns}</p>
@@ -73,7 +74,7 @@ const Statistics = () => {
           <p>Đã từ chối: {stats.rejectedDesigns}</p>
         </div>
 
-        <div className="stat-card">
+        <div className="dashboard-stat-card warning">
           <h3>Blog</h3>
           <p>Tổng số: {stats.totalBlogPosts}</p>
           <p>Bản nháp: {stats.draftBlogPosts}</p>
@@ -81,7 +82,7 @@ const Statistics = () => {
           <p>Đã từ chối: {stats.rejectedBlogPosts}</p>
         </div>
 
-        <div className="stat-card">
+        <div className="dashboard-stat-card danger">
           <h3>Bảo trì</h3>
           <p>Tổng số: {stats.totalMaintenanceRequests}</p>
           <p>Đang chờ: {stats.pendingMaintenanceRequests}</p>
@@ -91,18 +92,34 @@ const Statistics = () => {
         </div>
       </div>
       
-      <div className="detailed-statistics">
-        <ProjectStatistics />
-        <UserStatistics />
-        <DesignStatistics />
-        <BlogStatistics />
+      <div className="dashboard-detailed-statistics">    
+        <div className="left-column">
+          <UserStatistics />  
+          <DesignStatistics />
+          
+        </div>
+
+        <div className="right-column">
+          
+          <ProjectStatistics />
+          <MaintenanceStatistics />
+          
+         
+          
+        </div>
+      </div>
+      <div className="dashboard-detailed-statistics1"> 
+        <div className="left-column1">
         <RevenueStatistics 
-          revenueData={{
-            totalRevenue: stats.totalRevenue,
-            revenueChartData: stats.revenueChartData
-          }} 
-        />
-        <MaintenanceStatistics />
+            revenueData={{
+              totalRevenue: stats.totalRevenue,
+              revenueChartData: stats.revenueChartData
+            }} 
+          />
+        </div>
+        <div className="right-column1">
+        <BlogStatistics />
+        </div>
       </div>
     </div>
   );

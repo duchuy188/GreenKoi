@@ -308,11 +308,12 @@ const Dashboard = () => {
         </Header>
         <Content
           style={{
-            margin: "16px",
-            padding: "24px",
+            margin: "0px",
+            padding: "0px",
             backgroundColor: "#fff",
             borderRadius: 8,
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+            width: "100%",
           }}
         >
           <Breadcrumb
@@ -329,6 +330,7 @@ const Dashboard = () => {
               padding: "24px",
               backgroundColor: "#f0f2f5",
               borderRadius: 8,
+              width: "100%",
             }}
           >
             {isAllowed(location.pathname) ? <Outlet /> : <AccessDenied />}
