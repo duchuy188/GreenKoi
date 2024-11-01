@@ -30,7 +30,7 @@ input::placeholder {
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: url('/img/images3.jpg');
+    background-image: url('https://images.unsplash.com/photo-1596753055375-7314a20f6106?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -42,7 +42,7 @@ input::placeholder {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
+    
   }
 
   .signup-container {
@@ -56,11 +56,12 @@ input::placeholder {
   }
 
   .signup-form-container {
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.6);
     border-radius: 8px;
     padding: 2rem;
     width: 100%;
     max-width: 900px;
+    background-color: #627825;
   }
 
  
@@ -87,7 +88,7 @@ input::placeholder {
   }
 
   .signup-btn {
-    background: linear-gradient(45deg, #808080, #A9A9A9) !important;
+    background-color: #000000 !important;
     border: none !important;
     height: 45px !important;
     font-size: 16px !important;
@@ -98,9 +99,9 @@ input::placeholder {
   }
 
   .signup-btn:hover {
-    background: linear-gradient(45deg, #A9A9A9, #808080) !important;
+    background: #333333 !important;
     transform: translateY(-1px) !important;
-    box-shadow: 0 4px 12px rgba(128, 128, 128, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
   }
 
 
@@ -128,3 +129,10 @@ input::placeholder {
         transform: translateY(0);
     }
   } 
+  .ant-btn-primary{
+    background: #000000 !important;
+  }
+
+  .ant-btn-primary.signup-btn {
+    background: linear-gradient(45deg, #808080, #A9A9A9) !important;
+  }

@@ -47,7 +47,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: url('https://images.unsplash.com/photo-1638528505546-d53296d1ff47?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+    background-image: url('https://images.unsplash.com/photo-1596753055375-7314a20f6106?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -59,7 +59,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
+    
 }
 
 .auth-container {
@@ -73,7 +73,7 @@
 }
 
 .auth-form-container {
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.6);
     border-radius: 8px;
     padding: 2rem;
     width: 100%;
@@ -81,6 +81,8 @@
     display: flex;
     overflow: hidden;
     animation: fadeIn 0.5s ease-out;
+    background-color: #627825;
+    
 }
 
 @keyframes fadeIn {
@@ -97,16 +99,17 @@
 /* Style cho phần ảnh bên trái */
 .auth-image-section {
     flex: 1;
-    background-image: url('https://images.unsplash.com/photo-1611812717947-f3af41818730?q=80&w=1867&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+    background-image: url('https://images-ext-1.discordapp.net/external/ePzogJg6v__OKNOxAcd6o4Cvjx-KlAmWBg9OISjPi3c/%3Fq%3D80%26w%3D1937%26auto%3Dformat%26fit%3Dcrop%26ixlib%3Drb-4.0.3%26ixid%3DM3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%253D%253D/https/images.unsplash.com/photo-1691062054226-b4b5aef84cc9?format=webp&width=504&height=671');
     background-size: cover;
     background-position: center;
-    min-height: 400px;
+    min-height: 100%;
     position: relative;
     border-radius: 8px 0 0 8px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     padding: 2rem;
+    margin: -2rem 0 -2rem -2rem;
 }
 
 .auth-image-section::before {
@@ -116,7 +119,6 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
     border-radius: 8px 0 0 8px;
 }
 
@@ -162,7 +164,7 @@
 
 .divider-text {
     color: rgba(255, 255, 255, 0.7);
-    background: rgba(0, 0, 0, 0.8);
+    /* background: rgba(0, 0, 0, 0.8); */
     padding: 0 15px;
     position: relative;
     z-index: 2;
@@ -204,11 +206,13 @@
 @media (max-width: 768px) {
     .auth-form-container {
         flex-direction: column;
+       
     }
     
     .auth-image-section {
-        border-radius: 8px 8px 0 0;
+        margin: -2rem -2rem 0;
         min-height: 200px;
+        border-radius: 8px 8px 0 0;
     }
 }
 

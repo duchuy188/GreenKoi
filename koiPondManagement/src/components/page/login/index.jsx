@@ -115,8 +115,7 @@ function LoginPage() {
         <div className="auth-form-container">
           {/* Phần bên trái - Hình ảnh */}
           <div className="auth-image-section">
-            <div className="auth-image-content text-white">           
-              <p className="mb-8">Chào bạn! Vui lòng đăng nhập vào tài khoản của bạn</p>
+            <div className="auth-image-content text-white">                        
             </div>
           </div>
 
