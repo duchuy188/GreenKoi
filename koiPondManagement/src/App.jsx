@@ -96,6 +96,10 @@ function App() {
           element: <ConstructionPage />,
         },
         {
+          path: "/baogiabaoduong",
+          element: <MaintenancePage />,
+        },
+        {
           path: "/lapthietketheoyeucau",
           element: <GardenDesignForm />,
         },
