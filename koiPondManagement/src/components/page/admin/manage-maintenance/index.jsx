@@ -59,7 +59,8 @@ const ManageMaintenance = () => {
         paymentStatus: request.paymentStatus || "UNPAID",
         paymentMethod: request.paymentMethod || "CASH",
         depositAmount: request.depositAmount || 0,
-        remainingAmount: request.remainingAmount || 0
+        remainingAmount: request.remainingAmount || 0,
+        agreedPrice: request.agreedPrice || 0
       }));
       
       setMaintenanceRequests(formattedData);
@@ -218,6 +219,17 @@ const ManageMaintenance = () => {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
       }).format(amount || 0)
+    },
+    { 
+      title: "Giá thỏa thuận", 
+      dataIndex: "agreedPrice", 
+      key: "agreedPrice",
+      render: (price) => new Intl.NumberFormat('vi-VN', { 
+        style: 'currency', 
+        currency: 'VND',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(price || 0)
     },
     {
       title: "Hành động",

@@ -18,6 +18,14 @@ import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import moment from 'moment';
 
+// Add a helper function to format currency
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(amount);
+};
+
 const MaintenanceRequest = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +96,7 @@ const MaintenanceRequest = () => {
       const response = await api.patch(`/api/maintenance-requests/${id}/review`);
       if (response.status === 200) {
         message.success("Bắt đầu xem xét yêu cầu bảo trì thành công");
-        fetchMaintenanceRequests(); // Refresh the list
+        fetchMaintenanceRequests(); 
       }
     } catch (error) {
       console.error("Error starting review:", error);
@@ -102,7 +110,7 @@ const MaintenanceRequest = () => {
 
       const response = await api.patch(`/api/maintenance-requests/${selectedRecord.id}/confirm`, {
         agreedPrice: values.agreedPrice,
-        paymentStatus: values.paymentStatus,
+        paymentStatus: 'DEPOSIT_PAID',
         paymentMethod: values.paymentMethod,
         depositAmount: values.depositAmount,
         remainingAmount: remainingAmount,
@@ -110,7 +118,11 @@ const MaintenanceRequest = () => {
       });
 
       if (response.status === 200) {
-        message.success("Cập nhật thành công");
+        if (values.paymentMethod === 'CASH') {
+          await api.post(`/api/maintenance-requests/${selectedRecord.id}/deposit/cash`);
+        }
+
+        message.success("Cập nhật và xác nhận đặt cọc thành công");
         setIsModalVisible(false);
         fetchMaintenanceRequests();
       }
@@ -127,10 +139,15 @@ const MaintenanceRequest = () => {
 
   const handleCancelModalOk = async () => {
     try {
+      if (!cancellationReason.trim()) {
+        message.error("Vui lòng nhập lý do hủy yêu cầu");
+        return;
+      }
+
       const response = await api.patch(`/api/maintenance-requests/${cancellingRequestId}/cancel`, {
-        cancellationReason: cancellationReason,
-        requestStatus: 'CANCELLED'  // Add this line to update the status
+        cancellationReason: cancellationReason
       });
+
       if (response.status === 200) {
         message.success("Yêu cầu bảo trì đã được hủy thành công");
         setIsCancelModalVisible(false);
@@ -162,6 +179,26 @@ const MaintenanceRequest = () => {
     } catch (error) {
       console.error("Error updating payment status:", error);
       toast.error("Không thể cập nhật trạng thái thanh toán");
+    }
+  };
+
+  const handleFinalPayment = async (record) => {
+    try {
+      const updateResponse = await api.patch(`/api/maintenance-requests/${record.id}/payment-status`, {
+        paymentStatus: 'FULLY_PAID'
+      });
+
+      if (updateResponse.status === 200) {
+        if (record.paymentMethod === 'CASH') {
+          await api.post(`/api/maintenance-requests/${record.id}/final/cash`);
+        }
+
+        message.success("Thanh toán cuối cùng đã được xác nhận");
+        fetchMaintenanceRequests();
+      }
+    } catch (error) {
+      console.error("Error processing final payment:", error);
+      toast.error("Không thể xử lý thanh toán cuối cùng");
     }
   };
 
@@ -242,6 +279,11 @@ const MaintenanceRequest = () => {
               Cancel Request
             </Button>
           )}
+          {record.paymentStatus === "DEPOSIT_PAID" && (
+            <Button onClick={() => handleFinalPayment(record)}>
+              Confirm Final Payment
+            </Button>
+          )}
         </Space>
       ),
       hidden: statusFilter === "CANCELLED"
@@ -279,8 +321,21 @@ const MaintenanceRequest = () => {
            selectedRecord.paymentMethod === "BANK" ? "Ngân hàng" : 
            selectedRecord.paymentMethod}
         </Descriptions.Item>
-        <Descriptions.Item label="Số tiền đặt cọc">{selectedRecord.depositAmount?.toLocaleString()} VND</Descriptions.Item>
-        <Descriptions.Item label="Số tiền còn lại">{selectedRecord.remainingAmount?.toLocaleString()} VND</Descriptions.Item>
+        {selectedRecord.requestStatus === "REVIEWING" && (
+          <Descriptions.Item label="Giá thỏa thuận">
+            {formatCurrency(selectedRecord.agreedPrice || 0)}
+          </Descriptions.Item>
+        )}
+        {selectedRecord.requestStatus === "REVIEWING" && (
+          <Descriptions.Item label="Số tiền đặt cọc">
+            {formatCurrency(selectedRecord.depositAmount || 0)}
+          </Descriptions.Item>
+        )}
+        {selectedRecord.requestStatus === "REVIEWING" && (
+          <Descriptions.Item label="Số tiền còn lại">
+            {formatCurrency(selectedRecord.remainingAmount || 0)}
+          </Descriptions.Item>
+        )}
         {selectedRecord.requestStatus === "CANCELLED" && (
           <Descriptions.Item label="Lý do hủy">{selectedRecord.cancellationReason}</Descriptions.Item>
         )}
@@ -324,7 +379,13 @@ const MaintenanceRequest = () => {
             label="Giá đã thỏa thuận"
             rules={[{ required: true, message: 'Vui lòng nhập giá đã thỏa thuận!' }]}
           >
-            <Input type="number" />
+            <Input
+              type="number"
+              min={0}
+              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+              addonAfter="VND"
+            />
           </Form.Item>
           <Form.Item name="assignedTo" label="Người được giao" hidden>
             <Input/>
@@ -365,12 +426,24 @@ const MaintenanceRequest = () => {
           <Form.Item 
             name="depositAmount" 
             label="Số tiền đặt cọc"
-            rules={[{ required: true, message: 'Vui lòng nhập số tiền đặt cọc!' }]}
+            // rules={[{ required: true, message: 'Vui lòng nhập số tiền đặt cọc!' }]}
           >
-            <Input type="number" />
+            <Input
+              disabled
+              type="number"
+              min={0}
+              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+              addonAfter="VND"
+            />
           </Form.Item>
           <Form.Item name="remainingAmount" label="Số tiền còn lại">
-            <Input disabled />
+            <Input
+              disabled
+              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+              addonAfter="VND"
+            />
           </Form.Item>
           {selectedRecord.requestStatus === "REVIEWING" && (
             <Button type="primary" htmlType="submit">
