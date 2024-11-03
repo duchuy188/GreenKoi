@@ -333,11 +333,40 @@ public class MaintenanceRequestService {
     }
 
     private MaintenanceRequestDTO updateMaintenanceRequest(String id, Consumer<MaintenanceRequest> updateFunction) {
-        MaintenanceRequest request = findMaintenanceRequestById(id);
-        updateFunction.accept(request);
-        request.setUpdatedAt(LocalDateTime.now());
-        request = maintenanceRequestRepository.save(request);
-        return convertToDTO(request);
+        synchronized (id.intern()) {
+            MaintenanceRequest request = findMaintenanceRequestById(id);
+            
+            RequestStatus currentRequestStatus = request.getRequestStatus();
+            MaintenanceStatus currentMaintenanceStatus = request.getMaintenanceStatus();
+            
+            updateFunction.accept(request);
+            
+            validateStateTransition(currentRequestStatus, currentMaintenanceStatus, request);
+            
+            request.setUpdatedAt(LocalDateTime.now());
+            request = maintenanceRequestRepository.save(request);
+            return convertToDTO(request);
+        }
+    }
+
+    private void validateStateTransition(RequestStatus oldRequestStatus, 
+                                       MaintenanceStatus oldMaintenanceStatus,
+                                       MaintenanceRequest request) {
+        RequestStatus newRequestStatus = request.getRequestStatus();
+        MaintenanceStatus newMaintenanceStatus = request.getMaintenanceStatus();
+
+        if (oldRequestStatus == RequestStatus.CANCELLED && 
+            newRequestStatus != RequestStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot modify a cancelled request");
+        }
+
+        if (oldMaintenanceStatus != null && 
+            oldMaintenanceStatus == MaintenanceStatus.COMPLETED && 
+            newMaintenanceStatus != MaintenanceStatus.COMPLETED) {
+            throw new IllegalStateException("Cannot modify a completed maintenance");
+        }
+
+        // Add more validation rules as needed
     }
 
     private MaintenanceRequestDTO updateMaintenanceStatus(String id, MaintenanceRequest.MaintenanceStatus status) {

@@ -74,17 +74,23 @@ public class ConsultationRequestService {
             throw new RuntimeException("Only consulting staff can update request status");
         }
 
-        com.koipond.backend.model.ConsultationRequest request = consultationRequestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Consultation request not found"));
+        synchronized (requestId.intern()) {
+            com.koipond.backend.model.ConsultationRequest request = consultationRequestRepository.findById(requestId)
+                    .orElseThrow(() -> new RuntimeException("Consultation request not found"));
 
-        try {
-            ConsultationStatus status = ConsultationStatus.valueOf(newStatus);
-            request.setStatus(status.name());
-            request.setUpdatedAt(LocalDateTime.now());
-            com.koipond.backend.model.ConsultationRequest updatedRequest = consultationRequestRepository.save(request);
-            return convertToDTO(updatedRequest);
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid status: " + newStatus);
+            if (!ConsultationStatus.PENDING.name().equals(request.getStatus())) {
+                throw new RuntimeException("Can only update PENDING requests. Current status: " + request.getStatus());
+            }
+
+            try {
+                ConsultationStatus status = ConsultationStatus.valueOf(newStatus);
+                request.setStatus(status.name());
+                request.setUpdatedAt(LocalDateTime.now());
+                com.koipond.backend.model.ConsultationRequest updatedRequest = consultationRequestRepository.save(request);
+                return convertToDTO(updatedRequest);
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Invalid status: " + newStatus);
+            }
         }
     }
 
@@ -155,18 +161,21 @@ public class ConsultationRequestService {
         User customer = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        com.koipond.backend.model.ConsultationRequest request = consultationRequestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Consultation request not found"));
+        synchronized (requestId.intern()) {
+            com.koipond.backend.model.ConsultationRequest request = consultationRequestRepository.findById(requestId)
+                    .orElseThrow(() -> new RuntimeException("Consultation request not found"));
 
-        if (!request.getCustomer().getId().equals(customer.getId())) {
-            throw new RuntimeException("Unauthorized access to consultation request");
+            if (!request.getCustomer().getId().equals(customer.getId())) {
+                throw new RuntimeException("Unauthorized access to consultation request");
+            }
+
+            if (!ConsultationStatus.PENDING.name().equals(request.getStatus())) {
+                throw new RuntimeException("Can only cancel PENDING requests. Current status: " + request.getStatus());
+            }
+
+            request.setStatus(ConsultationStatus.CANCELLED.name());
+            request.setUpdatedAt(LocalDateTime.now());
+            consultationRequestRepository.save(request);
         }
-
-        if (!request.getStatus().equals(ConsultationStatus.PENDING.name())) {
-            throw new RuntimeException("Can only cancel PENDING requests");
-        }
-
-        request.setStatus(ConsultationStatus.CANCELLED.name());
-        consultationRequestRepository.save(request);
     }
 }

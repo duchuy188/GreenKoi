@@ -7,6 +7,7 @@ import com.koipond.backend.repository.DesignRepository;
 import com.koipond.backend.repository.UserRepository;
 import com.koipond.backend.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,17 +23,18 @@ public class DesignService {
     }
 
     public DesignDTO createDesign(DesignDTO designDTO, String designerUsername) {
-        User designer = userRepository.findByUsername(designerUsername)
-                .orElseThrow(() -> new ResourceNotFoundException("Designer not found"));
+        synchronized (designerUsername.intern()) {
+            User designer = userRepository.findByUsername(designerUsername)
+                    .orElseThrow(() -> new ResourceNotFoundException("Designer not found"));
 
-        Design design = new Design();
-        updateDesignFromDTO(design, designDTO);
-        design.setCreatedBy(designer);
-        // Đặt trạng thái mặc định khi tạo mới
-        design.setStatus(Design.DesignStatus.PENDING_APPROVAL);
+            Design design = new Design();
+            updateDesignFromDTO(design, designDTO);
+            design.setCreatedBy(designer);
+            design.setStatus(Design.DesignStatus.PENDING_APPROVAL);
 
-        Design savedDesign = designRepository.save(design);
-        return convertToDTO(savedDesign);
+            Design savedDesign = designRepository.save(design);
+            return convertToDTO(savedDesign);
+        }
     }
 
     public DesignDTO getDesign(String id) {
@@ -60,31 +62,69 @@ public class DesignService {
     }
 
     public DesignDTO updateDesign(String id, DesignDTO designDTO) {
-        Design design = findDesignById(id);
-        updateDesignFromDTO(design, designDTO);
-        Design updatedDesign = designRepository.save(design);
-        return convertToDTO(updatedDesign);
+        synchronized (id.intern()) {
+            Design design = findDesignById(id);
+            
+            // Validate status transition
+            if (design.getStatus() == Design.DesignStatus.APPROVED) {
+                throw new IllegalStateException("Cannot update approved design");
+            }
+            
+            updateDesignFromDTO(design, designDTO);
+            Design updatedDesign = designRepository.save(design);
+            return convertToDTO(updatedDesign);
+        }
     }
 
     public DesignDTO approveDesign(String id) {
-        Design design = findDesignById(id);
-        design.setStatus(Design.DesignStatus.APPROVED);
-        Design updatedDesign = designRepository.save(design);
-        return convertToDTO(updatedDesign);
+        synchronized (id.intern()) {
+            Design design = findDesignById(id);
+            
+            // Validate current status
+            if (design.getStatus() != Design.DesignStatus.PENDING_APPROVAL) {
+                throw new IllegalStateException(
+                    "Can only approve designs in PENDING_APPROVAL status. Current status: " + design.getStatus());
+            }
+            
+            design.setStatus(Design.DesignStatus.APPROVED);
+            Design updatedDesign = designRepository.save(design);
+            return convertToDTO(updatedDesign);
+        }
     }
 
     public DesignDTO rejectDesign(String id, String rejectionReason) {
-        Design design = findDesignById(id);
-        design.setStatus(Design.DesignStatus.REJECTED);
-        design.setRejectionReason(rejectionReason);
-        Design updatedDesign = designRepository.save(design);
-        return convertToDTO(updatedDesign);
+        synchronized (id.intern()) {
+            Design design = findDesignById(id);
+            
+            // Validate current status
+            if (design.getStatus() != Design.DesignStatus.PENDING_APPROVAL) {
+                throw new IllegalStateException(
+                    "Can only reject designs in PENDING_APPROVAL status. Current status: " + design.getStatus());
+            }
+            
+            if (rejectionReason == null || rejectionReason.trim().isEmpty()) {
+                throw new IllegalArgumentException("Rejection reason is required");
+            }
+            
+            design.setStatus(Design.DesignStatus.REJECTED);
+            design.setRejectionReason(rejectionReason);
+            Design updatedDesign = designRepository.save(design);
+            return convertToDTO(updatedDesign);
+        }
     }
 
     public void deleteDesign(String id) {
-        Design design = findDesignById(id);
-        design.setActive(false);
-        designRepository.save(design);
+        synchronized (id.intern()) {
+            Design design = findDesignById(id);
+            
+            // Validate if design can be deleted
+            if (design.getStatus() == Design.DesignStatus.APPROVED) {
+                throw new IllegalStateException("Cannot delete approved design");
+            }
+            
+            design.setActive(false);
+            designRepository.save(design);
+        }
     }
 
     private Design findDesignById(String id) {
@@ -93,6 +133,14 @@ public class DesignService {
     }
 
     private void updateDesignFromDTO(Design design, DesignDTO dto) {
+        // Validate required fields
+        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Design name is required");
+        }
+        if (dto.getBasePrice() == null || dto.getBasePrice().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Base price must be greater than 0");
+        }
+
         design.setName(dto.getName());
         design.setDescription(dto.getDescription());
         design.setImageUrl(dto.getImageUrl());
@@ -100,19 +148,26 @@ public class DesignService {
         design.setShape(dto.getShape());
         design.setDimensions(dto.getDimensions());
         design.setFeatures(dto.getFeatures());
-        // Xử lý trường hợp status là null hoặc không hợp lệ
+        
+        // Status validation and update
         if (dto.getStatus() != null) {
             try {
-                design.setStatus(Design.DesignStatus.valueOf(dto.getStatus()));
+                Design.DesignStatus newStatus = Design.DesignStatus.valueOf(dto.getStatus());
+                validateStatusTransition(design.getStatus(), newStatus);
+                design.setStatus(newStatus);
             } catch (IllegalArgumentException e) {
-                // Log lỗi và đặt trạng thái mặc định
-                System.out.println("Invalid status: " + dto.getStatus() + ". Setting to PENDING_APPROVAL.");
-                design.setStatus(Design.DesignStatus.PENDING_APPROVAL);
+                throw new IllegalArgumentException("Invalid status: " + dto.getStatus());
             }
-        } else {
-            design.setStatus(Design.DesignStatus.PENDING_APPROVAL);
         }
-        design.setRejectionReason(dto.getRejectionReason());
+    }
+
+    private void validateStatusTransition(Design.DesignStatus currentStatus, Design.DesignStatus newStatus) {
+        if (currentStatus == Design.DesignStatus.APPROVED && newStatus != Design.DesignStatus.APPROVED) {
+            throw new IllegalStateException("Cannot change status of approved design");
+        }
+        if (currentStatus == Design.DesignStatus.REJECTED && newStatus == Design.DesignStatus.APPROVED) {
+            throw new IllegalStateException("Cannot approve rejected design directly");
+        }
     }
 
     private DesignDTO convertToDTO(Design design) {

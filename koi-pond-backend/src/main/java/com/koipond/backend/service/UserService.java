@@ -98,52 +98,63 @@ public class UserService {
     }
 
     public User updateUserProfile(String username, UpdateProfileRequest updateRequest) {
-        User user = findByUsername(username);
-        user.setFullName(updateRequest.getFullName());
-        user.setPhone(updateRequest.getPhone());
-        user.setAddress(updateRequest.getAddress());
-        user.setEmail(updateRequest.getEmail());
+        synchronized (username.intern()) {
+            User user = findByUsername(username);
+            
+            // Validate if email is being changed and is not already taken
+            if (!user.getEmail().equals(updateRequest.getEmail()) && 
+                userRepository.findByEmail(updateRequest.getEmail()).isPresent()) {
+                throw new AuthenticationException("Email already exists");
+            }
 
-        log.debug("Updating user - fullName: {}, phone: {}, address: {}, email: {}",
-                updateRequest.getFullName(), updateRequest.getPhone(),
-                updateRequest.getAddress(), updateRequest.getEmail());
+            user.setFullName(updateRequest.getFullName());
+            user.setPhone(updateRequest.getPhone());
+            user.setAddress(updateRequest.getAddress());
+            user.setEmail(updateRequest.getEmail());
 
-        return userRepository.save(user);
+            log.debug("Updating user - fullName: {}, phone: {}, address: {}, email: {}",
+                    updateRequest.getFullName(), updateRequest.getPhone(),
+                    updateRequest.getAddress(), updateRequest.getEmail());
+
+            return userRepository.save(user);
+        }
     }
 
     public AuthResponse registerUser(RegisterRequest request) {
         log.info("Attempting to register new user with username: {}", request.getUsername());
 
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            log.warn("Registration failed: Email already exists: {}", request.getEmail());
-            throw new AuthenticationException("Email already exists");
-        }
+        synchronized (request.getUsername().intern()) {
+            if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+                log.warn("Registration failed: Email already exists: {}", request.getEmail());
+                throw new AuthenticationException("Email already exists");
+            }
 
-        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            log.warn("Registration failed: Username already exists: {}", request.getUsername());
-            throw new AuthenticationException("Username already exists");
-        }
+            if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+                log.warn("Registration failed: Username already exists: {}", request.getUsername());
+                throw new AuthenticationException("Username already exists");
+            }
 
-        User newUser = new User();
-        newUser.setId(UUID.randomUUID().toString());
-        newUser.setEmail(request.getEmail());
-        newUser.setUsername(request.getUsername());
-        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
-        newUser.setFullName(request.getFullName());
-        newUser.setPhone(request.getPhoneNumber());
-        newUser.setAddress(request.getAddress());
-        newUser.setRoleId(UserRole.CUSTOMER.getId());
-        newUser.setActive(true);
+            User newUser = new User();
+            newUser.setId(UUID.randomUUID().toString());
+            newUser.setEmail(request.getEmail());
+            newUser.setUsername(request.getUsername());
+            newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+            newUser.setFullName(request.getFullName());
+            newUser.setPhone(request.getPhoneNumber());
+            newUser.setAddress(request.getAddress());
+            newUser.setRoleId(UserRole.CUSTOMER.getId());
+            newUser.setActive(true);
 
-        log.info("Registering new user: {}", newUser);
-        try {
-            User savedUser = userRepository.save(newUser);
-            String token = jwtTokenProvider.createToken(savedUser.getUsername(), savedUser.getRoleId());
-            log.info("User registered successfully: {}", savedUser.getUsername());
-            return new AuthResponse(token, savedUser.getId(), savedUser.getUsername(), savedUser.getRoleId());
-        } catch (Exception e) {
-            log.error("Error registering new user: {}", e.getMessage());
-            throw new RuntimeException("Failed to register user", e);
+            log.info("Registering new user: {}", newUser);
+            try {
+                User savedUser = userRepository.save(newUser);
+                String token = jwtTokenProvider.createToken(savedUser.getUsername(), savedUser.getRoleId());
+                log.info("User registered successfully: {}", savedUser.getUsername());
+                return new AuthResponse(token, savedUser.getId(), savedUser.getUsername(), savedUser.getRoleId());
+            } catch (Exception e) {
+                log.error("Error registering new user: {}", e.getMessage());
+                throw new RuntimeException("Failed to register user", e);
+            }
         }
     }
 
@@ -199,19 +210,25 @@ public class UserService {
     }
 
     public UserDTO updateUser(String id, UserDTO userDTO) {
-        log.info("Updating user with id: {}", id);
-        User user = findUserById(id);
+        synchronized (id.intern()) {
+            User user = findUserById(id);
 
-        user.setEmail(userDTO.getEmail());
-        user.setFullName(userDTO.getFullName());
-        user.setPhone(userDTO.getPhone());
-        user.setAddress(userDTO.getAddress());
-        user.setRoleId(userDTO.getRoleId());
-        // Don't update password here, create a separate endpoint for password changes
+            // Validate if email is being changed and is not already taken
+            if (!user.getEmail().equals(userDTO.getEmail()) && 
+                userRepository.findByEmail(userDTO.getEmail()).isPresent()) {
+                throw new AuthenticationException("Email already exists");
+            }
 
-        User updatedUser = userRepository.save(user);
-        log.info("User updated successfully: {}", updatedUser.getUsername());
-        return convertToDTO(updatedUser);
+            user.setEmail(userDTO.getEmail());
+            user.setFullName(userDTO.getFullName());
+            user.setPhone(userDTO.getPhone());
+            user.setAddress(userDTO.getAddress());
+            user.setRoleId(userDTO.getRoleId());
+
+            User updatedUser = userRepository.save(user);
+            log.info("User updated successfully: {}", updatedUser.getUsername());
+            return convertToDTO(updatedUser);
+        }
     }
 
     private User findUserById(String id) {
@@ -223,11 +240,14 @@ public class UserService {
     }
 
     private UserDTO updateUserActiveStatus(String id, boolean active) {
-        User user = findUserById(id);
-        user.setActive(active);
-        User updatedUser = userRepository.save(user);
-        log.info("User {} status updated to {}: {}", active ? "unblocked" : "blocked", active, updatedUser.getUsername());
-        return convertToDTO(updatedUser);
+        synchronized (id.intern()) {
+            User user = findUserById(id);
+            user.setActive(active);
+            User updatedUser = userRepository.save(user);
+            log.info("User {} status updated to {}: {}", 
+                    active ? "unblocked" : "blocked", active, updatedUser.getUsername());
+            return convertToDTO(updatedUser);
+        }
     }
 
     private UserDTO convertToDTO(User user) {

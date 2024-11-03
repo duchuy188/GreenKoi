@@ -160,38 +160,39 @@ public class ProjectService {
 
     @Transactional
     public ProjectDTO updateProjectStatus(String id, String newStatus, String username) {
-        log.info("Updating status of project with id: {} to {}. User: {}", id, newStatus, username);
-        Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
+        synchronized (id.intern()) {
+            Project project = projectRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
 
-        User user = getUserByUsername(username);
-        // Kiểm tra quyền trực tiếp từ role
-        if (!user.getRoleId().equals("1") && !project.getConsultant().getUsername().equals(username)) {
-            throw new AccessDeniedException("You don't have permission to update this project's status");
+            User user = getUserByUsername(username);
+            // Kiểm tra quyền trực tiếp từ role
+            if (!user.getRoleId().equals("1") && !project.getConsultant().getUsername().equals(username)) {
+                throw new AccessDeniedException("You don't have permission to update this project's status");
+            }
+
+            if ("COMPLETED".equalsIgnoreCase(newStatus)) {
+                throw new IllegalArgumentException("To mark a project as completed, use the completeProject method.");
+            }
+
+            ProjectStatus status = getProjectStatusByName(newStatus);
+
+            if (!isValidStatusTransition(project.getStatus(), status)) {
+                throw new IllegalStateException("Invalid status transition from " + project.getStatus().getName() + " to " + newStatus);
+            }
+
+            if ("APPROVED".equals(newStatus) && project.getPaymentStatus() != Project.PaymentStatus.DEPOSIT_PAID) {
+                throw new IllegalStateException("Project cannot be approved until payment is completed");
+            }
+
+            project.setStatus(status);
+            project.setUpdatedAt(LocalDateTime.now());
+
+            updateProjectFieldsBasedOnStatus(project, status);
+
+            Project updatedProject = projectRepository.save(project);
+            log.info("Project status updated successfully: {}", updatedProject.getId());
+            return convertToDTO(updatedProject);
         }
-
-        if ("COMPLETED".equalsIgnoreCase(newStatus)) {
-            throw new IllegalArgumentException("To mark a project as completed, use the completeProject method.");
-        }
-
-        ProjectStatus status = getProjectStatusByName(newStatus);
-
-        if (!isValidStatusTransition(project.getStatus(), status)) {
-            throw new IllegalStateException("Invalid status transition from " + project.getStatus().getName() + " to " + newStatus);
-        }
-
-        if ("APPROVED".equals(newStatus) && project.getPaymentStatus() != Project.PaymentStatus.DEPOSIT_PAID) {
-            throw new IllegalStateException("Project cannot be approved until payment is completed");
-        }
-
-        project.setStatus(status);
-        project.setUpdatedAt(LocalDateTime.now());
-
-        updateProjectFieldsBasedOnStatus(project, status);
-
-        Project updatedProject = projectRepository.save(project);
-        log.info("Project status updated successfully: {}", updatedProject.getId());
-        return convertToDTO(updatedProject);
     }
 
     @Transactional
@@ -314,19 +315,20 @@ public class ProjectService {
     }
 
     private boolean isValidStatusTransition(ProjectStatus currentStatus, ProjectStatus newStatus) {
-        return switch (currentStatus.getName()) {
-            case "PENDING" -> newStatus.getName().equals("CANCELLED");
-            case "APPROVED" -> newStatus.getName().equals("IN_PROGRESS");
-            case "IN_PROGRESS" -> newStatus.getName().equals("ON_HOLD") ||
-                                newStatus.getName().equals("TECHNICALLY_COMPLETED") ||
-                                newStatus.getName().equals("MAINTENANCE");
-            case "TECHNICALLY_COMPLETED" -> newStatus.getName().equals("COMPLETED");
-            case "ON_HOLD" -> newStatus.getName().equals("IN_PROGRESS");
-            case "MAINTENANCE" -> newStatus.getName().equals("IN_PROGRESS");
-            case "COMPLETED" -> false;
-            case "CANCELLED" -> false;
-            default -> false;
-        };
+        synchronized (currentStatus.getName().intern()) {
+            return switch (currentStatus.getName()) {
+                case "PENDING" -> newStatus.getName().equals("CANCELLED");
+                case "APPROVED" -> newStatus.getName().equals("IN_PROGRESS");
+                case "IN_PROGRESS" -> newStatus.getName().equals("ON_HOLD") ||
+                                    newStatus.getName().equals("TECHNICALLY_COMPLETED") ||
+                                    newStatus.getName().equals("MAINTENANCE");
+                case "TECHNICALLY_COMPLETED" -> newStatus.getName().equals("COMPLETED");
+                case "ON_HOLD" -> newStatus.getName().equals("IN_PROGRESS");
+                case "MAINTENANCE" -> newStatus.getName().equals("IN_PROGRESS");
+                case "COMPLETED", "CANCELLED" -> false;
+                default -> false;
+            };
+        }
     }
 
     private void updateProjectFieldsBasedOnStatus(Project project, ProjectStatus newStatus) {
@@ -713,98 +715,108 @@ public class ProjectService {
 
     @Transactional
     public void processPaymentResult(String projectId, String vnp_ResponseCode) {
-        log.info("Processing payment result for project: {}, response code: {}", projectId, vnp_ResponseCode);
-        Project project = getProjectById(projectId);
+        synchronized (projectId.intern()) {
+            Project project = getProjectById(projectId);
 
-        if ("00".equals(vnp_ResponseCode)) {
-            if (project.getPaymentStatus() == Project.PaymentStatus.UNPAID) {
-                // Nếu là thanh toán đặt cọc
-                project.setPaymentStatus(Project.PaymentStatus.DEPOSIT_PAID);
-                // Chuyển trạng thái dự án sang APPROVED
-                ProjectStatus approvedStatus = getProjectStatusByName("APPROVED");
-                project.setStatus(approvedStatus);
-                updateProjectFieldsBasedOnStatus(project, approvedStatus);
-                log.info("Deposit payment successful for project: {}. Status updated to APPROVED", projectId);
-            } else if (project.getPaymentStatus() == Project.PaymentStatus.DEPOSIT_PAID) {
-                // Nếu là thanh toán đầy đủ và đã TECHNICALLY_COMPLETED
-                if (!"TECHNICALLY_COMPLETED".equals(project.getStatus().getName())) {
-                    throw new IllegalStateException("Project must be technically completed before final payment");
+            if ("00".equals(vnp_ResponseCode)) {
+                if (project.getPaymentStatus() == Project.PaymentStatus.UNPAID) {
+                    // Nếu là thanh toán đặt cọc
+                    project.setPaymentStatus(Project.PaymentStatus.DEPOSIT_PAID);
+                    // Chuyển trạng thái dự án sang APPROVED
+                    ProjectStatus approvedStatus = getProjectStatusByName("APPROVED");
+                    project.setStatus(approvedStatus);
+                    updateProjectFieldsBasedOnStatus(project, approvedStatus);
+                    log.info("Deposit payment successful for project: {}. Status updated to APPROVED", projectId);
+                } else if (project.getPaymentStatus() == Project.PaymentStatus.DEPOSIT_PAID) {
+                    // Nếu là thanh toán đầy đủ và đã TECHNICALLY_COMPLETED
+                    if (!"TECHNICALLY_COMPLETED".equals(project.getStatus().getName())) {
+                        throw new IllegalStateException("Project must be technically completed before final payment");
+                    }
+                    project.setPaymentStatus(Project.PaymentStatus.FULLY_PAID);
+                    log.info("Full payment successful for project: {}, waiting for manager approval", projectId);
                 }
-                project.setPaymentStatus(Project.PaymentStatus.FULLY_PAID);
-                log.info("Full payment successful for project: {}, waiting for manager approval", projectId);
+            } else {
+                log.warn("Payment failed for project: {}. VNPay response code: {}", projectId, vnp_ResponseCode);
             }
-        } else {
-            log.warn("Payment failed for project: {}. VNPay response code: {}", projectId, vnp_ResponseCode);
-        }
 
-        project.setUpdatedAt(LocalDateTime.now());
-        projectRepository.save(project);
+            project.setUpdatedAt(LocalDateTime.now());
+            projectRepository.save(project);
+        }
     }
 
     @Transactional
     public ProjectDTO markProjectAsTechnicallyCompleted(String projectId, String constructorUsername) {
-        log.info("Marking project as technically completed: {}. Constructor: {}", projectId, constructorUsername);
-        Project project = getProjectById(projectId);
+        synchronized (projectId.intern()) {
+            Project project = getProjectById(projectId);
 
-        User constructor = getUserByUsername(constructorUsername);
-        if (!constructor.getId().equals(project.getConstructor().getId())) {
-            throw new AccessDeniedException("Only the assigned constructor can mark the project as technically completed");
+            // Validate current status
+            if (!"IN_PROGRESS".equals(project.getStatus().getName())) {
+                throw new IllegalStateException("Project must be IN_PROGRESS to be marked as technically completed");
+            }
+
+            User constructor = getUserByUsername(constructorUsername);
+            if (!constructor.getId().equals(project.getConstructor().getId())) {
+                throw new AccessDeniedException("Only the assigned constructor can mark the project as technically completed");
+            }
+
+            if (!taskService.areAllTasksCompleted(projectId)) {
+                throw new IllegalStateException("Cannot mark project as technically completed. Not all tasks are completed.");
+            }
+
+            ProjectStatus technicallyCompletedStatus = getProjectStatusByName("TECHNICALLY_COMPLETED");
+            project.setStatus(technicallyCompletedStatus);
+            project.setTechnicalCompletionDate(LocalDate.now());
+            project.setProgressPercentage(100);
+            project.setCompletedStages(project.getTotalStages() - 1);  // Hoàn thành tất cả trừ stage cuối
+            project.setUpdatedAt(LocalDateTime.now());
+
+            Project updatedProject = projectRepository.save(project);
+            return convertToDTO(updatedProject);
         }
-
-        if (!taskService.areAllTasksCompleted(projectId)) {
-            throw new IllegalStateException("Cannot mark project as technically completed. Not all tasks are completed.");
-        }
-
-        ProjectStatus technicallyCompletedStatus = getProjectStatusByName("TECHNICALLY_COMPLETED");
-        project.setStatus(technicallyCompletedStatus);
-        project.setTechnicalCompletionDate(LocalDate.now());
-        project.setProgressPercentage(100);
-        project.setCompletedStages(project.getTotalStages() - 1);  // Hoàn thành tất cả trừ stage cuối
-        project.setUpdatedAt(LocalDateTime.now());
-
-        Project updatedProject = projectRepository.save(project);
-        return convertToDTO(updatedProject);
     }
 
     @Transactional
     public ProjectDTO updatePaymentStatus(String projectId, Project.PaymentStatus newStatus, String consultantUsername) {
-        log.info("Updating payment status for project: {} to {}. Consultant: {}", projectId, newStatus, consultantUsername);
-        Project project = getProjectById(projectId);
+        synchronized (projectId.intern()) {
+            Project project = getProjectById(projectId);
+            
+            // Store current states
+            Project.PaymentStatus currentPaymentStatus = project.getPaymentStatus();
+            String currentProjectStatus = project.getStatus().getName();
+            
+            // Validate state transition
+            validatePaymentStatusTransition(currentPaymentStatus, newStatus, currentProjectStatus);
+            
+            project.setPaymentStatus(newStatus);
+            project.setUpdatedAt(LocalDateTime.now());
 
-        // Kiểm tra quyền
-        if (!project.getConsultant().getUsername().equals(consultantUsername)) {
-            throw new AccessDeniedException("Only assigned consultant can update payment status");
+            Project updatedProject = projectRepository.save(project);
+            log.info("Payment status updated to {} for project {}", newStatus, projectId);
+            return convertToDTO(updatedProject);
         }
+    }
 
-        // Kiểm tra logic chuyển trạng thái
-        switch (project.getPaymentStatus()) {
+    private void validatePaymentStatusTransition(
+        Project.PaymentStatus currentStatus, 
+        Project.PaymentStatus newStatus, 
+        String projectStatus) {
+        
+        switch (currentStatus) {
             case UNPAID:
                 if (newStatus != Project.PaymentStatus.DEPOSIT_PAID) {
                     throw new IllegalStateException("From UNPAID, can only change to DEPOSIT_PAID");
                 }
-                // Khi đặt cọc thành công, chuyển trạng thái sang APPROVED
-                ProjectStatus approvedStatus = getProjectStatusByName("APPROVED");
-                project.setStatus(approvedStatus);
                 break;
-
             case DEPOSIT_PAID:
                 if (newStatus != Project.PaymentStatus.FULLY_PAID) {
                     throw new IllegalStateException("From DEPOSIT_PAID, can only change to FULLY_PAID");
                 }
-                if (!"TECHNICALLY_COMPLETED".equals(project.getStatus().getName())) {
+                if (!"TECHNICALLY_COMPLETED".equals(projectStatus)) {
                     throw new IllegalStateException("Project must be technically completed before marking as fully paid");
                 }
                 break;
-
             case FULLY_PAID:
                 throw new IllegalStateException("Cannot change payment status once fully paid");
         }
-
-        project.setPaymentStatus(newStatus);
-        project.setUpdatedAt(LocalDateTime.now());
-
-        Project updatedProject = projectRepository.save(project);
-        log.info("Payment status updated to {} for project {}", newStatus, projectId);
-        return convertToDTO(updatedProject);
     }
 }

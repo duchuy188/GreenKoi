@@ -32,77 +32,76 @@ public class BlogService {
 
     @Transactional
     public BlogPostDTO createDraft(BlogPostDTO blogPostDTO, String username) {
-        logger.info("Creating draft blog post for author: {}", username);
-        
-        User author = userRepository.findByUsername(username)
-            .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
+        synchronized (username.intern()) {
+            logger.info("Creating draft blog post for author: {}", username);
+            
+            User author = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
 
-        BlogPost blogPost = new BlogPost();
-        blogPost.setTitle(blogPostDTO.getTitle());
-        blogPost.setContent(blogPostDTO.getContent());
-        blogPost.setAuthor(author);
-        blogPost.setStatus(BlogPost.BlogPostStatus.DRAFT);
-        blogPost.setCreatedAt(LocalDateTime.now());
-        blogPost.setUpdatedAt(LocalDateTime.now());
-        blogPost.setCoverImageUrl(blogPostDTO.getCoverImageUrl());
-        blogPost.setActive(true); // Đảm bảo rằng draft mới luôn active
+            BlogPost blogPost = new BlogPost();
+            updateBlogPostFields(blogPost, blogPostDTO);
+            blogPost.setAuthor(author);
+            blogPost.setStatus(BlogPost.BlogPostStatus.DRAFT);
+            blogPost.setCreatedAt(LocalDateTime.now());
+            blogPost.setUpdatedAt(LocalDateTime.now());
+            blogPost.setActive(true);
 
-        BlogPost savedBlogPost = blogPostRepository.save(blogPost);
-        logger.info("Draft blog post created with ID: {}", savedBlogPost.getId());
-        return convertToDTO(savedBlogPost);
+            BlogPost savedBlogPost = blogPostRepository.save(blogPost);
+            logger.info("Draft blog post created with ID: {}", savedBlogPost.getId());
+            return convertToDTO(savedBlogPost);
+        }
     }
 
     @Transactional
     public BlogPostDTO updateDraft(String id, BlogPostDTO blogPostDTO) {
-        logger.info("Updating draft blog post with ID: {}", id);
-        BlogPost existingPost = blogPostRepository.findById(id)
-                .orElseThrow(() -> new BlogPostNotFoundException("Blog post not found with ID: " + id));
+        synchronized (id.intern()) {
+            logger.info("Updating draft blog post with ID: {}", id);
+            BlogPost existingPost = blogPostRepository.findById(id)
+                    .orElseThrow(() -> new BlogPostNotFoundException("Blog post not found with ID: " + id));
 
-        if (existingPost.getStatus() != BlogPost.BlogPostStatus.DRAFT) {
-            throw new InvalidBlogPostStateException("Only drafts can be updated");
+            validateBlogPostState(existingPost, "update", BlogPost.BlogPostStatus.DRAFT);
+
+            updateBlogPostFields(existingPost, blogPostDTO);
+            existingPost.setUpdatedAt(LocalDateTime.now());
+            BlogPost updatedPost = blogPostRepository.save(existingPost);
+            logger.info("Draft blog post updated successfully");
+            return convertToDTO(updatedPost);
         }
-
-        updateBlogPostFields(existingPost, blogPostDTO);
-        existingPost.setUpdatedAt(LocalDateTime.now());
-        // Không thay đổi trạng thái active khi cập nhật
-        BlogPost updatedPost = blogPostRepository.save(existingPost);
-        logger.info("Draft blog post updated successfully");
-        return convertToDTO(updatedPost);
     }
 
     @Transactional
     public BlogPostDTO submitForApproval(String id) {
-        logger.info("Submitting blog post for approval, ID: {}", id);
-        BlogPost blogPost = blogPostRepository.findById(id)
-                .orElseThrow(() -> new BlogPostNotFoundException("Blog post not found with ID: " + id));
+        synchronized (id.intern()) {
+            logger.info("Submitting blog post for approval, ID: {}", id);
+            BlogPost blogPost = blogPostRepository.findById(id)
+                    .orElseThrow(() -> new BlogPostNotFoundException("Blog post not found with ID: " + id));
 
-        if (blogPost.getStatus() != BlogPost.BlogPostStatus.DRAFT) {
-            throw new InvalidBlogPostStateException("Only drafts can be submitted for approval");
+            validateBlogPostState(blogPost, "submit", BlogPost.BlogPostStatus.DRAFT);
+
+            blogPost.setStatus(BlogPost.BlogPostStatus.PENDING_APPROVAL);
+            blogPost.setUpdatedAt(LocalDateTime.now());
+            BlogPost updatedPost = blogPostRepository.save(blogPost);
+            logger.info("Blog post submitted for approval successfully");
+            return convertToDTO(updatedPost);
         }
-
-        blogPost.setStatus(BlogPost.BlogPostStatus.PENDING_APPROVAL);
-        blogPost.setUpdatedAt(LocalDateTime.now());
-        BlogPost updatedPost = blogPostRepository.save(blogPost);
-        logger.info("Blog post submitted for approval successfully");
-        return convertToDTO(updatedPost);
     }
 
     @Transactional
     public BlogPostDTO approveBlogPost(String id) {
-        logger.info("Approving blog post with ID: {}", id);
-        BlogPost blogPost = blogPostRepository.findById(id)
-                .orElseThrow(() -> new BlogPostNotFoundException("Blog post not found with ID: " + id));
+        synchronized (id.intern()) {
+            logger.info("Approving blog post with ID: {}", id);
+            BlogPost blogPost = blogPostRepository.findById(id)
+                    .orElseThrow(() -> new BlogPostNotFoundException("Blog post not found with ID: " + id));
 
-        if (blogPost.getStatus() != BlogPost.BlogPostStatus.PENDING_APPROVAL) {
-            throw new InvalidBlogPostStateException("Only pending posts can be approved");
+            validateBlogPostState(blogPost, "approve", BlogPost.BlogPostStatus.PENDING_APPROVAL);
+
+            blogPost.setStatus(BlogPost.BlogPostStatus.APPROVED);
+            blogPost.setPublishedAt(LocalDateTime.now());
+            blogPost.setUpdatedAt(LocalDateTime.now());
+            BlogPost updatedPost = blogPostRepository.save(blogPost);
+            logger.info("Blog post approved successfully");
+            return convertToDTO(updatedPost);
         }
-
-        blogPost.setStatus(BlogPost.BlogPostStatus.APPROVED);
-        blogPost.setPublishedAt(LocalDateTime.now());
-        blogPost.setUpdatedAt(LocalDateTime.now());
-        BlogPost updatedPost = blogPostRepository.save(blogPost);
-        logger.info("Blog post approved successfully");
-        return convertToDTO(updatedPost);
     }
 
     @Transactional
@@ -175,22 +174,22 @@ public class BlogService {
 
     @Transactional
     public void softDeleteDraft(String id, String username) {
-        logger.info("Soft deleting draft blog post with ID: {} by user: {}", id, username);
-        BlogPost draft = blogPostRepository.findById(id)
-                .orElseThrow(() -> new BlogPostNotFoundException("Draft not found with ID: " + id));
+        synchronized (id.intern()) {
+            logger.info("Soft deleting draft blog post with ID: {} by user: {}", id, username);
+            BlogPost draft = blogPostRepository.findById(id)
+                    .orElseThrow(() -> new BlogPostNotFoundException("Draft not found with ID: " + id));
 
-        if (draft.getStatus() != BlogPost.BlogPostStatus.DRAFT) {
-            throw new InvalidBlogPostStateException("This post is not a draft");
+            validateBlogPostState(draft, "delete", BlogPost.BlogPostStatus.DRAFT);
+
+            if (!draft.getAuthor().getUsername().equals(username)) {
+                throw new InvalidBlogPostStateException("You can only delete your own drafts");
+            }
+
+            draft.setActive(false);
+            draft.setUpdatedAt(LocalDateTime.now());
+            blogPostRepository.save(draft);
+            logger.info("Draft blog post soft deleted successfully");
         }
-
-        if (!draft.getAuthor().getUsername().equals(username)) {
-            throw new InvalidBlogPostStateException("You can only delete your own drafts");
-        }
-
-        draft.setActive(false);
-        draft.setUpdatedAt(LocalDateTime.now());
-        blogPostRepository.save(draft);
-        logger.info("Draft blog post soft deleted successfully");
     }
 
     @Transactional
@@ -248,5 +247,20 @@ public class BlogService {
         post.setUpdatedAt(LocalDateTime.now());
         blogPostRepository.save(post);
         logger.info("Approved blog post restored successfully");
+    }
+
+    private void validateBlogPostState(BlogPost post, String action, BlogPost.BlogPostStatus requiredStatus) {
+        if (post.getStatus() != requiredStatus) {
+            String message = String.format("Cannot %s blog post. Required status: %s, Current status: %s",
+                action, requiredStatus, post.getStatus());
+            logger.warn(message);
+            throw new InvalidBlogPostStateException(message);
+        }
+        
+        if (!post.isActive()) {
+            String message = String.format("Cannot %s inactive blog post", action);
+            logger.warn(message);
+            throw new InvalidBlogPostStateException(message);
+        }
     }
 }
