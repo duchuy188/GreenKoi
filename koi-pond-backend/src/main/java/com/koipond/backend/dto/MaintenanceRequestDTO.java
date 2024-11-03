@@ -12,7 +12,12 @@ import java.util.List;
 public class MaintenanceRequestDTO {
     private String id;
     private String customerId;
+    private String customerName;
+    private String customerPhone;
+    private String customerEmail;
+    private String customerAddress;
     private String projectId;
+    private String projectName;
     private String consultantId;
     private String description;
     private String attachments;

@@ -245,21 +245,53 @@ public class MaintenanceRequestService {
         return entity;
     }
 
-    private MaintenanceRequestDTO convertToDTO(MaintenanceRequest entity) {
+    private MaintenanceRequestDTO convertToDTO(MaintenanceRequest request) {
         MaintenanceRequestDTO dto = new MaintenanceRequestDTO();
-        copyCommonFields(entity, dto);
-
-        if (entity.getCustomer() != null) {
-            dto.setCustomerId(entity.getCustomer().getId());
+        
+        // Copy ID và các trường cơ bản
+        dto.setId(request.getId());
+        
+        // Copy thông tin khách hàng
+        if (request.getCustomer() != null) {
+            User customer = request.getCustomer();
+            dto.setCustomerId(customer.getId());
+            dto.setCustomerName(customer.getFullName());
+            dto.setCustomerPhone(customer.getPhone());
+            dto.setCustomerEmail(customer.getEmail());
+            dto.setCustomerAddress(customer.getAddress());
         }
-        if (entity.getConsultant() != null) {
-            dto.setConsultantId(entity.getConsultant().getId());
+        
+        // Copy thông tin dự án
+        if (request.getProject() != null) {
+            Project project = request.getProject();
+            dto.setProjectId(project.getId());
+            dto.setProjectName(project.getName());
         }
-        if (entity.getAssignedTo() != null) {
-            dto.setAssignedTo(entity.getAssignedTo().getId());
-        }
-        if (entity.getProject() != null) {
-            dto.setProjectId(entity.getProject().getId());
+        
+        // Copy các trường còn lại
+        dto.setConsultantId(request.getConsultant() != null ? request.getConsultant().getId() : null);
+        dto.setDescription(request.getDescription());
+        dto.setAttachments(request.getAttachments());
+        dto.setRequestStatus(request.getRequestStatus());
+        dto.setMaintenanceStatus(request.getMaintenanceStatus());
+        dto.setAgreedPrice(request.getAgreedPrice());
+        dto.setScheduledDate(request.getScheduledDate());
+        dto.setStartDate(request.getStartDate());
+        dto.setCompletionDate(request.getCompletionDate());
+        dto.setCancellationReason(request.getCancellationReason());
+        dto.setMaintenanceNotes(request.getMaintenanceNotes());
+        
+        // Thêm các trường payment mới
+        dto.setPaymentStatus(request.getPaymentStatus());
+        dto.setPaymentMethod(request.getPaymentMethod());
+        dto.setDepositAmount(request.getDepositAmount());
+        dto.setRemainingAmount(request.getRemainingAmount());
+        
+        try {
+            dto.setMaintenanceImages(objectMapper.readValue(request.getMaintenanceImages(), 
+                new TypeReference<List<String>>() {}));
+        } catch (JsonProcessingException e) {
+            logger.error("Error parsing maintenance images JSON", e);
         }
 
         return dto;
