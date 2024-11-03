@@ -71,6 +71,10 @@ function Header() {
     },
     {
       key: "3",
+      label: <Link to="/maintenanceProfile">Bảo trì</Link>,
+    },
+    {
+      key: "4",
       label: <span onClick={handleLogout}>Đăng xuất</span>,
     },
   ];

@@ -1,7 +1,10 @@
-import { Table, Image, Modal, Button } from 'antd';
+import { Table, Image, Modal, Button, DatePicker, Space } from 'antd';
 import { useEffect, useState } from 'react';
 import api from "../../../config/axios";
 import { toast } from 'react-toastify';
+import moment from 'moment';
+
+const { RangePicker } = DatePicker;
 
 const ConstrucReviewComplete = () => {
   const [data, setData] = useState([]);
@@ -10,6 +13,8 @@ const ConstrucReviewComplete = () => {
   const [selectedNote, setSelectedNote] = useState('');
   const [selectedAttachments, setSelectedAttachments] = useState([]);
   const [attachmentModalVisible, setAttachmentModalVisible] = useState(false);
+  const [dateRange, setDateRange] = useState(null);
+  const [filteredData, setFilteredData] = useState([]);
 
   const showNoteModal = (note) => {
     setSelectedNote(note);
@@ -18,8 +23,7 @@ const ConstrucReviewComplete = () => {
 
   const showAttachmentModal = (attachments) => {
     const formattedAttachments = attachments.map(attachment => {
-      if (typeof attachment === 'string') {
-        // Assume it's an image URL if it's a string
+      if (typeof attachment === 'string') { 
         return { type: 'image', url: attachment };
       }
       return attachment;
@@ -36,19 +40,19 @@ const ConstrucReviewComplete = () => {
       hidden: true,
     },
     {
-      title: 'Khách hàng ID',
-      dataIndex: 'customerId',
-      key: 'customerId',
+      title: 'Khách hàng',
+      dataIndex: 'customerName',
+      key: 'customerName',
     },
     {
-      title: 'Dự án ID',
-      dataIndex: 'projectId',
-      key: 'projectId',
+      title: 'Dự án',
+      dataIndex: 'projectName',
+      key: 'projectName',
     },
     {
-      title: 'Tư vấn viên ID',
-      dataIndex: 'consultantId',
-      key: 'consultantId',
+      title: 'Tư vấn viên',
+      dataIndex: 'consultantName',
+      key: 'consultantName',
     },
     {
       title: 'Mô tả',
@@ -137,13 +141,39 @@ const ConstrucReviewComplete = () => {
     },
   ];
 
+  const handleDateRangeChange = (dates) => {
+    setDateRange(dates);
+    if (!dates) {
+      setFilteredData(data); // Reset về data gốc nếu xóa date range
+      return;
+    }
+
+    const [startDate, endDate] = dates;
+    const filtered = data.filter(item => {
+      const itemDate = moment(item.createdAt); // hoặc trường ngày phù hợp của bạn
+      return itemDate.isBetween(startDate, endDate, 'day', '[]');
+    });
+
+    setFilteredData(filtered);
+  };
+
   const fetchCompletedRequests = async () => {
     try {
       setLoading(true);
       const response = await api.get('/api/maintenance-requests/completed');
-      setData(response.data);
+      
+      const formattedData = response.data.map(item => ({
+        ...item,
+        customerName: item.customer?.name || item.customerName || 'Chưa có tên',
+        projectName: item.project?.name || item.projectName || 'Chưa có tên',
+        consultantName: item.consultant?.name || item.consultantName || 'Chưa có tên'
+      }));
+
+      setData(formattedData);
+      setFilteredData(formattedData); // Set dữ liệu ban đầu cho filteredData
     } catch (error) {
-      toast.error('Không thể tải dữ liệu yêu cầu bảo trì đã hoàn thành');
+      console.error('Error:', error);
+      toast.error('Không thể tải dữ liệu');
     } finally {
       setLoading(false);
     }
@@ -155,9 +185,19 @@ const ConstrucReviewComplete = () => {
 
   return (
     <>
-      <Table 
-        columns={columns} 
-        dataSource={data} 
+      <Space style={{ marginBottom: 16 }}>
+        <RangePicker
+          onChange={handleDateRangeChange}
+          format="DD/MM/YYYY"
+          placeholder={['Từ ngày', 'Đến ngày']}
+          locale={locale}
+          style={{ width: '100%' }}
+        />
+      </Space>
+
+      <Table
+        columns={columns}
+        dataSource={filteredData.length > 0 ? filteredData : data}
         loading={loading}
         rowKey="id"
       />

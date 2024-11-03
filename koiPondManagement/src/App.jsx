@@ -48,6 +48,7 @@ import MaintenanceRequest from "./components/page/admin/consulting/maintenance";
 import ConstrucMain from "./components/page/admin/construction/construc-main";
 import ConstrucReviewComplete from "./components/page/admin/construction/construc-reviewcomplete";
 import Statistics from "./components/page/admin/manage-dashboard/statistics/Statistics";
+import Cusmaintenance from "./components/page/maintenance/Cusmaintenance";
 
 function App() {
   const router = createBrowserRouter([
@@ -70,6 +71,10 @@ function App() {
         {
           path: "/orders",
           element: <OrdersCustomer />,
+        },
+        {
+          path: "/maintenanceProfile",
+          element: <Cusmaintenance />,
         },
         {
           path: "/duan",

@@ -163,26 +163,6 @@ const ConstrucMain = () => {
 
   const columns = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 200,
-      ellipsis: true,
-      hidden: true,
-    },
-    {
-      title: 'Khách hàng',
-      dataIndex: 'customerId',
-      key: 'customerId',
-    },
-    {
-      title: 'Dự án',
-      dataIndex: 'projectId',
-      key: 'projectId',
-      width: 200,
-      ellipsis: true,
-    },
-    {
       title: 'Tư vấn viên',
       dataIndex: 'consultantId',
       key: 'consultantId',
@@ -227,27 +207,10 @@ const ConstrucMain = () => {
       ),
     },
     {
-      title: 'Trạng thái bảo trì',
-      dataIndex: 'maintenanceStatus',
-      key: 'maintenanceStatus',
-      render: (status) => (
-        <Tag color={getStatusColor(status)}>
-          {status}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Giá đồng ý',
-      dataIndex: 'agreedPrice',
-      key: 'agreedPrice',
-      render: (price) => price?.toLocaleString() || '-',
-    },
-    {
       title: 'Ngày lên lịch',
       dataIndex: 'scheduledDate',
       key: 'scheduledDate',
       render: (date, record) => {
-        // Nếu đang edit record này
         if (editingIds.has(record.id)) {
           return (
             <DatePicker
@@ -257,7 +220,6 @@ const ConstrucMain = () => {
             />
           );
         }
-        // Nếu không edit thì hiển thị date bình thường
         return date?.format('DD-MM-YYYY') || '-';
       },
     },
@@ -274,34 +236,6 @@ const ConstrucMain = () => {
       render: (date) => date?.format('DD-MM-YYYY') || '-',
     },
     {
-      title: 'Ghi chú bảo trì',
-      dataIndex: 'maintenanceNotes',
-      key: 'maintenanceNotes',
-      ellipsis: true,
-    },
-    {
-      title: 'Hình ảnh bảo trì',
-      dataIndex: 'maintenanceImages',
-      key: 'maintenanceImages',
-      render: (images) => {
-        if (!images || images.length === 0) return '-';
-        return (
-          <Space>
-            {images.map((image, index) => (
-              <a 
-                key={index} 
-                href={image} 
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
-                Hình ảnh {index + 1}
-              </a>
-            ))}
-          </Space>
-        );
-      }
-    },
-    {
       title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
@@ -314,62 +248,96 @@ const ConstrucMain = () => {
       render: (date) => moment(date).format('DD-MM-YYYY HH:mm:ss'),
     },
     {
-      title: 'Phân công cho',
-      dataIndex: 'assignedTo',
-      key: 'assignedTo',
-      render: (assignedTo) => assignedTo || '-',
-    },
-    // Actions column ở cuối
-    {
       title: 'Hành động',
       key: 'actions',
       fixed: 'right',
       render: (_, record) => {
-        const isAssignedOrScheduled = ['ASSIGNED', 'SCHEDULED'].includes(record.maintenanceStatus);
+        const renderActionButton = (status, label, onClick, isCompleted, isNext) => {
+          if (isCompleted) {
+            return (
+              <Button type="text" style={{ color: 'green', cursor: 'default' }}>
+                {label} ✓
+              </Button>
+            );
+          }
+          if (isNext) {
+            return (
+              <Button type="primary" onClick={onClick}>
+                {label}
+              </Button>
+            );
+          }
+          return (
+            <Button type="text" disabled>
+              {label}
+            </Button>
+          );
+        };
 
-        return (
-          <Space direction="vertical">
-            {/* Nút Schedule luôn hiển thị */}
-            <Button 
-              onClick={() => {
+        const getMaintenanceSteps = () => {
+          const steps = [];
+          
+          // Step 1: Lên lịch
+          steps.push(
+            renderActionButton(
+              'ASSIGNED',
+              'Lên lịch',
+              () => {
                 setEditingIds(prev => new Set(prev).add(record.id));
                 setSelectedDates(prev => ({
                   ...prev,
-                  [record.id]: {
-                    scheduledDate: record.scheduledDate
-                  },
+                  [record.id]: { scheduledDate: record.scheduledDate },
                 }));
-              }}
-            >
-              Lên lịch
-            </Button>
+              },
+              record.maintenanceStatus !== 'ASSIGNED',
+              record.maintenanceStatus === 'ASSIGNED'
+            )
+          );
 
-            {/* Nút Save chỉ hiển thị khi đang edit schedule */}
-            {editingIds.has(record.id) && (
-              <Button onClick={() => handleSubmitDates(record.id)}>
+          // Show save button if currently editing
+          if (editingIds.has(record.id)) {
+            steps.push(
+              <Button key="save" onClick={() => handleSubmitDates(record.id)}>
                 Lưu
               </Button>
-            )}
+            );
+          }
 
-            {/* Nút Start Maintenance */}
-            {isAssignedOrScheduled && record.scheduledDate && (
-              <Button 
-                type="primary"
-                onClick={() => handleStartMaintenance(record.id)}
-              >
-                Bắt đầu bảo trì
-              </Button>
-            )}
+          // Step 2: Bắt đầu bảo trì
+          steps.push(
+            renderActionButton(
+              'SCHEDULED',
+              'Bắt đầu bảo trì',
+              () => handleStartMaintenance(record.id),
+              ['IN_PROGRESS', 'COMPLETED'].includes(record.maintenanceStatus),
+              record.maintenanceStatus === 'SCHEDULED'
+            )
+          );
 
-            {/* Nút Complete Maintenance */}
-            {record.maintenanceStatus === 'IN_PROGRESS' && (
-              <Button 
-                type="primary"
-                onClick={() => showCompleteModal(record.id)}
-              >
-                Hoàn thành bảo trì
-              </Button>
-            )}
+          // Step 3: Hoàn thành bảo trì
+          steps.push(
+            renderActionButton(
+              'IN_PROGRESS',
+              'Hoàn thành bảo trì',
+              () => showCompleteModal(record.id),
+              record.maintenanceStatus === 'COMPLETED',
+              record.maintenanceStatus === 'IN_PROGRESS'
+            )
+          );
+
+          // Step 4: Show completed status
+          if (record.maintenanceStatus === 'COMPLETED') {
+            steps.push(
+              <Tag color="success">Đã hoàn thành</Tag>
+            );
+          }
+
+          return steps;
+        };
+
+        return (
+          <Space direction="vertical">
+            {getMaintenanceSteps()}
           </Space>
         );
       },

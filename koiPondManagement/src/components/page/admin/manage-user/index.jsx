@@ -325,7 +325,7 @@ function UserManagement() {
               { required: true, message: "Vui lòng nhập tên đăng nhập!" },
             ]}
           >
-            <Input style={{ width: "100%" }} disabled />
+            <Input style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item
             name="email"
