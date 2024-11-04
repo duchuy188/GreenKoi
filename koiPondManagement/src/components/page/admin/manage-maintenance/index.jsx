@@ -157,7 +157,7 @@ const ManageMaintenance = () => {
   };
 
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id", hidden: true },
+    { title: "Mã", dataIndex: "id", key: "id", hidden: true },
     { title: "Khách hàng", dataIndex: "customerId", key: "customerId" },
     { title: "Dự án", dataIndex: "projectId", key: "projectId" },
     { title: "Tư vấn viên", dataIndex: "consultantId", key: "consultantId" },

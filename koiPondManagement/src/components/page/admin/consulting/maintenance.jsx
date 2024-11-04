@@ -13,12 +13,13 @@ import {
   DatePicker,
   Row,
   Col,
+  Tag,
 } from "antd";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import moment from 'moment';
 
-// Add a helper function to format currency
+
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
@@ -44,9 +45,17 @@ const MaintenanceRequest = () => {
   const fetchMaintenanceRequests = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/maintenance-requests/${statusFilter.toLowerCase()}`);
-      console.log("API response:", response.data);
-      setMaintenanceRequests(response.data);
+      let endpoint = `/api/maintenance-requests/${statusFilter.toLowerCase()}`;
+      
+      if (statusFilter === "COMPLETED") {
+        endpoint = '/api/maintenance-requests/completed-unpaid';
+        const response = await api.get(endpoint);
+        console.log("Completed maintenance requests:", response.data);
+        setMaintenanceRequests(response.data);
+      } else {
+        const response = await api.get(endpoint);
+        setMaintenanceRequests(response.data);
+      }
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
       if (error.response) {
@@ -106,23 +115,13 @@ const MaintenanceRequest = () => {
 
   const handleUpdateMaintenanceRequest = async (values) => {
     try {
-      const remainingAmount = values.agreedPrice - values.depositAmount;
-
       const response = await api.patch(`/api/maintenance-requests/${selectedRecord.id}/confirm`, {
         agreedPrice: values.agreedPrice,
-        paymentStatus: 'DEPOSIT_PAID',
-        paymentMethod: values.paymentMethod,
-        depositAmount: values.depositAmount,
-        remainingAmount: remainingAmount,
         requestStatus: 'CONFIRMED'
       });
 
       if (response.status === 200) {
-        if (values.paymentMethod === 'CASH') {
-          await api.post(`/api/maintenance-requests/${selectedRecord.id}/deposit/cash`);
-        }
-
-        message.success("Cập nhật và xác nhận đặt cọc thành công");
+        message.success("Cập nhật giá thỏa thuận thành công");
         setIsModalVisible(false);
         fetchMaintenanceRequests();
       }
@@ -167,38 +166,41 @@ const MaintenanceRequest = () => {
     setCancellingRequestId(null);
   };
 
-  const handleUpdatePaymentStatus = async (values) => {
-    try {
-      const response = await api.patch(`/api/maintenance-requests/${selectedRecord.id}/payment-status`, {
-        paymentStatus: values.paymentStatus
-      });
-      if (response.status === 200) {
-        message.success("Cập nhật trạng thái thanh toán thành công");
-        fetchMaintenanceRequests();
-      }
-    } catch (error) {
-      console.error("Error updating payment status:", error);
-      toast.error("Không thể cập nhật trạng thái thanh toán");
-    }
-  };
 
   const handleFinalPayment = async (record) => {
     try {
-      const updateResponse = await api.patch(`/api/maintenance-requests/${record.id}/payment-status`, {
-        paymentStatus: 'FULLY_PAID'
+      Modal.confirm({
+        title: 'Xác nhận thanh toán',
+        content: (
+          <div>
+            <p>Xác nhận thanh toán số tiền còn lại:</p>
+            <p style={{ fontWeight: 'bold' }}>{formatCurrency(record.remainingAmount)}</p>
+          </div>
+        ),
+        onOk: async () => {
+          const response = await api.post(`/api/maintenance-requests/${record.id}/final/cash`);
+          if (response.status === 200) {
+            message.success("Xác nhận thanh toán cuối cùng thành công");
+            fetchMaintenanceRequests();
+          }
+        },
+        okText: 'Xác nhận',
+        cancelText: 'Hủy',
       });
-
-      if (updateResponse.status === 200) {
-        if (record.paymentMethod === 'CASH') {
-          await api.post(`/api/maintenance-requests/${record.id}/final/cash`);
-        }
-
-        message.success("Thanh toán cuối cùng đã được xác nhận");
-        fetchMaintenanceRequests();
-      }
     } catch (error) {
       console.error("Error processing final payment:", error);
       toast.error("Không thể xử lý thanh toán cuối cùng");
+    }
+  };
+
+  const handleConfirmDeposit = async (record) => {
+    try {
+      await api.post(`/api/maintenance-requests/${record.id}/deposit/cash`);
+      message.success("Xác nhận đặt cọc thành công");
+      fetchMaintenanceRequests(); // Refresh lại danh sách
+    } catch (error) {
+      console.error("Error confirming deposit:", error);
+      toast.error("Không thể xác nhận đặt cọc");
     }
   };
 
@@ -217,31 +219,49 @@ const MaintenanceRequest = () => {
         ) : null
       ),
     },
-    { title: "ID", dataIndex: "id", key: "id", hidden: true },
-    { title: "Customer ID", dataIndex: "customerId", key: "customerId", hidden: true },
-    { title: "Project ID", dataIndex: "projectId", key: "projectId", hidden: true },
+    { title: "Mã yêu cầu", dataIndex: "id", key: "id", hidden: true },
+    { title: "Mã khách hàng", dataIndex: "customerId", key: "customerId", hidden: true },
+    { title: "Mã dự án", dataIndex: "projectId", key: "projectId", hidden: true },
     { title: "Mô tả", dataIndex: "description", key: "description" },
     {
       title: "Trạng thái yêu cầu",
       dataIndex: "requestStatus",
       key: "requestStatus",
       render: (status) => {
+        let color = '';
+        let text = '';
+        
         switch (status) {
           case "PENDING":
-            return "Đang chờ";
+            color = 'gold';
+            text = "Đang chờ";
+            break;
           case "REVIEWING":
-            return "Đang xem xét";
+            color = 'blue';
+            text = "Đang xem xét";
+            break;
+          case "CONFIRMED":
+            color = 'green';
+            text = "Đã xác nhận";
+            break;
+          case "COMPLETED":
+            color = 'cyan';
+            text = "Đã hoàn thành";
+            break;
           case "CANCELLED":
-            return "Đã hủy";
+            color = 'red';
+            text = "Đã hủy";
+            break;
           default:
-            return status;
+            color = 'default';
+            text = status;
         }
+        
+        return <Tag color={color}>{text}</Tag>;
       }
     },
     { title: "Ngày tạo", dataIndex: "createdAt", key: "createdAt", render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss') },
     { title: "Ngày cập nhật", dataIndex: "updatedAt", key: "updatedAt", render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss') },
-    { title: "Trạng thái bảo trì", dataIndex: "maintenanceStatus", key: "maintenanceStatus", hidden: true },
-    { title: "Ngày lên lịch", dataIndex: "scheduledDate", key: "scheduledDate", hidden: true },
     { 
       title: "Trạng thái thanh toán", 
       dataIndex: "paymentStatus", 
@@ -259,29 +279,50 @@ const MaintenanceRequest = () => {
         }
       }
     },
+    { 
+      title: "Số tiền đặt cọc", 
+      dataIndex: "depositAmount", 
+      key: "depositAmount",
+      render: (amount) => formatCurrency(amount),
+      hidden: statusFilter !== "CONFIRMED"
+    },
+    { 
+      title: "Số tiền còn lại", 
+      dataIndex: "remainingAmount", 
+      key: "remainingAmount",
+      render: (amount) => formatCurrency(amount),
+      hidden: statusFilter !== "COMPLETED"
+    },
     {
-      title: "Actions",
+      title: "Hành động",
       key: "actions",
       render: (_, record) => (
         <Space size="middle">
-          {record.requestStatus !== "PENDING" && (
-            <Button onClick={() => handleViewMaintenanceDetails(record)}>
-              View Details
+          <Button onClick={() => handleViewMaintenanceDetails(record)}>
+            Xem chi tiết
+          </Button>
+          {statusFilter === "COMPLETED" && record.paymentStatus !== "FULLY_PAID" && (
+            <Button 
+              type="primary" 
+              onClick={() => handleFinalPayment(record)}
+              disabled={record.remainingAmount <= 0}
+            >
+              Xác nhận thanh toán cuối cùng
             </Button>
           )}
           {record.requestStatus === "PENDING" && (
             <Button onClick={() => handleStartReview(record.id)}>
-              Start Review
+              Bắt đầu xem xét
             </Button>
           )}
           {record.requestStatus === "REVIEWING" && (
             <Button onClick={() => handleCancelRequest(record.id)} danger>
-              Cancel Request
+              Hủy yêu cầu
             </Button>
           )}
-          {record.paymentStatus === "DEPOSIT_PAID" && (
-            <Button onClick={() => handleFinalPayment(record)}>
-              Confirm Final Payment
+          {statusFilter === "CONFIRMED" && record.paymentStatus === "UNPAID" && (
+            <Button type="primary" onClick={() => handleConfirmDeposit(record)}>
+              Xác nhận đặt cọc
             </Button>
           )}
         </Space>
@@ -289,16 +330,193 @@ const MaintenanceRequest = () => {
       hidden: statusFilter === "CANCELLED"
     },
     { 
-      title: "Cancellation Reason", 
+      title: "Lý do hủy", 
       dataIndex: "cancellationReason", 
       key: "cancellationReason",
       render: (text, record) => record.requestStatus === "CANCELLED" ? text : "-",
       hidden: statusFilter !== "CANCELLED"
     },
+    { 
+      title: "Tên khách hàng", 
+      dataIndex: "customerName", 
+      key: "customerName",
+      hidden: true
+    },
+    { 
+      title: "Số điện thoại", 
+      dataIndex: "customerPhone", 
+      key: "customerPhone",
+      hidden: true
+    },
+    { 
+      title: "Thư điện tử", 
+      dataIndex: "customerEmail", 
+      key: "customerEmail",
+      hidden: true
+    },
+    { 
+      title: "Địa chỉ", 
+      dataIndex: "customerAddress", 
+      key: "customerAddress",
+      hidden: true
+    },
+    { 
+      title: "Tên dự án", 
+      dataIndex: "projectName", 
+      key: "projectName",
+      hidden: true
+    },
+    { 
+      title: "Người được giao", 
+      dataIndex: "assignedToName", 
+      key: "assignedToName",
+      hidden: true
+    },
+    { 
+      title: "Trạng thái bảo trì", 
+      dataIndex: "maintenanceStatus", 
+      key: "maintenanceStatus",
+      render: (status) => {
+        switch (status) {
+          case "ASSIGNED":
+            return "Đã phân công";
+          case "IN_PROGRESS":
+            return "Đang thực hiện";
+          case "COMPLETED":
+            return "Đã hoàn thành";
+          default:
+            return status;
+        }
+      },
+      hidden: statusFilter === "CONFIRMED" || statusFilter !== "CONFIRMED"
+    },
   ];
 
   const renderModalContent = () => {
     if (!selectedRecord) return null;
+
+    if (statusFilter === "COMPLETED") {
+      return (
+        <Descriptions bordered column={2}>
+          <Descriptions.Item label="Tên khách hàng">{selectedRecord.customerName}</Descriptions.Item>
+          <Descriptions.Item label="Số điện thoại">{selectedRecord.customerPhone}</Descriptions.Item>
+          <Descriptions.Item label="Email">{selectedRecord.customerEmail}</Descriptions.Item>
+          <Descriptions.Item label="Địa chỉ">{selectedRecord.customerAddress}</Descriptions.Item>
+          
+          <Descriptions.Item label="Mô tả" span={2}>{selectedRecord.description}</Descriptions.Item>
+          
+          <Descriptions.Item label="Giá thỏa thuận">{formatCurrency(selectedRecord.agreedPrice)}</Descriptions.Item>
+          <Descriptions.Item label="Số tiền đã cọc">{formatCurrency(selectedRecord.depositAmount)}</Descriptions.Item>
+          <Descriptions.Item label="Số tiền còn lại">{formatCurrency(selectedRecord.remainingAmount)}</Descriptions.Item>
+          
+          <Descriptions.Item label="Ngày hoàn thành">
+            {moment(selectedRecord.completionDate).format('YYYY-MM-DD')}
+          </Descriptions.Item>
+          
+          <Descriptions.Item label="Trạng thái thanh toán">
+            {selectedRecord.paymentStatus === "UNPAID" ? "Chưa thanh toán" :
+             selectedRecord.paymentStatus === "DEPOSIT_PAID" ? "Đã đặt cọc" :
+             selectedRecord.paymentStatus === "FULLY_PAID" ? "Đã thanh toán đủ" :
+             selectedRecord.paymentStatus}
+          </Descriptions.Item>
+          
+          <Descriptions.Item label="Ghi chú bảo trì" span={2}>
+            {selectedRecord.maintenanceNotes}
+          </Descriptions.Item>
+          
+          {selectedRecord.maintenanceImages && selectedRecord.maintenanceImages.length > 0 && (
+            <Descriptions.Item label="Hình ảnh bảo trì" span={2}>
+              <Space>
+                {selectedRecord.maintenanceImages.map((image, index) => (
+                  <Image key={index} width={100} src={image} />
+                ))}
+              </Space>
+            </Descriptions.Item>
+          )}
+        </Descriptions>
+      );
+    }
+
+    if (statusFilter === "CONFIRMED") {
+      return (
+        <Descriptions bordered column={2}>
+          <Descriptions.Item label="Tên khách hàng">{selectedRecord.customerName}</Descriptions.Item>
+          <Descriptions.Item label="Số điện thoại">{selectedRecord.customerPhone}</Descriptions.Item>
+          <Descriptions.Item label="Email">{selectedRecord.customerEmail}</Descriptions.Item>
+          <Descriptions.Item label="Địa chỉ">{selectedRecord.customerAddress}</Descriptions.Item>
+          
+          <Descriptions.Item label="Mã dự án">{selectedRecord.projectId}</Descriptions.Item>
+          <Descriptions.Item label="Tên dự án">{selectedRecord.projectName}</Descriptions.Item>
+          
+          <Descriptions.Item label="Mô tả" span={2}>{selectedRecord.description}</Descriptions.Item>
+          
+          <Descriptions.Item label="Trạng thái yêu cầu">
+            {selectedRecord.requestStatus === "PENDING" ? "Đang chờ" :
+             selectedRecord.requestStatus === "REVIEWING" ? "Đang xem xét" :
+             selectedRecord.requestStatus === "CONFIRMED" ? "Đã xác nhận" :
+             selectedRecord.requestStatus === "CANCELLED" ? "Đã hủy" :
+             selectedRecord.requestStatus}
+          </Descriptions.Item>
+          <Descriptions.Item label="Trạng thái bảo trì">{selectedRecord.maintenanceStatus}</Descriptions.Item>
+          
+          <Descriptions.Item label="Giá thỏa thuận">{formatCurrency(selectedRecord.agreedPrice)}</Descriptions.Item>
+          <Descriptions.Item label="Số tiền đặt cọc">{formatCurrency(selectedRecord.depositAmount)}</Descriptions.Item>
+          <Descriptions.Item label="Số tiền còn lại">{formatCurrency(selectedRecord.remainingAmount)}</Descriptions.Item>
+          
+          <Descriptions.Item label="Ngày lên lịch">
+            {moment(selectedRecord.scheduledDate).format('YYYY-MM-DD')}
+          </Descriptions.Item>
+          <Descriptions.Item label="Ngày bắt đầu">
+            {moment(selectedRecord.startDate).format('YYYY-MM-DD')}
+          </Descriptions.Item>
+          <Descriptions.Item label="Ngày hoàn thành">
+            {moment(selectedRecord.completionDate).format('YYYY-MM-DD')}
+          </Descriptions.Item>
+          
+          <Descriptions.Item label="Tư vấn viên">{selectedRecord.consultantName}</Descriptions.Item>
+          <Descriptions.Item label="Người được giao">{selectedRecord.assignedToName}</Descriptions.Item>
+          
+          <Descriptions.Item label="Trạng thái thanh toán">
+            {selectedRecord.paymentStatus === "UNPAID" ? "Chưa thanh toán" :
+             selectedRecord.paymentStatus === "DEPOSIT_PAID" ? "Đã đặt cọc" :
+             selectedRecord.paymentStatus === "FULLY_PAID" ? "Đã thanh toán đủ" :
+             selectedRecord.paymentStatus}
+          </Descriptions.Item>
+          <Descriptions.Item label="Phương thức thanh toán">
+            {selectedRecord.paymentMethod === "CASH" ? "Tiền mặt" :
+             selectedRecord.paymentMethod === "BANK" ? "Chuyển khoản" :
+             selectedRecord.paymentMethod}
+          </Descriptions.Item>
+          
+          <Descriptions.Item label="Ghi chú bảo trì" span={2}>
+            {selectedRecord.maintenanceNotes}
+          </Descriptions.Item>
+          
+          {selectedRecord.attachments && (
+            <Descriptions.Item label="Hình ảnh đính kèm" span={2}>
+              <Image width={100} src={selectedRecord.attachments} />
+            </Descriptions.Item>
+          )}
+          
+          {selectedRecord.maintenanceImages && selectedRecord.maintenanceImages.length > 0 && (
+            <Descriptions.Item label="Hình ảnh bảo trì" span={2}>
+              <Space>
+                {selectedRecord.maintenanceImages.map((image, index) => (
+                  <Image key={index} width={100} src={image} />
+                ))}
+              </Space>
+            </Descriptions.Item>
+          )}
+          
+          <Descriptions.Item label="Ngày tạo">
+            {moment(selectedRecord.createdAt).format('YYYY-MM-DD HH:mm:ss')}
+          </Descriptions.Item>
+          <Descriptions.Item label="Ngày cập nhật">
+            {moment(selectedRecord.updatedAt).format('YYYY-MM-DD HH:mm:ss')}
+          </Descriptions.Item>
+        </Descriptions>
+      );
+    }
 
     const commonFields = (
       <>
@@ -350,29 +568,13 @@ const MaintenanceRequest = () => {
           layout="vertical"
           initialValues={{
             ...selectedRecord,
-            scheduledDate: selectedRecord.scheduledDate ? moment(selectedRecord.scheduledDate) : null,
           }}
         >
-          <Form.Item name="id" label="Mã yêu cầu" hidden>
-            <Input disabled />
-          </Form.Item>
-          <Form.Item name="customerId" label="Mã khách hàng" hidden>
-            <Input disabled />
-          </Form.Item>
-          <Form.Item name="projectId" label="Mã dự án" hidden>
-            <Input disabled />
-          </Form.Item>
           <Form.Item name="description" label="Mô tả">
             <Input.TextArea disabled />
           </Form.Item>
           <Form.Item name="requestStatus" label="Trạng thái yêu cầu">
             <Input disabled />
-          </Form.Item>
-          <Form.Item name="maintenanceStatus" label="Trạng thái bảo trì" hidden>
-            <Input disabled />
-          </Form.Item>
-          <Form.Item name="scheduledDate" label="Ngày lên lịch" hidden>
-            <DatePicker disabled />
           </Form.Item>
           <Form.Item 
             name="agreedPrice" 
@@ -387,84 +589,26 @@ const MaintenanceRequest = () => {
               addonAfter="VND"
             />
           </Form.Item>
-          <Form.Item name="assignedTo" label="Người được giao" hidden>
-            <Input/>
-          </Form.Item>
-          <Form.Item name="maintenanceNotes" label="Ghi chú bảo trì" hidden>
-            <Input.TextArea/>
-          </Form.Item>
-          <Form.Item name="createdAt" label="Ngày tạo">
-            <Input disabled />
-          </Form.Item>
-          <Form.Item name="updatedAt" label="Ngày cập nhật">
-            <Input disabled />
-          </Form.Item>
-          <Form.Item name="attachments" label="Hình ảnh đính kèm">
-            <Input disabled />
-          </Form.Item>
-          <Form.Item 
-            name="paymentStatus" 
-            label="Trạng thái thanh toán"
-            rules={[{ required: true, message: 'Vui lòng chọn trạng thái thanh toán!' }]}
-          >
-            <Select>
-              <Select.Option value="UNPAID">Chưa thanh toán</Select.Option>
-              <Select.Option value="DEPOSIT_PAID">Đã cọc</Select.Option>
-              <Select.Option value="FULLY_PAID">Đã thanh toán</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item 
-            name="paymentMethod" 
-            label="Phương thức thanh toán"
-            rules={[{ required: true, message: 'Vui lòng chọn phương thức thanh toán!' }]}
-          >
-            <Select>
-              <Select.Option value="CASH">Tiền mặt</Select.Option>
-              <Select.Option value="BANK">Ngân hàng</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item 
-            name="depositAmount" 
-            label="Số tiền đặt cọc"
-            // rules={[{ required: true, message: 'Vui lòng nhập số tiền đặt cọc!' }]}
-          >
-            <Input
-              disabled
-              type="number"
-              min={0}
-              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-              addonAfter="VND"
-            />
-          </Form.Item>
-          <Form.Item name="remainingAmount" label="Số tiền còn lại">
-            <Input
-              disabled
-              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-              addonAfter="VND"
-            />
-          </Form.Item>
-          {selectedRecord.requestStatus === "REVIEWING" && (
-            <Button type="primary" htmlType="submit">
-              Cập nhật giá thỏa thuận
-            </Button>
-          )}
-          {selectedRecord.requestStatus === "CANCELLED" && (
-            <Form.Item name="cancellationReason" label="Lý do hủy">
-              <Input.TextArea disabled />
-            </Form.Item>
-          )}
+          <Button type="primary" htmlType="submit">
+            Cập nhật giá thỏa thuận
+          </Button>
         </Form>
       );
     }
   };
 
-  const filteredRequests = maintenanceRequests.filter(request => 
-    request.requestStatus === "PENDING" || 
-    request.requestStatus === "REVIEWING" ||
-    request.requestStatus === "CANCELLED"
-  );
+  const filteredRequests = maintenanceRequests.filter(request => {
+    if (statusFilter === "COMPLETED") {
+      return request.maintenanceStatus === "COMPLETED" && 
+             request.paymentStatus !== "FULLY_PAID";
+    }
+    if (statusFilter === "PENDING") return request.requestStatus === "PENDING";
+    if (statusFilter === "REVIEWING") return request.requestStatus === "REVIEWING";
+    if (statusFilter === "CANCELLED") return request.requestStatus === "CANCELLED";
+    if (statusFilter === "CONFIRMED") return request.requestStatus === "CONFIRMED";
+    if (statusFilter === "COMPLETED") return request.requestStatus === "COMPLETED"; 
+    return false;
+  });
 
   return (
     <div>
@@ -476,6 +620,8 @@ const MaintenanceRequest = () => {
       >
         <Select.Option value="PENDING">Đang chờ</Select.Option>
         <Select.Option value="REVIEWING">Đang xem xét</Select.Option>
+        <Select.Option value="CONFIRMED">Đã xác nhận</Select.Option>
+        <Select.Option value="COMPLETED">Hoàn thành - chờ thanh toán </Select.Option>
         <Select.Option value="CANCELLED">Đã hủy</Select.Option>
       </Select>
       {loading ? (
@@ -514,5 +660,5 @@ const MaintenanceRequest = () => {
     </div>
   );
 };
-
+  
 export default MaintenanceRequest;
