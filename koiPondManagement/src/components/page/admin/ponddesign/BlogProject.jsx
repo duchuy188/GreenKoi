@@ -11,6 +11,8 @@ import {
   Select,
   Space,
   Typography,
+  Tag,
+  Image,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import api from "../../../config/axios";
@@ -140,18 +142,41 @@ function BlogProject() {
     return `${time}\n${formattedDate}`;
   };
 
-  const filteredDrafts = draftBlogs.filter(
-    (blog) =>
-      blog.title?.toLowerCase().includes(searchText.toLowerCase()) ||
-      blog.id?.toString().includes(searchText)
-  );
+  const filteredDrafts = draftBlogs
+    .filter(
+      (blog) =>
+        blog.title?.toLowerCase().includes(searchText.toLowerCase()) ||
+        blog.id?.toString().includes(searchText)
+    )
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  const filteredPendingBlogs = pendingBlogs.filter(
-    (blog) =>
-      (statusFilter === "ALL" || blog.status === statusFilter) &&
-      (blog.title?.toLowerCase().includes(searchText.toLowerCase()) ||
-        blog.id?.toString().includes(searchText))
-  );
+  const filteredPendingBlogs = pendingBlogs
+    .filter(
+      (blog) =>
+        (statusFilter === "ALL" || blog.status === statusFilter) &&
+        (blog.title?.toLowerCase().includes(searchText.toLowerCase()) ||
+          blog.id?.toString().includes(searchText))
+    )
+    .sort((a, b) => {
+      // Nếu cả hai bài viết đều chưa được duyệt (1970-01-01 hoặc null)
+      const isADefault =
+        a.publishedAt === "1970-01-01T07:00:00.000Z" || a.publishedAt === null;
+      const isBDefault =
+        b.publishedAt === "1970-01-01T07:00:00.000Z" || b.publishedAt === null;
+
+      if (isADefault && isBDefault) {
+        // Nếu cả hai chưa được duyệt, sắp xếp theo thời gian tạo mới nhất
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      } else if (isADefault) {
+        // Nếu A chưa được duyệt, đẩy xuống dưới
+        return 1;
+      } else if (isBDefault) {
+        // Nếu B chưa được duyệt, đẩy xuống dưới
+        return -1;
+      }
+      // Nếu cả hai đều đã được duyệt, sắp xếp theo thời gian xuất bản mới nhất
+      return new Date(b.publishedAt) - new Date(a.publishedAt);
+    });
 
   const draftColumns = [
     {
@@ -198,17 +223,60 @@ function BlogProject() {
       title: "Hình ảnh",
       dataIndex: "coverImageUrl",
       key: "coverImageUrl",
-      render: (url) => <img src={url} alt="Blog" style={{ width: 100 }} />,
+      render: (url) => (
+        <Image
+          src={url}
+          alt="Blog"
+          width={100}
+          height={100}
+          style={{ objectFit: "cover", marginTop: "5px" }}
+          placeholder={
+            <div
+              style={{
+                width: 100,
+                height: 100,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                background: "#f5f5f5",
+              }}
+            >
+              Loading...
+            </div>
+          }
+        />
+      ),
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       render: (status) => {
+        let color = "default";
+        let text = status;
+
         switch (status) {
+          case "PENDING_APPROVAL":
+            color = "gold";
+            text = "Đang chờ xử lý";
+            break;
+          case "APPROVED":
+            color = "green";
+            text = "Đã chấp nhận";
+            break;
+          case "REJECTED":
+            color = "red";
+            text = "Đã từ chối";
+            break;
           case "DRAFT":
-            return "Nháp";
+            color = "blue";
+            text = "Nháp";
+            break;
+          default:
+            text = status;
         }
+
+        return <Tag color={color}>{text}</Tag>;
       },
     },
     {
@@ -254,7 +322,7 @@ function BlogProject() {
           </Tooltip>
           <Tooltip title="Xóa">
             <Popconfirm
-              title="Bạn có chắc chắn muốn xóa?"
+              title="Bạn có muốn muốn xóa?"
               onConfirm={() => handleDeleteDraft(record.id)}
               okText="Đồng ý"
               cancelText="Hủy"
@@ -314,23 +382,60 @@ function BlogProject() {
       title: "Hình ảnh",
       dataIndex: "coverImageUrl",
       key: "coverImageUrl",
-      render: (url) => <img src={url} alt="Blog" style={{ width: 100 }} />,
+      render: (url) => (
+        <Image
+          src={url}
+          alt="Blog"
+          width={100}
+          height={100}
+          style={{ objectFit: "cover", marginTop: "5px" }}
+          placeholder={
+            <div
+              style={{
+                width: 100,
+                height: 100,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                background: "#f5f5f5",
+              }}
+            >
+              Loading...
+            </div>
+          }
+        />
+      ),
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       render: (status) => {
+        let color = "default";
+        let text = status;
+
         switch (status) {
           case "PENDING_APPROVAL":
-            return "Đang chờ xử lý";
+            color = "gold";
+            text = "Đang chờ xử lý";
+            break;
           case "APPROVED":
-            return "Đã chấp nhận";
+            color = "green";
+            text = "Đã chấp nhận";
+            break;
           case "REJECTED":
-            return "Đã từ chối";
+            color = "red";
+            text = "Đã từ chối";
+            break;
+          case "DRAFT":
+            color = "blue";
+            text = "Nháp";
+            break;
           default:
-            return status;
+            text = status;
         }
+
+        return <Tag color={color}>{text}</Tag>;
       },
     },
     {
@@ -359,9 +464,14 @@ function BlogProject() {
       key: "publishedAt",
       sorter: (a, b) => new Date(b.publishedAt) - new Date(a.publishedAt),
       showSorterTooltip: false,
-      render: (text) => (
-        <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
-      ),
+      render: (text) => {
+        if (text === "1970-01-01T07:00:00.000Z" || text === null) {
+          return "Chưa được duyệt";
+        }
+        return (
+          <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
+        );
+      },
     },
     {
       title: "Lý do từ chối",
@@ -379,7 +489,7 @@ function BlogProject() {
           dataSource={filteredDrafts}
           columns={draftColumns}
           loading={loading}
-          pagination={false}
+          pagination={{ pageSize: 5 }}
           rowKey="id"
         />
       </div>
@@ -392,7 +502,7 @@ function BlogProject() {
             value={statusFilter}
             onChange={setStatusFilter}
             style={{ width: 200 }}
-            placeholder="Chờ duyệt"
+            placeholder="Chọn trạng thái"
           >
             <Option value="ALL">Tất cả</Option>
             <Option value="PENDING_APPROVAL">Chờ duyệt</Option>
@@ -404,19 +514,33 @@ function BlogProject() {
           dataSource={filteredPendingBlogs}
           columns={pendingColumns}
           loading={loading}
-          pagination={false}
+          pagination={{ pageSize: 5 }}
           rowKey="id"
         />
       </div>
 
-      {/* Keep only the content viewing modal */}
+      {/* Content modal */}
       <Modal
-        title={currentTitle}
+        title="Nội dung bài viết"
         open={isContentModalVisible}
         onCancel={() => setIsContentModalVisible(false)}
-        footer={null}
+        footer={[
+          <Button key="close" onClick={() => setIsContentModalVisible(false)}>
+            Đóng
+          </Button>,
+        ]}
+        width={600}
       >
-        <div dangerouslySetInnerHTML={{ __html: currentContent }} />
+        <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
+          <div
+            dangerouslySetInnerHTML={{ __html: currentContent }}
+            style={{
+              fontSize: "14px",
+              lineHeight: "1.6",
+              textAlign: "justify",
+            }}
+          />
+        </div>
       </Modal>
     </div>
   );

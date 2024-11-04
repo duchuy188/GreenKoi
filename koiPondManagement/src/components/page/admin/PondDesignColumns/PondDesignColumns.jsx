@@ -1,4 +1,4 @@
-import { Button, Table, Popconfirm, Modal, Input } from "antd";
+import { Button, Table, Popconfirm, Modal, Input, Image, Tag } from "antd";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
@@ -105,7 +105,27 @@ function PondDesignColumns() {
       dataIndex: "imageUrl",
       key: "imageUrl",
       render: (url) => (
-        <img src={url} alt="Pond Design" style={{ width: 100 }} />
+        <Image
+          src={url}
+          alt="Pond Design"
+          width={100}
+          height={100}
+          style={{ objectFit: "cover", marginTop: "5px" }}
+          placeholder={
+            <div
+              style={{
+                width: 100,
+                height: 100,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                background: "#f5f5f5",
+              }}
+            >
+              Loading...
+            </div>
+          }
+        />
       ),
     },
     { title: "Hình dáng", dataIndex: "shape", key: "shape" },
@@ -130,16 +150,17 @@ function PondDesignColumns() {
       dataIndex: "status",
       key: "status",
       render: (status) => {
+        let color = "default";
+        let text = status;
         switch (status) {
           case "PENDING_APPROVAL":
-            return "Đang chờ xử lý";
-          case "APPROVED":
-            return "Đã chấp nhận";
-          case "REJECTED":
-            return "Đã từ chối";
+            color = "gold";
+            text = "Đang chờ xử lý";
+            break;
           default:
-            return status;
+            text = status;
         }
+        return <Tag color={color}>{text}</Tag>;
       },
     },
     {
@@ -198,13 +219,27 @@ function PondDesignColumns() {
       <Modal
         title="Mô tả chi tiết"
         open={isDescriptionModalVisible}
-        onOk={() => setIsDescriptionModalVisible(false)}
         onCancel={() => setIsDescriptionModalVisible(false)}
-        closable={true}
-        okText="Đóng"
-        cancelButtonProps={{ style: { display: "none" } }}
+        footer={[
+          <Button
+            key="close"
+            onClick={() => setIsDescriptionModalVisible(false)}
+          >
+            Đóng
+          </Button>,
+        ]}
+        width={600}
       >
-        <div dangerouslySetInnerHTML={{ __html: currentDescription }} />
+        <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
+          <div
+            dangerouslySetInnerHTML={{ __html: currentDescription }}
+            style={{
+              fontSize: "14px",
+              lineHeight: "1.6",
+              textAlign: "justify",
+            }}
+          />
+        </div>
       </Modal>
     </div>
   );

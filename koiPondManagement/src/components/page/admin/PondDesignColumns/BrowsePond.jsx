@@ -8,6 +8,7 @@ import {
   Tag,
   Popconfirm,
   Select,
+  Image,
 } from "antd";
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
@@ -148,7 +149,7 @@ function BrowsePond() {
       key: "content",
       render: (text) => (
         <>
-          {text.slice(0, 20)}...
+          {text.slice(0, 10)}...
           <Button type="link" onClick={() => openContentModal(text)}>
             Xem thêm
           </Button>
@@ -165,7 +166,27 @@ function BrowsePond() {
       dataIndex: "coverImageUrl",
       key: "coverImageUrl",
       render: (url) => (
-        <img src={url} alt="Pond Design" style={{ width: 50 }} />
+        <Image
+          src={url}
+          alt="Pond Design"
+          width={100}
+          height={100}
+          style={{ objectFit: "cover", marginTop: "5px" }}
+          placeholder={
+            <div
+              style={{
+                width: 100,
+                height: 100,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                background: "#f5f5f5",
+              }}
+            >
+              Loading...
+            </div>
+          }
+        />
       ),
     },
     {
@@ -173,21 +194,32 @@ function BrowsePond() {
       dataIndex: "status",
       key: "status",
       render: (status) => {
+        let color = "default";
+        let text = status;
         switch (status) {
           case "PENDING_APPROVAL":
-            return "Đang chờ xử lý";
+            color = "gold";
+            text = "Đang chờ xử lý";
+            break;
           case "APPROVED":
-            return "Đã chấp nhận";
+            color = "green";
+            text = "Đã chấp nhận";
+            break;
           default:
-            return status;
+            text = status;
         }
+        return <Tag color={color}>{text}</Tag>;
       },
     },
     {
       title: "Hoạt Động",
       dataIndex: "active",
       key: "active",
-      render: (active) => <Tag>{active ? "Hoạt động" : "Không hoạt động"}</Tag>,
+      render: (active) => (
+        <Tag color={active ? "blue" : "red"}>
+          {active ? "Hoạt động" : "Không hoạt động"}
+        </Tag>
+      ),
     },
     {
       title: "Thời gian tạo",
@@ -200,6 +232,17 @@ function BrowsePond() {
       dataIndex: "updatedAt",
       key: "updatedAt",
       render: (text) => (text ? new Date(text).toLocaleString() : "-"),
+    },
+    {
+      title: "Thời gian xuất bản",
+      dataIndex: "publishedAt",
+      key: "publishedAt",
+      render: (text, record) => {
+        if (record.status === "PENDING_APPROVAL") {
+          return "Chưa xuất bản";
+        }
+        return text ? new Date(text).toLocaleString() : "-";
+      },
     },
     {
       key: "actions",

@@ -10,6 +10,8 @@ import {
   Popconfirm,
   Modal,
   Select,
+  Image,
+  Tag,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import api from "../../../config/axios";
@@ -144,7 +146,27 @@ function DesignProject() {
       dataIndex: "imageUrl",
       key: "imageUrl",
       render: (url) => (
-        <img src={url} alt="Pond Design" style={{ width: 100 }} />
+        <Image
+          src={url}
+          alt="Pond Design"
+          width={100}
+          height={100}
+          style={{ objectFit: "cover", marginTop: "5px" }}
+          placeholder={
+            <div
+              style={{
+                width: 100,
+                height: 100,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                background: "#f5f5f5",
+              }}
+            >
+              Loading...
+            </div>
+          }
+        />
       ),
     },
     { title: "Hình dáng", dataIndex: "shape", key: "shape" },
@@ -168,16 +190,25 @@ function DesignProject() {
       dataIndex: "status",
       key: "status",
       render: (status) => {
+        let color = "default";
+        let text = status;
         switch (status) {
           case "PENDING_APPROVAL":
-            return "Đang chờ xử lý";
+            color = "gold";
+            text = "Đang chờ xử lý";
+            break;
           case "APPROVED":
-            return "Đã chấp nhận";
+            color = "green";
+            text = "Đã chấp nhận";
+            break;
           case "REJECTED":
-            return "Đã từ chối";
+            color = "red";
+            text = "Đã từ chối";
+            break;
           default:
-            return status;
+            text = status;
         }
+        return <Tag color={color}>{text}</Tag>;
       },
     },
     { title: "Lý do", dataIndex: "rejectionReason", key: "rejectionReason" },
@@ -230,19 +261,34 @@ function DesignProject() {
           columns={columns}
           dataSource={filteredPonds}
           rowKey="id"
-          pagination={false}
+          loading={loading}
         />
       </Card>
 
       <Modal
         title="Mô tả chi tiết"
         open={isDescriptionModalVisible}
-        onOk={() => setIsDescriptionModalVisible(false)}
-        closable={false}
-        okText="Đóng"
-        cancelButtonProps={{ style: { display: "none" } }}
+        onCancel={() => setIsDescriptionModalVisible(false)}
+        footer={[
+          <Button
+            key="close"
+            onClick={() => setIsDescriptionModalVisible(false)}
+          >
+            Đóng
+          </Button>,
+        ]}
+        width={600}
       >
-        <div dangerouslySetInnerHTML={{ __html: currentDescription }} />
+        <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
+          <div
+            dangerouslySetInnerHTML={{ __html: currentDescription }}
+            style={{
+              fontSize: "14px",
+              lineHeight: "1.6",
+              textAlign: "justify",
+            }}
+          />
+        </div>
       </Modal>
 
       {/* Modal chỉnh sửa */}
