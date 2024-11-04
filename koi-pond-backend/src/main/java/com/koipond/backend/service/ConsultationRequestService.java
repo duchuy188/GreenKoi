@@ -78,8 +78,23 @@ public class ConsultationRequestService {
             com.koipond.backend.model.ConsultationRequest request = consultationRequestRepository.findById(requestId)
                     .orElseThrow(() -> new RuntimeException("Consultation request not found"));
 
-            if (!ConsultationStatus.PENDING.name().equals(request.getStatus())) {
-                throw new RuntimeException("Can only update PENDING requests. Current status: " + request.getStatus());
+            String currentStatus = request.getStatus();
+            if (currentStatus.equals(ConsultationStatus.CANCELLED.name())) {
+                throw new RuntimeException("Cannot update CANCELLED requests");
+            }
+            
+            if (currentStatus.equals(ConsultationStatus.COMPLETED.name())) {
+                throw new RuntimeException("Cannot update COMPLETED requests");
+            }
+            
+            if (currentStatus.equals(ConsultationStatus.PENDING.name()) && 
+                !newStatus.equals(ConsultationStatus.IN_PROGRESS.name())) {
+                throw new RuntimeException("PENDING requests can only be changed to IN_PROGRESS");
+            }
+            
+            if (currentStatus.equals(ConsultationStatus.IN_PROGRESS.name()) && 
+                !newStatus.equals(ConsultationStatus.COMPLETED.name())) {
+                throw new RuntimeException("IN_PROGRESS requests can only be changed to COMPLETED");
             }
 
             try {
