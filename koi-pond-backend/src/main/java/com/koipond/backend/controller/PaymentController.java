@@ -59,43 +59,44 @@ public class PaymentController {
         }
     }
 
-    @GetMapping("/vnpay-return")
-    @Operation(summary = "Process VNPay return", description = "Processes the payment result returned by VNPay.")
-    @ApiResponse(responseCode = "200", description = "Payment processed successfully")
-    @ApiResponse(responseCode = "500", description = "Error processing payment")
-    public ResponseEntity<?> vnpayReturn(@RequestParam Map<String, String> queryParams) {
+    @PostMapping("/verify-payment")
+    @Operation(summary = "Verify VNPay payment", description = "Verifies the payment result from VNPay.")
+    @ApiResponse(responseCode = "200", description = "Payment verified successfully")
+    public ResponseEntity<?> verifyPayment(@RequestBody Map<String, String> queryParams) {
         String vnp_ResponseCode = queryParams.get("vnp_ResponseCode");
         String vnp_TxnRef = queryParams.get("vnp_TxnRef");
         String vnp_OrderInfo = queryParams.get("vnp_OrderInfo");
 
-        // Tách lấy ID từ vnp_TxnRef (bỏ phần timestamp)
         String id = vnp_TxnRef.split("_")[0];
 
-        logger.info("Processing VNPay return - ID: {}, OrderInfo: {}, ResponseCode: {}", 
+        logger.info("Verifying VNPay payment - ID: {}, OrderInfo: {}, ResponseCode: {}", 
             id, vnp_OrderInfo, vnp_ResponseCode);
 
         try {
-            // Xác định loại thanh toán từ OrderInfo
             if (vnp_OrderInfo.contains("project")) {
                 projectService.processPaymentResult(id, vnp_ResponseCode);
-                return ResponseEntity.ok("Project payment processed successfully");
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Project payment verified successfully",
+                    "paymentType", "PROJECT"
+                ));
             } else if (vnp_OrderInfo.contains("bao tri")) {
                 String paymentType = vnp_OrderInfo.contains("dat coc") ? 
                     "MAINTENANCE_DEPOSIT" : "MAINTENANCE_FINAL";
                     
                 maintenanceRequestService.processVnPayCallback(id, vnp_ResponseCode, paymentType);
-                return ResponseEntity.ok("Maintenance payment processed successfully");
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Maintenance payment verified successfully",
+                    "paymentType", "MAINTENANCE"
+                ));
             } else {
                 throw new IllegalArgumentException("Invalid payment type in OrderInfo");
             }
-        } catch (ResourceNotFoundException e) {
-            logger.error("Resource not found: {}", id, e);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
-            logger.error("Error processing payment for ID: {}", id, e);
+            logger.error("Error verifying payment for ID: {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("Error processing payment: " + e.getMessage()));
+                    .body(new ErrorResponse("Error verifying payment: " + e.getMessage()));
         }
     }
 }
