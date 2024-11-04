@@ -34,7 +34,7 @@ public class MaintenanceRequestDTO {
     private String maintenanceNotes;
     private List<String> maintenanceImages;
     
-    // ThÃªm cÃ¡c trÆ°á»ng má»›i
+    // Thêm các trường mới
     private MaintenanceRequest.PaymentStatus paymentStatus;
     private MaintenanceRequest.PaymentMethod paymentMethod;
     private BigDecimal depositAmount;

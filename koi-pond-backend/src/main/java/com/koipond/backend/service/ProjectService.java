@@ -790,6 +790,14 @@ public class ProjectService {
             project.setPaymentStatus(newStatus);
             project.setUpdatedAt(LocalDateTime.now());
 
+            // Thêm logic để tự động cập nhật trạng thái dự án
+            if (newStatus == Project.PaymentStatus.DEPOSIT_PAID && "PENDING".equals(currentProjectStatus)) {
+                ProjectStatus approvedStatus = getProjectStatusByName("APPROVED");
+                project.setStatus(approvedStatus);
+                updateProjectFieldsBasedOnStatus(project, approvedStatus);
+                log.info("Project status automatically updated to APPROVED after deposit payment");
+            }
+
             Project updatedProject = projectRepository.save(project);
             log.info("Payment status updated to {} for project {}", newStatus, projectId);
             return convertToDTO(updatedProject);

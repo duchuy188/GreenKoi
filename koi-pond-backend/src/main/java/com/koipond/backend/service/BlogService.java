@@ -139,7 +139,13 @@ public class BlogService {
         dto.setAuthorId(entity.getAuthor().getId());
         dto.setCoverImageUrl(entity.getCoverImageUrl());
         dto.setStatus(entity.getStatus().name());
-        dto.setPublishedAt(entity.getPublishedAt());
+        
+        if (entity.getStatus() == BlogPost.BlogPostStatus.APPROVED) {
+            dto.setPublishedAt(entity.getPublishedAt());
+        } else {
+            dto.setPublishedAt(null);
+        }
+        
         dto.setActive(entity.isActive());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());

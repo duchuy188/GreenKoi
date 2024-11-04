@@ -64,7 +64,7 @@ public class MaintenanceRequestService {
                 return new ResourceNotFoundException("Customer not found");
             });
 
-        // Kiá»ƒm tra quyá»n sá»Ÿ há»¯u dá»± Ã¡n
+        // Kiểm tra quyền sở hữu dự án
         if (!project.getCustomer().getId().equals(customerId)) {
             logger.warn("Attempt to create maintenance request for unowned project. Project owner: {}, Requester: {}", project.getCustomer().getId(), customerId);
             throw new IllegalArgumentException("Cannot create maintenance request for unowned project");
@@ -229,7 +229,7 @@ public class MaintenanceRequestService {
         if (dto.getCustomerId() != null) {
             entity.setCustomer(userRepository.findById(dto.getCustomerId()).orElse(null));
         }
-        // Bá» pháº§n set consultant
+        // Bỏ phần set consultant
         if (dto.getAssignedTo() != null) {
             entity.setAssignedTo(userRepository.findById(dto.getAssignedTo()).orElse(null));
         }
@@ -248,10 +248,10 @@ public class MaintenanceRequestService {
     private MaintenanceRequestDTO convertToDTO(MaintenanceRequest request) {
         MaintenanceRequestDTO dto = new MaintenanceRequestDTO();
         
-        // Copy ID vÃ  cÃ¡c trÆ°á»ng cÆ¡ báº£n
+        // Copy ID và các trường cơ bản
         dto.setId(request.getId());
         
-        // Copy thÃ´ng tin khÃ¡ch hÃ ng
+        // Copy thông tin khách hàng
         if (request.getCustomer() != null) {
             User customer = request.getCustomer();
             dto.setCustomerId(customer.getId());
@@ -261,14 +261,14 @@ public class MaintenanceRequestService {
             dto.setCustomerAddress(customer.getAddress());
         }
         
-        // Copy thÃ´ng tin dá»± Ã¡n
+        // Copy thông tin dự án
         if (request.getProject() != null) {
             Project project = request.getProject();
             dto.setProjectId(project.getId());
             dto.setProjectName(project.getName());
         }
         
-        // Copy thÃ´ng tin consultant vÃ  staff
+        // Copy thông tin consultant và staff
         if (request.getConsultant() != null) {
             dto.setConsultantId(request.getConsultant().getId());
             dto.setConsultantName(request.getConsultant().getFullName());
@@ -279,25 +279,25 @@ public class MaintenanceRequestService {
             dto.setAssignedToName(request.getAssignedTo().getFullName());
         }
         
-        // Copy cÃ¡c trÆ°á»ng cÃ²n láº¡i
+        // Copy các trường còn lại
         dto.setDescription(request.getDescription());
         dto.setAttachments(request.getAttachments());
         dto.setRequestStatus(request.getRequestStatus());
         dto.setMaintenanceStatus(request.getMaintenanceStatus());
         dto.setAgreedPrice(request.getAgreedPrice());
         
-        // Copy cÃ¡c trÆ°á»ng ngÃ y thÃ¡ng
+        // Copy các trường ngày tháng
         dto.setScheduledDate(request.getScheduledDate());
         dto.setStartDate(request.getStartDate());
         dto.setCompletionDate(request.getCompletionDate());
         dto.setCreatedAt(request.getCreatedAt());
         dto.setUpdatedAt(request.getUpdatedAt());
         
-        // Copy cÃ¡c trÆ°á»ng khÃ¡c
+        // Copy các trường khác
         dto.setCancellationReason(request.getCancellationReason());
         dto.setMaintenanceNotes(request.getMaintenanceNotes());
         
-        // Copy thÃ´ng tin thanh toÃ¡n
+        // Copy thông tin thanh toán
         dto.setPaymentStatus(request.getPaymentStatus());
         dto.setPaymentMethod(request.getPaymentMethod());
         dto.setDepositAmount(request.getDepositAmount());
@@ -336,7 +336,7 @@ public class MaintenanceRequestService {
         target.setCancellationReason(source.getCancellationReason());
         target.setMaintenanceNotes(source.getMaintenanceNotes());
         
-        // ThÃªm cÃ¡c trÆ°á»ng payment má»›i
+        // Thêm các trường payment mới
         target.setPaymentStatus(source.getPaymentStatus());
         target.setPaymentMethod(source.getPaymentMethod());
         target.setDepositAmount(source.getDepositAmount());
@@ -364,7 +364,7 @@ public class MaintenanceRequestService {
         target.setUpdatedAt(source.getUpdatedAt());
         target.setMaintenanceNotes(source.getMaintenanceNotes());
         
-        // ThÃªm cÃ¡c trÆ°á»ng payment má»›i
+        // Thêm các trường payment mới
         target.setPaymentStatus(source.getPaymentStatus());
         target.setPaymentMethod(source.getPaymentMethod());
         target.setDepositAmount(source.getDepositAmount());
@@ -387,20 +387,20 @@ public class MaintenanceRequestService {
         synchronized (id.intern()) {
             MaintenanceRequest request = findMaintenanceRequestById(id);
             
-            // LÆ°u tráº¡ng thÃ¡i hiá»‡n táº¡i Ä‘á»ƒ kiá»ƒm tra
+            // Lưu trạng thái hiện tại để kiểm tra
             RequestStatus currentRequestStatus = request.getRequestStatus();
             MaintenanceStatus currentMaintenanceStatus = request.getMaintenanceStatus();
             
-            // Thá»±c hiá»‡n cáº­p nháº­t
+            // Thực hiện cập nhật
             updateFunction.accept(request);
             
-            // Kiá»ƒm tra tÃ­nh há»£p lá»‡ cá»§a viá»‡c chuyá»ƒn tráº¡ng thÃ¡i
+            // Kiểm tra tính hợp lệ của việc chuyển trạng thái
             validateStateTransition(currentRequestStatus, currentMaintenanceStatus, request);
             
-            // Cáº­p nháº­t thá»i gian
+            // Cập nhật thời gian
             request.setUpdatedAt(LocalDateTime.now());
             
-            // LÆ°u vÃ  chuyá»ƒn Ä‘á»•i káº¿t quáº£
+            // Lưu và chuyển đổi kết quả
             request = maintenanceRequestRepository.save(request);
             return convertToDTO(request);
         }
@@ -412,7 +412,7 @@ public class MaintenanceRequestService {
         RequestStatus newRequestStatus = request.getRequestStatus();
         MaintenanceStatus newMaintenanceStatus = request.getMaintenanceStatus();
 
-        // Kiá»ƒm tra cÃ¡c tráº¡ng thÃ¡i khÃ´ng Ä‘Æ°á»£c phÃ©p thay Ä‘á»•i
+        // Kiểm tra các trạng thái không được phép thay đổi
         if (oldRequestStatus == RequestStatus.CANCELLED && 
             newRequestStatus != RequestStatus.CANCELLED) {
             throw new IllegalStateException("Cannot modify a cancelled request");
@@ -423,19 +423,19 @@ public class MaintenanceRequestService {
             throw new IllegalStateException("Cannot modify a completed maintenance");
         }
 
-        // Kiá»ƒm tra luá»“ng tráº¡ng thÃ¡i há»£p lá»‡
+        // Kiểm tra luồng trạng thái hợp lệ
         if (oldMaintenanceStatus != null && newMaintenanceStatus != null) {
             validateMaintenanceStatusTransition(oldMaintenanceStatus, newMaintenanceStatus);
         }
     }
 
     private void validateMaintenanceStatusTransition(MaintenanceStatus oldStatus, MaintenanceStatus newStatus) {
-        // Äá»‹nh nghÄ©a cÃ¡c chuyá»ƒn Ä‘á»•i tráº¡ng thÃ¡i há»£p lá»‡
+        // Định nghĩa các chuyển đổi trạng thái hợp lệ
         boolean isValidTransition = switch (oldStatus) {
             case ASSIGNED -> newStatus == MaintenanceStatus.SCHEDULED || newStatus == MaintenanceStatus.IN_PROGRESS;
             case SCHEDULED -> newStatus == MaintenanceStatus.IN_PROGRESS;
             case IN_PROGRESS -> newStatus == MaintenanceStatus.COMPLETED;
-            case COMPLETED -> newStatus == MaintenanceStatus.COMPLETED; // KhÃ´ng cho phÃ©p thay Ä‘á»•i
+            case COMPLETED -> newStatus == MaintenanceStatus.COMPLETED; // Không cho phép thay đổi
             default -> false;
         };
 
@@ -475,7 +475,7 @@ public class MaintenanceRequestService {
             throw new IllegalArgumentException("Customer can only review their own maintenance requests");
         }
 
-        // Kiá»ƒm tra xem Ä‘Ã£ cÃ³ Ä‘Ã¡nh giÃ¡ chÆ°a
+        // Kiểm tra xem đã có đánh giá chưa
         Optional<Review> existingReview = reviewRepository.findByMaintenanceRequestId(maintenanceRequestId);
         if (existingReview.isPresent()) {
             throw new IllegalStateException("A review already exists for this maintenance request");
