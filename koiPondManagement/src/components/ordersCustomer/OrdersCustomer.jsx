@@ -30,26 +30,109 @@ const OrdersCustomer = () => {
   const [maintenanceForm] = Form.useForm();
   const [maintenanceLoading, setMaintenanceLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState("pending");
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isPolling, setIsPolling] = useState(false);
+
+  // Add payment status options
+  const paymentStatusOptions = [
+    { value: "UNPAID", label: "Chưa thanh toán" },
+    { value: "DEPOSIT_PAID", label: "Đã cọc" },
+    { value: "FULLY_PAID", label: "Đã thanh toán" },
+  ];
 
   useEffect(() => {
-    fetchOrders();
+    // Initial fetch
+    initialFetch();
+    
+    // Setup polling
+    const pollingInterval = setInterval(() => {
+      pollOrders();
+    }, 10000); // Poll every 10 seconds
+    
+    return () => clearInterval(pollingInterval);
   }, []);
 
-  const fetchOrders = async () => {
+  const initialFetch = async () => {
     try {
-      setLoading(true);
+      setInitialLoading(true);
+      await fetchOrders(true);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  const pollOrders = async () => {
+    try {
+      setIsPolling(true);
+      await fetchOrders(false);
+    } finally {
+      setIsPolling(false);
+    }
+  };
+
+  const fetchOrders = async (isInitialFetch) => {
+    try {
       const response = await api.get(`/api/projects/customer`);
       if (Array.isArray(response.data)) {
-        setOrders(response.data);
+        const sortedOrders = response.data.sort((a, b) => {
+          // Sort by startDate first
+          const startDateDiff = moment(b.startDate).valueOf() - moment(a.startDate).valueOf();
+          if (startDateDiff !== 0) return startDateDiff;
+          
+          // If startDate is same, sort by createdAt
+          return moment(b.createdAt).valueOf() - moment(a.createdAt).valueOf();
+        });
+
+        setOrders(prevOrders => {
+          // Compare new orders with previous orders
+          if (JSON.stringify(prevOrders) !== JSON.stringify(sortedOrders)) {
+            // Only show notifications if this is not the initial fetch
+            if (!isInitialFetch) {
+              // Check for new orders
+              sortedOrders.forEach(newOrder => {
+                const prevOrder = prevOrders.find(po => po.id === newOrder.id);
+                
+                // If this is a new order
+                if (!prevOrder) {
+                  toast.info(`Có đơn hàng mới: "${newOrder.name}"`);
+                }
+                // Check for status changes
+                else if (prevOrder.statusName !== newOrder.statusName) {
+                  toast.info(`Dự án "${newOrder.name}" đã được cập nhật trạng thái thành ${
+                    newOrder.statusName === "IN_PROGRESS" ? "ĐANG THỰC HIỆN" :
+                    newOrder.statusName === "APPROVED" ? "ĐÃ DUYỆT" :
+                    newOrder.statusName === "PENDING" ? "CHỜ DUYỆT" :
+                    newOrder.statusName === "PLANNING" ? "ĐANG LÊN KẾ HOẠCH" :
+                    newOrder.statusName === "ON_HOLD" ? "TẠM DỪNG" :
+                    newOrder.statusName === "CANCELLED" ? "ĐÃ HỦY" :
+                    newOrder.statusName === "MAINTENANCE" ? "BẢO TRÌ" :
+                    newOrder.statusName === "TECHNICALLY_COMPLETED" ? "ĐÃ HOÀN THÀNH KỸ THUẬT" :
+                    newOrder.statusName === "COMPLETED" ? "HOÀN THÀNH" :
+                    newOrder.statusName
+                  }`);
+                }
+
+                // Check for payment status changes
+                if (prevOrder && prevOrder.paymentStatus !== newOrder.paymentStatus) {
+                  const newPaymentStatus = paymentStatusOptions.find(opt => opt.value === newOrder.paymentStatus)?.label || "Chưa thanh toán";
+                  toast.info(`Trạng thái thanh toán của dự án "${newOrder.name}" đã được cập nhật thành ${newPaymentStatus}`);
+                }
+              });
+            }
+            return sortedOrders;
+          }
+          return prevOrders;
+        });
       } else {
         console.error("Unexpected data structure:", response.data);
         toast.error("Cấu trúc dữ liệu không mong đợi");
       }
     } catch (error) {
       console.error("Error fetching orders:", error);
-      toast.error("Không thể tải danh sách đơn hàng");
-    } finally {
-      setLoading(false);
+      if (!isInitialFetch) {
+        // Only show error toast if it's not the initial fetch
+        toast.error("Không thể tải danh sách đơn hàng");
+      }
     }
   };
 
@@ -176,6 +259,14 @@ const OrdersCustomer = () => {
                           ? "bg-success"
                           : order.statusName === "PENDING"
                           ? "bg-warning text-dark"
+                          : order.statusName === "PLANNING"
+                          ? "bg-info"
+                          : order.statusName === "ON_HOLD"
+                          ? "bg-secondary"
+                          : order.statusName === "CANCELLED"
+                          ? "bg-danger"
+                          : order.statusName === "MAINTENANCE"
+                          ? "bg-info"
                           : order.statusName === "TECHNICALLY_COMPLETED"
                           ? "bg-info"
                           : order.statusName === "COMPLETED"
@@ -187,13 +278,19 @@ const OrdersCustomer = () => {
                       {order.statusName === "IN_PROGRESS"
                         ? "ĐANG THỰC HIỆN"
                         : order.statusName === "APPROVED"
-                        ? "ĐÃ THANH TOÁN"
+                        ? "ĐÃ DUYỆT"
                         : order.statusName === "PENDING"
-                        ? "CHƯA THANH TOÁN"
+                        ? "CHỜ DUYỆT"
+                        : order.statusName === "PLANNING"
+                        ? "ĐANG LÊN KẾ HOẠCH"
+                        : order.statusName === "ON_HOLD"
+                        ? "TẠM DỪNG"
+                        : order.statusName === "CANCELLED"
+                        ? "ĐÃ HỦY"
+                        : order.statusName === "MAINTENANCE"
+                        ? "BẢO TRÌ"
                         : order.statusName === "TECHNICALLY_COMPLETED"
-                        ? "HOÀN THÀNH XÂY DỰNG"
-                        : order.statusName === "COMPLETED"
-                        ? "HOÀN THÀNH DỰ ÁN"
+                        ? "ĐÃ HOÀN THÀNH KỸ THUẬT"
                         : order.statusName}
                     </span>
                   </div>
@@ -213,6 +310,19 @@ const OrdersCustomer = () => {
                     <small className="text-muted">
                       Kết Thúc: {moment(order.endDate).format("DD/MM/YYYY")}
                     </small>
+                  </p>
+                  <p className="card-text mb-1">
+                    <i className="fas fa-money-bill-wave me-2 text-warning"></i>
+                    <strong>Trạng Thái Thanh Toán:</strong>{" "}
+                    <span className={`badge ${
+                      order.paymentStatus === "FULLY_PAID" 
+                        ? "bg-success" 
+                        : order.paymentStatus === "DEPOSIT_PAID"
+                        ? "bg-info"
+                        : "bg-danger"
+                    }`}>
+                      {paymentStatusOptions.find(opt => opt.value === order.paymentStatus)?.label || "Chưa thanh toán"}
+                    </span>
                   </p>
                 </div>
                 <div className="card-footer bg-transparent border-top-0 pt-0">
@@ -319,11 +429,17 @@ const OrdersCustomer = () => {
                       : selectedOrder.statusName === "APPROVED"
                       ? "ĐÃ DUYỆT"
                       : selectedOrder.statusName === "PENDING"
-                      ? "CHƯA THANH TOÁN"
+                      ? "CHỜ DUYỆT"
+                      : selectedOrder.statusName === "PLANNING"
+                      ? "ĐANG LÊN KẾ HOẠCH"
+                      : selectedOrder.statusName === "ON_HOLD"
+                      ? "TẠM DỪNG"
+                      : selectedOrder.statusName === "CANCELLED"
+                      ? "ĐÃ HỦY"
+                      : selectedOrder.statusName === "MAINTENANCE"
+                      ? "BẢO TRÌ"
                       : selectedOrder.statusName === "TECHNICALLY_COMPLETED"
-                      ? "HOÀN THÀNH XÂY DỰNG"
-                      : selectedOrder.statusName === "COMPLETED"
-                      ? "HOÀN THÀNH DỰ ÁN"
+                      ? "ĐÃ HOÀN THÀNH KỸ THUẬT"
                       : selectedOrder.statusName || "N/A"}
                   </span>
                 </p>
@@ -345,6 +461,19 @@ const OrdersCustomer = () => {
                   <i className="fas fa-user-tie text-orange me-2"></i>
                   <strong>Mã Tư Vấn Viên:</strong>{" "}
                   {selectedOrder.consultantId || "N/A"}
+                </p>
+                <p>
+                  <i className="fas fa-money-bill-wave text-warning me-2"></i>
+                  <strong>Trạng Thái Thanh Toán:</strong>{" "}
+                  <span className={`badge ${
+                    selectedOrder.paymentStatus === "FULLY_PAID" 
+                      ? "bg-success" 
+                      : selectedOrder.paymentStatus === "DEPOSIT_PAID"
+                      ? "bg-info"
+                      : "bg-danger"
+                  }`}>
+                    {paymentStatusOptions.find(opt => opt.value === selectedOrder.paymentStatus)?.label || "Chưa thanh toán"}
+                  </span>
                 </p>
               </div>
             </div>
@@ -375,7 +504,7 @@ const OrdersCustomer = () => {
                       <td>{task.name}</td>
                       <td>
                         {task.status === "COMPLETED"
-                          ? "HOÀN THÀNH"
+                          ? "HON THÀNH"
                           : task.status === "PENDING"
                           ? "ĐANG CHỜ"
                           : task.status}
