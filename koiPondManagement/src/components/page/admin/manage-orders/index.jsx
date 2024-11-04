@@ -49,34 +49,68 @@ const OrdersList = () => {
   const [isDescriptionModalVisible, setIsDescriptionModalVisible] =
     useState(false);
   const [selectedDescription, setSelectedDescription] = useState("");
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isPolling, setIsPolling] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
-    fetchOrders();
-    fetchConstructors();
+    initialFetch();
+    
+    const pollingInterval = setInterval(() => {
+      pollOrders();
+    }, 10000); // Poll every 30 seconds
+    
+    return () => clearInterval(pollingInterval);
   }, []);
 
-  const fetchOrders = async () => {
+  const initialFetch = async () => {
     try {
-      setLoading(true);
+      setInitialLoading(true);
+      await fetchOrders(true);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  const pollOrders = async () => {
+    try {
+      setIsPolling(true);
+      await fetchOrders(false);
+    } finally {
+      setIsPolling(false);
+    }
+  };
+
+  const fetchOrders = async (isInitialFetch) => {
+    try {
       const response = await api.get("/api/projects");
-      // Sort orders by createdAt in descending order (newest first)
-      const sortedOrders = response.data.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      );
-      setOrders(sortedOrders);
-      // Fetch tasks for each project
-      for (const order of sortedOrders) {
-        fetchProjectTasks(order.id, order.constructorId);
-        // Only fetch reviews for completed projects
-        if (order.statusId === "PS6") {
-          fetchProjectReview(order.id);
-        }
+      if (response.data) {
+        setOrders(prevOrders => {
+          const newOrders = response.data.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          
+          if (JSON.stringify(prevOrders) !== JSON.stringify(newOrders)) {
+            if (!isInitialFetch) {
+              newOrders.forEach(order => {
+                if (!prevOrders.find(po => po.id === order.id)) {
+                  toast.info(`Có đơn hàng mới: ${order.name}`);
+                }
+              });
+            }
+            return newOrders;
+          }
+          return prevOrders;
+        });
       }
     } catch (error) {
       console.error("Error fetching orders:", error);
-      toast.error("Không thể tải đơn hàng");
-    } finally {
-      setLoading(false);
+      if (!isInitialFetch) {
+        toast.error(
+          error.response?.data?.message || 
+          "Không thể tải danh sách đơn hàng"
+        );
+      }
     }
   };
 
@@ -233,19 +267,11 @@ const OrdersList = () => {
 
   const completeProject = async (id) => {
     try {
+      setActionLoading(true);
       const response = await api.patch(`/api/projects/${id}/complete`);
       if (response.status === 200) {
         toast.success("Đã hoàn thành dự án thành công");
-        setOrders((prevOrders) => {
-          const updatedOrders = prevOrders.map((order) =>
-            order.id === id
-              ? { ...order, statusId: "PS6", statusName: "COMPLETED" }
-              : order
-          );
-          return updatedOrders.sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-          );
-        });
+        await fetchOrders(false);
       }
     } catch (error) {
       console.error("Error completing project:", error);
@@ -256,6 +282,8 @@ const OrdersList = () => {
       } else {
         toast.error("Không thể hoàn thành dự án");
       }
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -403,7 +431,13 @@ const OrdersList = () => {
               okText="Có"
               cancelText="Không"
             >
-              <Button type="primary">Hoàn thành dự án</Button>
+              <Button 
+                onClick={() => completeProject(record.id)}
+                loading={actionLoading}
+                type="primary"
+              >
+                Hoàn thành
+              </Button>
             </Popconfirm>
           )}
         </Space>
@@ -758,8 +792,9 @@ const OrdersList = () => {
         <Table
           columns={columns}
           dataSource={orders}
-          loading={loading}
+          loading={initialLoading}
           rowKey="id"
+          pagination={{ pageSize: 10 }}
         />
       ) : (
         renderCardView()

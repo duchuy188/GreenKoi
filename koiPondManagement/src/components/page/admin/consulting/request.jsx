@@ -41,10 +41,94 @@ const RequestConsulting = () => {
   const [designDetail, setDesignDetail] = useState("");
   const [isShowingDetail, setIsShowingDetail] = useState(false);
   const [descriptionValue, setDescriptionValue] = useState("");
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isPolling, setIsPolling] = useState(false);
+  const [createOrderLoading, setCreateOrderLoading] = useState(false);
+  const [updateStatusLoading, setUpdateStatusLoading] = useState(false);
 
   useEffect(() => {
-    fetchConsultationRequests();
+    // Initial fetch
+    initialFetch();
+    
+    // Setup polling
+    const pollingInterval = setInterval(() => {
+      pollRequests();
+    }, 10000);
+    
+    return () => clearInterval(pollingInterval);
   }, []);
+
+  const initialFetch = async () => {
+    try {
+      setInitialLoading(true);
+      await fetchConsultationRequests(true);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  const pollRequests = async () => {
+    try {
+      setIsPolling(true);
+      await fetchConsultationRequests(false);
+    } finally {
+      setIsPolling(false);
+    }
+  };
+
+  const fetchConsultationRequests = async (isInitialFetch) => {
+    try {
+      const response = await api.get("/api/ConsultationRequests");
+      
+      if (Array.isArray(response.data)) {
+        const requests = response.data
+          .filter((request) => request.status !== "CANCELLED")
+          .map((request) => request)
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        setConsultationRequests(prevRequests => {
+          if (JSON.stringify(prevRequests) !== JSON.stringify(requests)) {
+            // Kiểm tra và thông báo yêu cầu mới (chỉ khi đang polling)
+            if (!isInitialFetch) {
+              requests.forEach(request => {
+                if (!prevRequests.find(pr => pr.id === request.id)) {
+                  toast.info(`Có yêu cầu tư vấn mới từ: ${request.customerName}`);
+                }
+              });
+            }
+            return requests;
+          }
+          return prevRequests;
+        });
+      } else if (response.data.consultationRequests) {
+        // Tương tự như trên
+        const filteredRequests = response.data.consultationRequests
+          .filter((request) => request.status !== "CANCELLED")
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          
+        setConsultationRequests(prevRequests => {
+          if (JSON.stringify(prevRequests) !== JSON.stringify(filteredRequests)) {
+            if (!isInitialFetch) {
+              filteredRequests.forEach(request => {
+                if (!prevRequests.find(pr => pr.id === request.id)) {
+                  toast.info(`Có yêu cầu tư vấn mới từ: ${request.customerName}`);
+                }
+              });
+            }
+            return filteredRequests;
+          }
+          return prevRequests;
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching consultation requests:", error);
+      toast.error(
+        error.response
+          ? `Error: ${error.response.status} - ${error.response.data.message}`
+          : "Network error. Please check your connection."
+      );
+    }
+  };
 
   useEffect(() => {
     const filtered = consultationRequests.filter(
@@ -59,46 +143,11 @@ const RequestConsulting = () => {
     setFilteredRequests(filtered);
   }, [searchText, consultationRequests, statusFilter]);
 
-  const fetchConsultationRequests = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get("/api/ConsultationRequests");
-      //console.log("Raw consultation requests:", response.data);
-      if (Array.isArray(response.data)) {
-        const requests = response.data
-          .filter((request) => request.status !== "CANCELLED")
-          .map((request) => {
-            // console.log("Individual request:", request);
-            return request;
-          })
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-        setConsultationRequests(requests);
-      } else if (response.data.consultationRequests) {
-        const filteredRequests = response.data.consultationRequests
-          .filter((request) => request.status !== "CANCELLED")
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setConsultationRequests(filteredRequests);
-      } else {
-        setConsultationRequests([]);
-        toast.error(
-          "Failed to load consultation requests. Unexpected data structure."
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching consultation requests:", error);
-      toast.error(
-        error.response
-          ? `Error: ${error.response.status} - ${error.response.data.message}`
-          : "Network error. Please check your connection."
-      );
-      setConsultationRequests([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleEditStatus = (record) => {
+    if (record.status === "COMPLETED") {
+      toast.error("Không thể chỉnh sửa yêu cầu đã hoàn thành");
+      return;
+    }
     setSelectedRequest(record);
     form.setFieldsValue({ status: record.status });
     setEditModalVisible(true);
@@ -106,18 +155,44 @@ const RequestConsulting = () => {
 
   const handleUpdateStatus = async (values) => {
     try {
-      setLoading(true);
+      setUpdateStatusLoading(true);
+      
+      // Check if trying to move from IN_PROGRESS to PENDING
+      if (selectedRequest.status === "IN_PROGRESS" && values.status === "PENDING") {
+        toast.error("Không thể chuyển từ trạng thái 'Đang thực hiện' về 'Đang chờ'");
+        return;
+      }
+      if (selectedRequest.status === "COMPLETED" && 
+        (values.status === "IN_PROGRESS" || values.status === "PENDING")) {
+       toast.error("Không thể chuyển từ trạng thái 'Hoàn thành' về trạng thái trước đó");
+       return;
+     }
+      
       await api.put(
         `/api/ConsultationRequests/${selectedRequest.id}/status?newStatus=${values.status}`
       );
+      
       toast.success("Cập nhật trạng thái thành công");
       setEditModalVisible(false);
       await fetchConsultationRequests();
     } catch (error) {
       console.error("Error updating status:", error);
-      toast.error("Không thể cập nhật trạng thái");
+      
+      // Handle specific error cases
+      if (error.response?.status === 500) {
+        if (values.status === "IN_PROGRESS") {
+          toast.error("Không thể cập nhật trạng thái. Yêu cầu này có thể đã bị hủy.");
+        } else {
+          toast.error("Có lỗi xảy ra khi cập nhật trạng thái. Vui lòng thử lại sau.");
+        }
+      } else {
+        toast.error(
+          error.response?.data?.message || 
+          "Không thể cập nhật trạng thái. Vui lòng thử lại sau."
+        );
+      }
     } finally {
-      setLoading(false);
+      setUpdateStatusLoading(false);
     }
   };
 
@@ -152,7 +227,7 @@ const RequestConsulting = () => {
 
   const handleEditOrderSubmit = async (values) => {
     try {
-      setLoading(true);
+      setCreateOrderLoading(true);
 
       if (!selectedRequest) {
         throw new Error("No request selected");
@@ -174,6 +249,7 @@ const RequestConsulting = () => {
         await updateConsultationStatus(selectedRequest.id, "COMPLETED");
         await fetchConsultationRequests();
         setEditOrderModalVisible(false);
+        editOrderForm.resetFields();
       }
     } catch (error) {
       console.error("Error creating order:", error);
@@ -182,7 +258,7 @@ const RequestConsulting = () => {
           (error.response?.data?.message || error.message)
       );
     } finally {
-      setLoading(false);
+      setCreateOrderLoading(false);
     }
   };
 
@@ -319,12 +395,14 @@ const RequestConsulting = () => {
       key: "actions",
       render: (_, record) => (
         <Space size="middle">
-          <Tooltip title="Cập nhật trạng thái">
-            <FaEdit
-              onClick={() => handleEditStatus(record)}
-              style={{ cursor: "pointer", fontSize: "18px" }}
-            />
-          </Tooltip>
+           {record.status !== "COMPLETED" && (
+        <Tooltip title="Cập nhật trạng thái">
+          <FaEdit
+            onClick={() => handleEditStatus(record)}
+            style={{ cursor: "pointer", fontSize: "18px" }}
+          />
+        </Tooltip>
+      )}
           {record.status === "IN_PROGRESS" && (
             <Tooltip title="Tạo đơn hàng">
               <FaShoppingCart
@@ -430,7 +508,7 @@ const RequestConsulting = () => {
       <Table
         columns={responsiveColumns}
         dataSource={filteredRequests}
-        loading={loading}
+        loading={initialLoading}
         rowKey="id"
         pagination={{ pageSize: 10 }}
         size="small"
@@ -451,11 +529,10 @@ const RequestConsulting = () => {
             <Select>
               <Select.Option value="PENDING">Đang chờ</Select.Option>
               <Select.Option value="IN_PROGRESS">Đang thực hiện</Select.Option>
-              <Select.Option value="COMPLETED">Đã hoàn thành</Select.Option>
             </Select>
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loading}>
+            <Button type="primary" htmlType="submit" loading={updateStatusLoading}>
               Cập nhật trạng thái
             </Button>
           </Form.Item>
@@ -464,7 +541,10 @@ const RequestConsulting = () => {
       <Modal
         title="Tạo đơn hàng"
         open={editOrderModalVisible}
-        onCancel={() => setEditOrderModalVisible(false)}
+        onCancel={() => {
+          setEditOrderModalVisible(false);
+          editOrderForm.resetFields();
+        }}
         footer={null}
       >
         <Form
@@ -594,7 +674,7 @@ const RequestConsulting = () => {
             <Input disabled />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loading}>
+            <Button type="primary" htmlType="submit" loading={createOrderLoading}>
               Tạo đơn hàng
             </Button>
           </Form.Item>

@@ -11,6 +11,12 @@ function ConsultationRequests() {
 
   useEffect(() => {
     fetchConsultationRequests();
+    
+    const interval = setInterval(() => {
+      fetchConsultationRequests();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchConsultationRequests = async () => {
@@ -33,9 +39,9 @@ function ConsultationRequests() {
           },
         }
       );
-      const filteredRequests = response.data.filter(
-        (request) => request.status !== "CANCELLED"
-      );
+      const filteredRequests = response.data
+        .filter((request) => request.status !== "CANCELLED")
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setConsultationRequests(filteredRequests);
     } catch (err) {
       console.error("Lỗi khi tìm kiếm yêu cầu tư vấn:", err);
@@ -115,6 +121,12 @@ function ConsultationRequests() {
       dataIndex: "status",
       key: "status",
     },
+     {
+    title: "Ngày cập nhật",
+    dataIndex: "updatedAt",
+    key: "updatedAt",
+    render: (text) => text ? new Date(text).toLocaleDateString() : "Chưa cập nhật",
+  },
     {
       title: "Ghi chú",
       dataIndex: "notes",
@@ -123,8 +135,8 @@ function ConsultationRequests() {
     {
       title: "Hành động",
       key: "action",
-      render: (_, record) =>
-        record.status === "PENDING" ? (
+      render: (_, record) => (
+        record.status === "PENDING" && (
           <span>
             <Button
               icon={<EditOutlined />}
@@ -144,7 +156,8 @@ function ConsultationRequests() {
               </Button>
             </Popconfirm>
           </span>
-        ) : null,
+        )
+      ),
     },
   ];
 
