@@ -119,12 +119,13 @@ public class MaintenanceRequestController {
     }
 
     @GetMapping("/confirmed")
-    @PreAuthorize("hasRole('ROLE_1')")
-    @Operation(summary = "Get confirmed maintenance requests", description = "Retrieves all confirmed maintenance requests. Only accessible by managers.")
-    public ResponseEntity<List<MaintenanceRequestDTO>> getConfirmedMaintenanceRequests() {
-        List<MaintenanceRequestDTO> confirmedRequests = maintenanceRequestService.getConfirmedMaintenanceRequests();
-        return ResponseEntity.ok(confirmedRequests);
-    }
+@PreAuthorize("hasAnyRole('ROLE_1', 'ROLE_2')") 
+@Operation(summary = "Get confirmed maintenance requests", 
+          description = "Retrieves all confirmed maintenance requests. Accessible by managers and consultants.")
+public ResponseEntity<List<MaintenanceRequestDTO>> getConfirmedMaintenanceRequests() {
+    List<MaintenanceRequestDTO> confirmedRequests = maintenanceRequestService.getConfirmedMaintenanceRequests();
+    return ResponseEntity.ok(confirmedRequests);
+}
 
     @GetMapping("/assigned-to-me")
     @PreAuthorize("hasRole('ROLE_4')")
