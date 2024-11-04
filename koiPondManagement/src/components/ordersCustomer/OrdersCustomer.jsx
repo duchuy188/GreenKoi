@@ -5,7 +5,6 @@ import {
   Col,
   Button,
   Modal,
-  message,
   Rate,
   Input,
   Form,
@@ -15,6 +14,8 @@ import { useNavigate } from "react-router-dom";
 import api from "/src/components/config/axios";
 import moment from "moment";
 import "./OrdersCustomer.css";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const OrdersCustomer = () => {
   const [orders, setOrders] = useState([]);
@@ -28,6 +29,7 @@ const OrdersCustomer = () => {
     useState(false);
   const [maintenanceForm] = Form.useForm();
   const [maintenanceLoading, setMaintenanceLoading] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState("pending");
 
   useEffect(() => {
     fetchOrders();
@@ -41,11 +43,11 @@ const OrdersCustomer = () => {
         setOrders(response.data);
       } else {
         console.error("Unexpected data structure:", response.data);
-        message.error("Cấu trúc dữ liệu không mong đợi");
+        toast.error("Cấu trúc dữ liệu không mong đợi");
       }
     } catch (error) {
       console.error("Error fetching orders:", error);
-      message.error("Không thể tải danh sách đơn hàng");
+      toast.error("Không thể tải danh sách đơn hàng");
     } finally {
       setLoading(false);
     }
@@ -77,7 +79,7 @@ const OrdersCustomer = () => {
         reviewData
       );
       console.log("Review submission response:", response);
-      message.success("Đánh giá đã được gửi thành công");
+      toast.success("Đánh giá đã được gửi thành công");
       setIsReviewModalVisible(false);
       form.resetFields();
       fetchOrders();
@@ -88,7 +90,7 @@ const OrdersCustomer = () => {
         console.error("Response status:", error.response.status);
         console.error("Response headers:", error.response.headers);
       }
-      message.error(`Không thể gửi đánh giá: ${error.message}`);
+      toast.error(`Không thể gửi đánh giá: ${error.message}`);
     }
   };
 
@@ -114,13 +116,13 @@ const OrdersCustomer = () => {
         maintenanceData
       );
       console.log("Maintenance request submission response:", response);
-      message.success("Yêu cầu bảo trì đã được gửi thành công");
+      toast.success("Yêu cầu bảo trì đã được gửi thành công");
       setIsMaintenanceModalVisible(false);
       maintenanceForm.resetFields();
-      fetchOrders(); // Refresh the orders list
+      fetchOrders();
     } catch (error) {
       console.error("Error submitting maintenance request:", error);
-      message.error(`Không thể gửi yêu cầu bảo trì: Đơn hàng chưa hoàn thành`);
+      toast.error(`Không thể gửi yêu cầu bảo trì: Đơn hàng chưa hoàn thành`);
     } finally {
       setMaintenanceLoading(false);
     }
@@ -134,11 +136,11 @@ const OrdersCustomer = () => {
       if (response.data && response.data.paymentUrl) {
         window.open(response.data.paymentUrl, "_blank");
       } else {
-        message.error("Không thể tạo liên kết thanh toán");
+        toast.error("Không thể tạo liên kết thanh toán");
       }
     } catch (error) {
       console.error("Error creating payment:", error);
-      message.error("Không thể khởi tạo thanh toán VNPAY");
+      toast.error("Không thể khởi tạo thanh toán VNPAY");
     }
   };
 
@@ -166,15 +168,39 @@ const OrdersCustomer = () => {
                     <small className="text-muted">
                       <i className="fas fa-hashtag me-1"></i>Mã Đơn: {order.id}
                     </small>
-                    <span className="badge bg-danger text-white">
+                    <span
+                      className={`badge ${
+                        order.statusName === "IN_PROGRESS"
+                          ? "bg-primary"
+                          : order.statusName === "APPROVED"
+                          ? "bg-success"
+                          : order.statusName === "PENDING"
+                          ? "bg-warning text-dark"
+                          : order.statusName === "TECHNICALLY_COMPLETED"
+                          ? "bg-info"
+                          : order.statusName === "COMPLETED"
+                          ? "bg-success"
+                          : "bg-secondary"
+                      } text-white`}
+                    >
                       <i className="fas fa-info-circle me-1"></i>
-                      {order.statusName}
+                      {order.statusName === "IN_PROGRESS"
+                        ? "ĐANG THỰC HIỆN"
+                        : order.statusName === "APPROVED"
+                        ? "ĐÃ THANH TOÁN"
+                        : order.statusName === "PENDING"
+                        ? "CHƯA THANH TOÁN"
+                        : order.statusName === "TECHNICALLY_COMPLETED"
+                        ? "HOÀN THÀNH XÂY DỰNG"
+                        : order.statusName === "COMPLETED"
+                        ? "HOÀN THÀNH DỰ ÁN"
+                        : order.statusName}
                     </span>
                   </div>
                   <p className="card-text mb-1">
                     <i className="fas fa-dollar-sign me-2 text-warning"></i>
                     <strong>Tổng Giá:</strong>{" "}
-                    {(order.totalPrice || 0).toLocaleString("vi-VN")}đ
+                    {(order.totalPrice || 0).toLocaleString("vi-VN")} VNĐ
                   </p>
                   <p className="card-text mb-1">
                     <i className="fas fa-calendar-alt me-2 text-warning"></i>
@@ -227,11 +253,11 @@ const OrdersCustomer = () => {
             <i className="fas fa-info-circle me-2"></i>Chi Tiết Đơn Hàng
           </h4>
         }
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
-        width={700}
-        bodyStyle={{ maxHeight: "80vh", overflowY: "auto" }}
+        style={{ maxWidth: 700 }}
+        styles={{ body: { maxHeight: "80vh", overflowY: "auto" } }}
       >
         {selectedOrder && (
           <div className="p-3">
@@ -243,20 +269,29 @@ const OrdersCustomer = () => {
                 </p>
                 <p>
                   <i className="fas fa-align-left text-orange me-2"></i>
-                  <strong>Mô Tả:</strong> {selectedOrder.description || "N/A"}
+                  <strong>Mô Tả:</strong>{" "}
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: selectedOrder.description || "N/A",
+                    }}
+                  />
                 </p>
                 <p>
                   <i className="fas fa-dollar-sign text-warning me-2"></i>
                   <strong>Tổng Giá:</strong>{" "}
                   {selectedOrder.totalPrice != null
-                    ? `$${Number(selectedOrder.totalPrice).toFixed(2)}`
+                    ? `${Number(selectedOrder.totalPrice).toLocaleString(
+                        "vi-VN"
+                      )} VNĐ`
                     : "N/A"}
                 </p>
                 <p>
                   <i className="fas fa-piggy-bank text-orange me-2"></i>
                   <strong>Số Tiền Đặt Cọc:</strong>{" "}
                   {selectedOrder.depositAmount != null
-                    ? `$${Number(selectedOrder.depositAmount).toFixed(2)}`
+                    ? `${Number(selectedOrder.depositAmount).toLocaleString(
+                        "vi-VN"
+                      )} VNĐ`
                     : "N/A"}
                 </p>
               </div>
@@ -264,8 +299,32 @@ const OrdersCustomer = () => {
                 <p>
                   <i className="fas fa-chart-line text-warning me-2"></i>
                   <strong>Trạng Thái:</strong>{" "}
-                  <span className="badge bg-warning text-dark">
-                    {selectedOrder.statusName || "N/A"}
+                  <span
+                    className={`badge ${
+                      selectedOrder.statusName === "IN_PROGRESS"
+                        ? "bg-primary"
+                        : selectedOrder.statusName === "APPROVED"
+                        ? "bg-success"
+                        : selectedOrder.statusName === "PENDING"
+                        ? "bg-warning text-dark"
+                        : selectedOrder.statusName === "TECHNICALLY_COMPLETED"
+                        ? "bg-info"
+                        : selectedOrder.statusName === "COMPLETED"
+                        ? "bg-success"
+                        : "bg-secondary"
+                    } text-white`}
+                  >
+                    {selectedOrder.statusName === "IN_PROGRESS"
+                      ? "ĐANG THỰC HIỆN"
+                      : selectedOrder.statusName === "APPROVED"
+                      ? "ĐÃ DUYỆT"
+                      : selectedOrder.statusName === "PENDING"
+                      ? "CHƯA THANH TOÁN"
+                      : selectedOrder.statusName === "TECHNICALLY_COMPLETED"
+                      ? "HOÀN THÀNH XÂY DỰNG"
+                      : selectedOrder.statusName === "COMPLETED"
+                      ? "HOÀN THÀNH DỰ ÁN"
+                      : selectedOrder.statusName || "N/A"}
                   </span>
                 </p>
                 <p>
@@ -314,7 +373,13 @@ const OrdersCustomer = () => {
                   {(selectedOrder.tasks || []).map((task, index) => (
                     <tr key={index}>
                       <td>{task.name}</td>
-                      <td>{task.status}</td>
+                      <td>
+                        {task.status === "COMPLETED"
+                          ? "HOÀN THÀNH"
+                          : task.status === "PENDING"
+                          ? "ĐANG CHỜ"
+                          : task.status}
+                      </td>
                       <td>
                         {task.completionPercentage != null
                           ? `${task.completionPercentage}%`
@@ -335,7 +400,7 @@ const OrdersCustomer = () => {
             <i className="fas fa-star me-2"></i>Gửi Đánh Giá
           </h4>
         }
-        visible={isReviewModalVisible}
+        open={isReviewModalVisible}
         onCancel={() => setIsReviewModalVisible(false)}
         footer={null}
         width={500}
@@ -377,7 +442,7 @@ const OrdersCustomer = () => {
 
       <Modal
         title="Yêu Cầu Bảo Trì"
-        visible={isMaintenanceModalVisible}
+        open={isMaintenanceModalVisible}
         onCancel={() => {
           setIsMaintenanceModalVisible(false);
           maintenanceForm.resetFields();
@@ -399,7 +464,7 @@ const OrdersCustomer = () => {
           >
             <Input.TextArea rows={4} />
           </Form.Item>
-          <Form.Item name="attachments" label="Tệp Đính Kèm">
+          <Form.Item name="attachments" label="Link ảnh Đính Kèm">
             <Input />
           </Form.Item>
           <Form.Item>
@@ -413,6 +478,11 @@ const OrdersCustomer = () => {
           </Form.Item>
         </Form>
       </Modal>
+      <span className={`payment-status ${paymentStatus}`}>
+        {paymentStatus === "success" && "Thanh toán thành công"}
+        {paymentStatus === "pending" && "Chờ thanh toán"}
+        {paymentStatus === "failed" && "Thanh toán thất bại"}
+      </span>
     </div>
   );
 };
