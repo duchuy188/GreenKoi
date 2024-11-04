@@ -3,124 +3,119 @@ import { useEffect, useState } from 'react';
 import api from "../../../config/axios";
 import { toast } from 'react-toastify';
 import moment from 'moment';
-
-const { RangePicker } = DatePicker;
+import locale from 'antd/es/date-picker/locale/vi_VN';
 
 const ConstrucReviewComplete = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedNote, setSelectedNote] = useState('');
-  const [selectedAttachments, setSelectedAttachments] = useState([]);
-  const [attachmentModalVisible, setAttachmentModalVisible] = useState(false);
-  const [dateRange, setDateRange] = useState(null);
-  const [filteredData, setFilteredData] = useState([]);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
 
   const showNoteModal = (note) => {
     setSelectedNote(note);
     setModalVisible(true);
   };
 
-  const showAttachmentModal = (attachments) => {
-    const formattedAttachments = attachments.map(attachment => {
-      if (typeof attachment === 'string') { 
-        return { type: 'image', url: attachment };
-      }
-      return attachment;
-    });
-    setSelectedAttachments(formattedAttachments);
-    setAttachmentModalVisible(true);
+  const showImageModal = (images) => {
+    setSelectedImages(images);
+    setImageModalVisible(true);
   };
 
   const columns = [
     {
       title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      hidden: true,
+      key: 'index',
+      width: 80,
+      render: (text, record, index) => index + 1,
     },
     {
       title: 'Khách hàng',
       dataIndex: 'customerName',
       key: 'customerName',
+      width: 150,
+    },
+    {
+      title: 'SĐT',
+      dataIndex: 'customerPhone',
+      key: 'customerPhone',
+      width: 120,
+    },
+    {
+      title: 'Email',
+      dataIndex: 'customerEmail',
+      key: 'customerEmail',
+      width: 150,
     },
     {
       title: 'Dự án',
       dataIndex: 'projectName',
       key: 'projectName',
+      width: 150,
     },
     {
-      title: 'Tư vấn viên',
+      title: 'Nhân viên tư vấn',
       dataIndex: 'consultantName',
       key: 'consultantName',
+      width: 150,
+    },
+    {
+      title: 'Địa chỉ',
+      dataIndex: 'customerAddress',
+      key: 'customerAddress',
+      width: 200,
     },
     {
       title: 'Mô tả',
       dataIndex: 'description',
       key: 'description',
+      width: 200,
     },
     {
-      title: 'Tài liệu đính kèm',
-      dataIndex: 'attachments',
-      key: 'attachments',
-    },
-    {
-      title: 'Trạng thái yêu cầu',
-      dataIndex: 'requestStatus',
-      key: 'requestStatus',
-      hidden: true,
-    },
-    {
-      title: 'Trạng thái bảo trì',
-      dataIndex: 'maintenanceStatus',
-      key: 'maintenanceStatus',
-      hidden: true,
-    },
-    {
-      title: 'Giá đồng ý',
+      title: 'Giá thỏa thuận',
       dataIndex: 'agreedPrice',
       key: 'agreedPrice',
+      width: 130,
+      render: (price) => price?.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
     },
     {
       title: 'Ngày lên lịch',
       dataIndex: 'scheduledDate',
       key: 'scheduledDate',
+      width: 150,
     },
     {
       title: 'Ngày bắt đầu',
       dataIndex: 'startDate',
       key: 'startDate',
+      width: 150,
     },
     {
       title: 'Ngày hoàn thành',
       dataIndex: 'completionDate',
       key: 'completionDate',
-    },
-    {
-      title: 'Giao cho',
-      dataIndex: 'assignedTo',
-      key: 'assignedTo',
-    },
-    {
-      title: 'Lý do hủy',
-      dataIndex: 'cancellationReason',
-      key: 'cancellationReason',
-      hidden: true,
+      width: 150,
     },
     {
       title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
+      width: 150,
+      render: (date) => moment(date).format('DD/MM/YYYY HH:mm:ss')
     },
     {
       title: 'Ngày cập nhật',
       dataIndex: 'updatedAt',
       key: 'updatedAt',
+      width: 150,
+      render: (date) => moment(date).format('DD/MM/YYYY HH:mm:ss')
     },
     {
       title: 'Ghi chú bảo trì',
       dataIndex: 'maintenanceNotes',
       key: 'maintenanceNotes',
+      width: 150,
       render: (text) => (
         <Button onClick={() => showNoteModal(text)}>
           Xem ghi chú
@@ -131,49 +126,57 @@ const ConstrucReviewComplete = () => {
       title: 'Hình ảnh bảo trì',
       dataIndex: 'maintenanceImages',
       key: 'maintenanceImages',
+      width: 150,
       render: (images) => (
-        <Image.PreviewGroup>
-          {images.map((image, index) => (
-            <Image key={index} width={50} src={image} />
-          ))}
-        </Image.PreviewGroup>
+        <Button onClick={() => showImageModal(images)}>
+          Xem hình ảnh ({images.length})
+        </Button>
       ),
     },
   ];
-
-  const handleDateRangeChange = (dates) => {
-    setDateRange(dates);
-    if (!dates) {
-      setFilteredData(data); // Reset về data gốc nếu xóa date range
-      return;
-    }
-
-    const [startDate, endDate] = dates;
-    const filtered = data.filter(item => {
-      const itemDate = moment(item.createdAt); // hoặc trường ngày phù hợp của bạn
-      return itemDate.isBetween(startDate, endDate, 'day', '[]');
-    });
-
-    setFilteredData(filtered);
-  };
 
   const fetchCompletedRequests = async () => {
     try {
       setLoading(true);
       const response = await api.get('/api/maintenance-requests/completed');
-      
-      const formattedData = response.data.map(item => ({
-        ...item,
-        customerName: item.customer?.name || item.customerName || 'Chưa có tên',
-        projectName: item.project?.name || item.projectName || 'Chưa có tên',
-        consultantName: item.consultant?.name || item.consultantName || 'Chưa có tên'
-      }));
 
-      setData(formattedData);
-      setFilteredData(formattedData); // Set dữ liệu ban đầu cho filteredData
+      if (response?.data) {
+        const dataArray = Array.isArray(response.data) ? response.data : [response.data];
+        const formattedData = dataArray.map(item => ({
+          key: item?.id || Math.random(),
+          id: item?.id || '',
+          customerName: item?.customerName || '',
+          customerPhone: item?.customerPhone || '',
+          customerEmail: item?.customerEmail || '',
+          customerAddress: item?.customerAddress || '',
+          projectName: item?.projectName || '',
+          consultantName: item?.consultantName || '',
+          description: item?.description || '',
+          agreedPrice: Number(item?.agreedPrice) || 0,
+          depositAmount: Number(item?.depositAmount) || 0,
+          remainingAmount: Number(item?.remainingAmount) || 0,
+          scheduledDate: item?.scheduledDate || '',
+          startDate: item?.startDate || '',
+          completionDate: item?.completionDate || '',
+          assignedTo: item?.assignedTo || '',
+          maintenanceNotes: item?.maintenanceNotes || '',
+          maintenanceImages: Array.isArray(item?.maintenanceImages) ? item.maintenanceImages : [],
+          createdAt: item?.createdAt || '',
+          updatedAt: item?.updatedAt || ''
+        }));
+
+        setData(formattedData);
+      } else {
+        setData([]);
+        toast.warning('Không có dữ liệu');
+      }
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Không thể tải dữ liệu');
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response,
+        config: error.config
+      });
+      toast.error('Không thể tải dữ liệu: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -185,19 +188,9 @@ const ConstrucReviewComplete = () => {
 
   return (
     <>
-      <Space style={{ marginBottom: 16 }}>
-        <RangePicker
-          onChange={handleDateRangeChange}
-          format="DD/MM/YYYY"
-          placeholder={['Từ ngày', 'Đến ngày']}
-          locale={locale}
-          style={{ width: '100%' }}
-        />
-      </Space>
-
       <Table
         columns={columns}
-        dataSource={filteredData.length > 0 ? filteredData : data}
+        dataSource={data}
         loading={loading}
         rowKey="id"
       />
@@ -210,33 +203,23 @@ const ConstrucReviewComplete = () => {
         <p>{selectedNote}</p>
       </Modal>
       <Modal
-        title="Tài liệu đính kèm"
-        visible={attachmentModalVisible}
-        onOk={() => setAttachmentModalVisible(false)}
-        onCancel={() => setAttachmentModalVisible(false)}
+        title="Hình ảnh bảo trì"
+        visible={imageModalVisible}
+        onOk={() => setImageModalVisible(false)}
+        onCancel={() => setImageModalVisible(false)}
         width={800}
       >
         <Image.PreviewGroup>
-          {selectedAttachments.map((attachment, index) => (
-            <div key={index} style={{ marginBottom: '20px' }}>
-              {attachment.type === 'image' ? (
-                <Image
-                  src={attachment.url}
-                  alt={`Attachment ${index + 1}`}
-                  style={{ maxWidth: '100%', maxHeight: '200px' }}
-                />
-              ) : (
-                <a 
-                  href={attachment.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ fontSize: '16px', textDecoration: 'underline' }}
-                >
-                  {attachment.name || `Tài liệu ${index + 1}`}
-                </a>
-              )}
-            </div>
-          ))}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+            {selectedImages.map((image, index) => (
+              <Image
+                key={index}
+                src={image}
+                alt={`Maintenance image ${index + 1}`}
+                style={{ width: '100%', objectFit: 'cover' }}
+              />
+            ))}
+          </div>
         </Image.PreviewGroup>
       </Modal>
     </>

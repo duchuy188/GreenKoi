@@ -27,6 +27,7 @@ const ConstrucMain = () => {
         customerId: request.customerId,
         projectId: request.projectId,
         consultantId: request.consultantId,
+        consultantName: request.consultantName || '',
         description: request.description,
         attachments: request.attachments,
         requestStatus: request.requestStatus || 'PENDING',
@@ -40,6 +41,9 @@ const ConstrucMain = () => {
         createdAt: request.createdAt,
         updatedAt: request.updatedAt,
         assignedTo: request.assignedTo || '',
+        customerName: request.customerName || '',
+        customerPhone: request.customerPhone || '',
+        customerEmail: request.customerEmail || '',
       }));
 
       setMaintenanceRequests(transformedData);
@@ -132,19 +136,11 @@ const ConstrucMain = () => {
       const requestBody = {
         maintenanceNotes: maintenanceNotes,
         maintenanceImages: imageUrls,
-        additionalProps1: [],
-        additionalProps2: [],
-        additionalProps3: []
       };
 
       const response = await api.patch(
         `/api/maintenance-requests/${selectedMaintenanceId}/complete-maintenance`,
-        requestBody,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+        requestBody
       );
 
       if (response.status === 200) {
@@ -163,9 +159,24 @@ const ConstrucMain = () => {
 
   const columns = [
     {
+      title: 'Khách hàng',
+      dataIndex: 'customerName',
+      key: 'customerName',
+    },
+    {
+      title: 'Số điện thoại',
+      dataIndex: 'customerPhone',
+      key: 'customerPhone',
+    },
+    {
+      title: 'Email',
+      dataIndex: 'customerEmail',
+      key: 'customerEmail',
+    },
+    {
       title: 'Tư vấn viên',
-      dataIndex: 'consultantId',
-      key: 'consultantId',
+      dataIndex: 'consultantName',
+      key: 'consultantName',
     },
     {
       title: 'Mô tả',
