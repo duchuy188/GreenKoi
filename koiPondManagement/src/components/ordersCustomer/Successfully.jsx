@@ -67,7 +67,9 @@ function SuccessPage() {
               </p>
               <p style={{ fontSize: "24px", margin: "10px 0" }}>
                 Số tiền đã thanh toán:{" "}
-                <span style={{ fontWeight: "normal" }}>{vnp_Amount}</span>
+                <span style={{ fontWeight: "normal" }}>
+                  {parseInt(vnp_Amount) / 100} VND
+                </span>
               </p>
               <p style={{ fontSize: "24px", margin: "10px 0" }}>
                 Mã giao dịch:{" "}

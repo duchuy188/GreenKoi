@@ -111,11 +111,7 @@ function App() {
         {
           path: "/successfully",
           element: <Successfully />,
-        },
-        {
-          path: "/successfully",
-          element: <Successfully />,
-        },
+        },    
         {
           path: "/error",
           element: <Error />,

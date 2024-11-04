@@ -178,11 +178,11 @@ function LoginPage() {
                 </Link>
               </div>
 
-              <div className="divider">
+              {/* <div className="divider">
                 <span className="divider-text">Hoặc</span>
-              </div>
+              </div> */}
 
-              <Form.Item>
+              {/* <Form.Item>
                 <Button
                   block
                   size="large"
@@ -192,7 +192,7 @@ function LoginPage() {
                 >
                   Đăng nhập bằng Google
                 </Button>
-              </Form.Item>
+              </Form.Item> */}
             </Form>
           </div>
         </div>

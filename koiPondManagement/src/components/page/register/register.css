@@ -8,7 +8,7 @@ input::placeholder {
   
   .ant-input-password input {
     background: transparent !important;
-    color: rgb(241, 237, 237) !important;
+    color: rgb(17, 14, 14) !important;
   }
   
   .ant-input:focus::placeholder {
