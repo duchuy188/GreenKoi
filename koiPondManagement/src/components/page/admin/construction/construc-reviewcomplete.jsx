@@ -196,7 +196,7 @@ const ConstrucReviewComplete = () => {
       />
       <Modal
         title="Chi tiết ghi chú"
-        visible={modalVisible}
+        open={modalVisible}
         onOk={() => setModalVisible(false)}
         onCancel={() => setModalVisible(false)}
       >
@@ -204,7 +204,7 @@ const ConstrucReviewComplete = () => {
       </Modal>
       <Modal
         title="Hình ảnh bảo trì"
-        visible={imageModalVisible}
+        open={imageModalVisible}
         onOk={() => setImageModalVisible(false)}
         onCancel={() => setImageModalVisible(false)}
         width={800}

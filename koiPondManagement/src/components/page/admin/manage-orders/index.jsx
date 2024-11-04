@@ -272,7 +272,7 @@ const OrdersList = () => {
   const renderDescriptionModal = () => (
     <Modal
       title="Chi tiết mô tả"
-      visible={isDescriptionModalVisible}
+      open={isDescriptionModalVisible}
       onCancel={() => setIsDescriptionModalVisible(false)}
       footer={[
         <Button key="close" onClick={() => setIsDescriptionModalVisible(false)}>
@@ -674,7 +674,7 @@ const OrdersList = () => {
   const renderAssignModal = () => (
     <Modal
       title={<div className="assign-modal-title">Phân công nhà thầu</div>}
-      visible={isAssignModalVisible}
+      open={isAssignModalVisible}
       onCancel={() => {
         setIsAssignModalVisible(false);
         setSelectedConstructor(null);

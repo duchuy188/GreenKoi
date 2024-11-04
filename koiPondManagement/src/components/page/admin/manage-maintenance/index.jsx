@@ -336,7 +336,7 @@ const ManageMaintenance = () => {
       {/* View Cancel Reason Modal */}
       <Modal
         title="Lý do hủy"
-        visible={viewCancelReasonModalVisible}
+        open={viewCancelReasonModalVisible}
         onOk={() => setViewCancelReasonModalVisible(false)}
         onCancel={() => setViewCancelReasonModalVisible(false)}
       >
@@ -346,7 +346,7 @@ const ManageMaintenance = () => {
       {/* Cancel Request Modal */}
       <Modal
         title="Hủy yêu cầu"
-        visible={cancelModalVisible}
+        open={cancelModalVisible}
         onOk={submitCancel}
         onCancel={() => setCancelModalVisible(false)}
       >
@@ -361,7 +361,7 @@ const ManageMaintenance = () => {
       {/* Assign Staff Modal */}
       <Modal
         title="Phân công nhân viên"
-        visible={isAssignModalVisible}
+        open={isAssignModalVisible}
         onOk={handleAssignSubmit}
         onCancel={() => setIsAssignModalVisible(false)}
       >

@@ -408,7 +408,7 @@ const ConstrucMain = () => {
       )}
       <Modal
         title="Hoàn thành bảo trì"
-        visible={isCompleteModalVisible}
+        open={isCompleteModalVisible}
         onOk={handleCompleteMaintenance}
         onCancel={() => {
           setIsCompleteModalVisible(false);

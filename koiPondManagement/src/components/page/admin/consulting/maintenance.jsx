@@ -491,7 +491,7 @@ const MaintenanceRequest = () => {
       )}
       <Modal
         title="Chi tiết yêu cầu bảo trì"
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
         width={800}
@@ -500,7 +500,7 @@ const MaintenanceRequest = () => {
       </Modal>
       <Modal
         title="Hủy yêu cầu bảo trì"
-        visible={isCancelModalVisible}
+        open={isCancelModalVisible}
         onOk={handleCancelModalOk}
         onCancel={handleCancelModalCancel}
       >
