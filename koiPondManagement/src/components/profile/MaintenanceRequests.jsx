@@ -268,6 +268,7 @@ function MaintenanceRequests() {
           borderRadius: '4px',
           backgroundColor: 
             status === 'PENDING' ? '#fff7e6' :
+            status === 'REVIEWING' ? '#fff7e6' :
             status === 'CONFIRMED' ? '#e6f7ff' :
             status === 'COMPLETED' ? '#f6ffed' :
             status === 'CANCELLED' ? '#fff1f0' : '#f0f0f0',
@@ -284,6 +285,7 @@ function MaintenanceRequests() {
           }`
         }}>
           {status === 'PENDING' ? 'Đang Xem Xét' :
+           status === 'REVIEWING' ? 'Đang Xem Xét' :
            status === 'CONFIRMED' ? 'Đã Xác Nhận' :
            status === 'COMPLETED' ? 'Hoàn Thành' :
            status === 'CANCELLED' ? 'Đã Hủy' : status}
@@ -423,7 +425,7 @@ function MaintenanceRequests() {
 
     return (
       <Modal
-        title={`Chi tiết yêu cầu bảo trì #${selectedRequest.id}`}
+        title="Chi tiết yêu cầu bảo trì"
         visible={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={[

@@ -10,7 +10,7 @@ import {
   DatePicker,
   InputNumber,
 } from "antd";
-import { EyeOutlined } from "@ant-design/icons";
+import { EyeOutlined, StarFilled } from "@ant-design/icons";
 import api from "../../../config/axios";
 import moment from "moment";
 
@@ -32,6 +32,8 @@ const ManageMaintenance = () => {
   const [staffList, setStaffList] = useState([]);
   const [selectedStaffId, setSelectedStaffId] = useState(null);
   const [selectedStaffFilter, setSelectedStaffFilter] = useState(null);
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [currentReview, setCurrentReview] = useState(null);
 
   const paymentStatusOptions = [
     { value: 'UNPAID', label: 'Chưa thanh toán' },
@@ -154,6 +156,16 @@ const ManageMaintenance = () => {
     }
 
     return filteredData;
+  };
+
+  const handleViewReview = async (record) => {
+    try {
+      const response = await api.get(`/api/maintenance-requests/${record.id}/review`);
+      setCurrentReview(response.data);
+      setReviewModalVisible(true);
+    } catch (error) {
+      message.error("Không thể tải đánh giá.");
+    }
   };
 
   const columns = [
@@ -288,9 +300,16 @@ const ManageMaintenance = () => {
               Xem lý do hủy
             </Button>
           )}
+          {requestStatus === "COMPLETED" && (
+            <Button 
+              icon={<EyeOutlined />} 
+              onClick={() => handleViewReview(record)}
+            >
+              Xem đánh giá
+            </Button>
+          )}
         </>
       ),
-      hidden: requestStatus === "COMPLETED",
     },
   ];
 
@@ -376,6 +395,36 @@ const ManageMaintenance = () => {
             </Option>
           ))}
         </Select>
+      </Modal>
+
+      {/* Review Modal */}
+      <Modal
+        title="Đánh giá của khách hàng"
+        open={reviewModalVisible}
+        onOk={() => setReviewModalVisible(false)}
+        onCancel={() => setReviewModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setReviewModalVisible(false)}>
+            Đóng
+          </Button>
+        ]}
+      >
+        {currentReview ? (
+          <div>
+            <div style={{ marginBottom: 16 }}>
+              <span style={{ marginRight: 8 }}>Đánh giá:</span>
+              {[...Array(currentReview.rating)].map((_, index) => (
+                <StarFilled key={index} style={{ color: '#fadb14' }} />
+              ))}
+            </div>
+            <div>
+              <span style={{ marginRight: 8 }}>Nhận xét:</span>
+              <p>{currentReview.comment || "Không có nhận xét"}</p>
+            </div>
+          </div>
+        ) : (
+          <p>Chưa có đánh giá</p>
+        )}
       </Modal>
     </div>
   );

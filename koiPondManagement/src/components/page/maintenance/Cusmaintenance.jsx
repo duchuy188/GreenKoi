@@ -36,6 +36,8 @@ function Cusmaintenance() {
     statusFilter: "ALL",
     paymentFilter: "ALL"
   });
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
 
   const statusOptions = [
     { value: "ALL", label: "Tất Cả Trạng Thái" },
@@ -101,6 +103,11 @@ function Cusmaintenance() {
           maintenanceImages: item.maintenanceImages || [],
           attachments: item.attachments ? item.attachments.split(',') : [],
           key: item.id,
+          review: {
+            rating: item.rating || 0,
+            comment: item.comment || '',
+            reviewDate: item.reviewDate
+          },
         }))
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -154,6 +161,11 @@ function Cusmaintenance() {
       const token = localStorage.getItem("token");
       const customerId = localStorage.getItem("customerId");
 
+      if (!rating) {
+        message.error("Vui lòng chọn số sao đánh giá");
+        return;
+      }
+
       const reviewData = {
         maintenanceRequestId: selectedRequest.id,
         projectId: selectedRequest.projectId,
@@ -172,7 +184,8 @@ function Cusmaintenance() {
       );
 
       message.success("Đánh giá đã được gửi thành công");
-      setDetailModalVisible(false);
+      setHasReviewed(true);
+      setReviewModalVisible(false);
       fetchMaintenanceRequests();
     } catch (err) {
       console.error("Error submitting review:", err);
@@ -276,6 +289,52 @@ function Cusmaintenance() {
     gap: '8px',
   };
 
+  const fetchReviewData = async (maintenanceRequestId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await api.get(
+        `/api/maintenance-requests/${maintenanceRequestId}/review`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (err) {
+      console.error("Error fetching review:", err);
+      message.error("Không thể tải thông tin đánh giá");
+      return null;
+    }
+  };
+
+  const handleViewReview = async (record) => {
+    const reviewData = await fetchReviewData(record.id);
+    
+    if (!reviewData) return;
+
+    Modal.info({
+      title: 'Đánh Giá Của Bạn',
+      content: (
+        <div style={{ marginTop: '16px' }}>
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>Số sao:</div>
+            <Rate disabled value={reviewData.rating} />
+          </div>
+          {reviewData.comment && (
+            <div>
+              <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>Nhận xét:</div>
+              <p>{reviewData.comment}</p>
+            </div>
+          )}
+          <div style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>
+            Ngày đánh giá: {moment(reviewData.createdAt).format('DD/MM/YYYY HH:mm')}
+          </div>
+        </div>
+      ),
+      width: 500,
+      okText: 'Đóng',
+    });
+  };
+
   const columns = [
     {
       title: "NGÀY YÊU CẦU",
@@ -365,7 +424,7 @@ function Cusmaintenance() {
           <Button
             style={{
               ...actionButtonStyle,
-              backgroundColor: '#ffc107', // màu vàng
+              backgroundColor: '#ffc107',
             }}
             onClick={() => handleViewDetails(record)}
           >
@@ -376,7 +435,7 @@ function Cusmaintenance() {
             <Button
               style={{
                 ...actionButtonStyle,
-                backgroundColor: '#0d6efd', // màu xanh dương
+                backgroundColor: '#0d6efd',
               }}
             >
               <WalletOutlined /> Thanh Toán VNPAY
@@ -387,7 +446,7 @@ function Cusmaintenance() {
             <Button
               style={{
                 ...actionButtonStyle,
-                backgroundColor: '#00bcd4', // màu xanh ngọc
+                backgroundColor: '#00bcd4',
               }}
               onClick={() => showCancelModal(record.id)}
             >
@@ -395,18 +454,43 @@ function Cusmaintenance() {
             </Button>
           )}
 
-          {record.requestStatus === "COMPLETED" && !record.review && (
-            <Button
-              style={{
-                ...actionButtonStyle,
-                backgroundColor: '#28a745', // màu xanh lá
-              }}
-              onClick={() => handleViewDetails(record)}
-            >
-              <StarOutlined /> Đánh Giá
-            </Button>
+          {record.maintenanceStatus === "COMPLETED" && (
+            <>
+              {!record.review?.rating ? (
+                <Button
+                  style={{
+                    ...actionButtonStyle,
+                    backgroundColor: '#28a745',
+                  }}
+                  onClick={() => handleOpenReview(record)}
+                >
+                  <StarOutlined /> Đánh Giá
+                </Button>
+              ) : (
+                <Button
+                  style={{
+                    ...actionButtonStyle,
+                    backgroundColor: '#52c41a',
+                  }}
+                  onClick={() => handleViewReview(record)}
+                >
+                  <StarOutlined /> Xem Đánh Giá
+                </Button>
+              )}
+            </>
           )}
         </div>
+      ),
+    },
+    {
+      title: "ĐÁNH GIÁ",
+      dataIndex: "review",
+      key: "review",
+      width: 120,
+      render: (review) => review?.rating ? (
+        <Rate disabled defaultValue={review.rating} style={{ fontSize: '14px' }} />
+      ) : (
+        <span style={{ color: '#999' }}>Chưa đánh giá</span>
       ),
     },
   ];
@@ -588,7 +672,7 @@ function Cusmaintenance() {
               <Descriptions.Item label="Đnh Giá">
                 <Rate 
                   value={rating} 
-                  onChange={(value) => setRating(value)} 
+                  onChange={setRating} 
                   style={{ fontSize: 20 }}
                 />
               </Descriptions.Item>
@@ -628,7 +712,7 @@ function Cusmaintenance() {
   const renderCancelModal = () => (
     <Modal
       title="Huỷ Yêu Cầu Bảo Trì"
-      open={cancelModalVisible} 
+      visible={cancelModalVisible}
       onCancel={() => {
         setCancelModalVisible(false);
         setCancelReason("");
@@ -645,6 +729,62 @@ function Cusmaintenance() {
         onChange={(e) => setCancelReason(e.target.value)}
         placeholder="Vui lòng nhập lý do huỷ yêu cầu bảo trì..."
       />
+    </Modal>
+  );
+
+  const handleOpenReview = (record) => {
+    setSelectedRequest(record);
+    setReviewModalVisible(true);
+    setRating(0);
+    setComment("");
+  };
+
+  const renderReviewModal = () => (
+    <Modal
+      title="Đánh Giá Dịch Vụ"
+      visible={reviewModalVisible}
+      onCancel={() => {
+        setReviewModalVisible(false);
+        setRating(0);
+        setComment("");
+      }}
+      footer={[
+        <Button 
+          key="submit" 
+          type="primary" 
+          onClick={handleSubmitReview}
+          disabled={!rating}
+        >
+          Gửi Đánh Giá
+        </Button>,
+        <Button key="cancel" onClick={() => {
+          setReviewModalVisible(false);
+          setRating(0);
+          setComment("");
+        }}>
+          Hủy
+        </Button>
+      ]}
+    >
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 8, fontWeight: 'bold' }}>Đánh Giá:</div>
+          <Rate 
+            value={rating}
+            onChange={setRating}
+            style={{ fontSize: 24 }}
+          />
+        </div>
+        <div>
+          <div style={{ marginBottom: 8, fontWeight: 'bold' }}>Nhận Xét:</div>
+          <Input.TextArea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Nhập nhận xét của bạn về dịch vụ..."
+            rows={4}
+          />
+        </div>
+      </div>
     </Modal>
   );
 
@@ -673,6 +813,7 @@ function Cusmaintenance() {
       {renderDetailModal()}
       {renderCancelModal()}
       {renderFilterModal()}
+      {renderReviewModal()}
     </div>
   );
 }

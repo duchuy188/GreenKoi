@@ -298,9 +298,11 @@ const MaintenanceRequest = () => {
       key: "actions",
       render: (_, record) => (
         <Space size="middle">
-          <Button onClick={() => handleViewMaintenanceDetails(record)}>
-            Xem chi tiết
-          </Button>
+          {record.requestStatus !== "PENDING" && (
+            <Button onClick={() => handleViewMaintenanceDetails(record)}>
+              Xem chi tiết
+            </Button>
+          )}
           {statusFilter === "COMPLETED" && record.paymentStatus !== "FULLY_PAID" && (
             <Button 
               type="primary" 
