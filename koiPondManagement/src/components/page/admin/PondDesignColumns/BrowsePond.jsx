@@ -255,9 +255,15 @@ function BrowsePond() {
             okText="Đồng ý"
             cancelText="Hủy"
           >
-            <Button type="primary">Chấp Nhận</Button>
+            <Button type="link" className="text-blue-500">
+              Chấp Nhận
+            </Button>
           </Popconfirm>
-          <Button type="primary" danger onClick={() => openRejectModal(record)}>
+          <Button
+            type="link"
+            style={{ color: "#ff4d4f" }}
+            onClick={() => openRejectModal(record)}
+          >
             Không chấp nhận
           </Button>
         </>

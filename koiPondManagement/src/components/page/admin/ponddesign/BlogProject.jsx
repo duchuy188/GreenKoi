@@ -130,18 +130,6 @@ function BlogProject() {
     }
   };
 
-  const formatDateTime = (dateTimeStr) => {
-    const date = new Date(dateTimeStr);
-    const time = date.toLocaleTimeString("en-US", {
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-    const formattedDate = date.toISOString().split("T")[0];
-    return `${time}\n${formattedDate}`;
-  };
-
   const filteredDrafts = draftBlogs
     .filter(
       (blog) =>
@@ -284,20 +272,54 @@ function BlogProject() {
       dataIndex: "createdAt",
       key: "createdAt",
       sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-      showSorterTooltip: false,
-      render: (text) => (
-        <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
-      ),
+      render: (text) => {
+        if (!text) return null;
+        const date = new Date(text);
+        const formattedDate = date.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+        const time = date.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+        return (
+          <>
+            <div>{formattedDate}</div>
+            <div>{time}</div>
+          </>
+        );
+      },
     },
     {
       title: "Thời gian cập nhật",
       dataIndex: "updatedAt",
       key: "updatedAt",
       sorter: (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
-      showSorterTooltip: false,
-      render: (text) => (
-        <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
-      ),
+      render: (text) => {
+        if (!text) return null;
+        const date = new Date(text);
+        const formattedDate = date.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+        const time = date.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+        return (
+          <>
+            <div>{formattedDate}</div>
+            <div>{time}</div>
+          </>
+        );
+      },
     },
     {
       key: "action",
@@ -443,33 +465,81 @@ function BlogProject() {
       dataIndex: "createdAt",
       key: "createdAt",
       sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-      showSorterTooltip: false,
-      render: (text) => (
-        <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
-      ),
+      render: (text) => {
+        if (!text) return null;
+        const date = new Date(text);
+        const formattedDate = date.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+        const time = date.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+        return (
+          <>
+            <div>{formattedDate}</div>
+            <div>{time}</div>
+          </>
+        );
+      },
     },
     {
       title: "Thời gian cập nhật",
       dataIndex: "updatedAt",
       key: "updatedAt",
       sorter: (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
-      showSorterTooltip: false,
-      render: (text) => (
-        <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
-      ),
+      render: (text) => {
+        if (!text) return null;
+        const date = new Date(text);
+        const formattedDate = date.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+        const time = date.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+        return (
+          <>
+            <div>{formattedDate}</div>
+            <div>{time}</div>
+          </>
+        );
+      },
     },
     {
       title: "Thời gian xuất bản",
       dataIndex: "publishedAt",
       key: "publishedAt",
       sorter: (a, b) => new Date(b.publishedAt) - new Date(a.publishedAt),
-      showSorterTooltip: false,
       render: (text) => {
         if (text === "1970-01-01T07:00:00.000Z" || text === null) {
           return "Chưa được duyệt";
         }
+        const date = new Date(text);
+        const formattedDate = date.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+        const time = date.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
         return (
-          <span style={{ whiteSpace: "pre-line" }}>{formatDateTime(text)}</span>
+          <>
+            <div>{formattedDate}</div>
+            <div>{time}</div>
+          </>
         );
       },
     },
@@ -491,6 +561,11 @@ function BlogProject() {
           loading={loading}
           pagination={{ pageSize: 5 }}
           rowKey="id"
+          locale={{
+            cancelSort: "Bỏ sắp xếp",
+            triggerAsc: "Sắp xếp tăng dần",
+            triggerDesc: "Sắp xếp giảm dần",
+          }}
         />
       </div>
 
@@ -516,6 +591,11 @@ function BlogProject() {
           loading={loading}
           pagination={{ pageSize: 5 }}
           rowKey="id"
+          locale={{
+            cancelSort: "Bỏ sắp xếp",
+            triggerAsc: "Sắp xếp tăng dần",
+            triggerDesc: "Sắp xếp giảm dần",
+          }}
         />
       </div>
 

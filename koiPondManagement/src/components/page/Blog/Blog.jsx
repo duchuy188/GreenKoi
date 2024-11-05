@@ -74,7 +74,7 @@ const Blog = () => {
               alt={post.title}
               style={{
                 width: "100%",
-                height: "75vh",
+                height: "400px",
                 objectFit: "cover",
                 marginTop: "-6%",
               }}
@@ -123,7 +123,7 @@ const Blog = () => {
           </Col>
           <Col span={8}>
             <Card>
-            <Title level={3}>Bài viết mới nhất</Title>
+              <Title level={3}>Bài viết mới nhất</Title>
               {latestPosts.map((latestPost) => (
                 <Col span={24} style={{ paddingLeft: 8 }} key={latestPost.id}>
                   <Link
@@ -137,7 +137,7 @@ const Blog = () => {
                         alt={latestPost.title}
                         style={{
                           width: "100%",
-                          height: "auto",
+                          height: "200px",
                           objectFit: "cover",
                           marginBottom: 8,
                         }}

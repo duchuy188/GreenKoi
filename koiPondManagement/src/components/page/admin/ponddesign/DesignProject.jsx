@@ -113,13 +113,15 @@ function DesignProject() {
     form.resetFields(); // Reset form sau khi đóng modal
   };
 
-  // Filter designer ponds based on status and search text
-  const filteredPonds = designerPonds.filter(
-    (pond) =>
-      (statusFilter === "ALL" || pond.status === statusFilter) &&
-      (pond.name?.toLowerCase().includes(searchText.toLowerCase()) ||
-        pond.id?.toString().includes(searchText))
-  );
+  // Filter và sort designer ponds based on status and search text
+  const filteredPonds = designerPonds
+    .filter(
+      (pond) =>
+        (statusFilter === "ALL" || pond.status === statusFilter) &&
+        (pond.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+          pond.id?.toString().includes(searchText))
+    )
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   // Updated columns definition
   const columns = [
@@ -186,7 +188,72 @@ function DesignProject() {
         </span>
       ),
     },
-    { title: "Giá", dataIndex: "basePrice", key: "basePrice" },
+    {
+      title: "Giá",
+      dataIndex: "basePrice",
+      key: "basePrice",
+      render: (price) =>
+        price
+          ?.toLocaleString("vi-VN", {
+            style: "currency",
+            currency: "VND",
+          })
+          .replace("₫", "VNĐ") || "0 VNĐ",
+    },
+    {
+      title: "Ngày tạo",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      sorter: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      render: (text) => {
+        if (!text) return null;
+        const date = new Date(text);
+        const formattedDate = date.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+        const time = date.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+        return (
+          <>
+            <div>{formattedDate}</div>
+            <div>{time}</div>
+          </>
+        );
+      },
+    },
+    {
+      title: "Ngày chỉnh sửa",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
+      sorter: (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
+      render: (text) => {
+        if (!text) return null;
+        const date = new Date(text);
+        const formattedDate = date.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+        const time = date.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+        return (
+          <>
+            <div>{formattedDate}</div>
+            <div>{time}</div>
+          </>
+        );
+      },
+    },
     {
       title: "Trạng thái",
       dataIndex: "status",
@@ -223,7 +290,8 @@ function DesignProject() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => showEditModal(record)} // Mở modal và gửi dữ liệu hồ cần chỉnh sửa
+              onClick={() => showEditModal(record)}
+              style={{ color: "#1890ff" }}
             >
               <FaEdit />
             </Button>
@@ -235,7 +303,7 @@ function DesignProject() {
             cancelText="Hủy"
           >
             <Tooltip title="Xóa">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" style={{ color: "#ff4d4f" }}>
                 <RiDeleteBin2Fill />
               </Button>
             </Tooltip>
@@ -264,6 +332,11 @@ function DesignProject() {
           dataSource={filteredPonds}
           rowKey="id"
           loading={loading}
+          locale={{
+            cancelSort: "Bỏ sắp xếp",
+            triggerAsc: "Sắp xếp tăng dần",
+            triggerDesc: "Sắp xếp giảm dần",
+          }}
         />
       </Card>
 

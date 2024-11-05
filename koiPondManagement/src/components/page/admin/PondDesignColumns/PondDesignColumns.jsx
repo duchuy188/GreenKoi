@@ -143,7 +143,18 @@ function PondDesignColumns() {
         </span>
       ),
     },
-    { title: "Giá", dataIndex: "basePrice", key: "basePrice" },
+    {
+      title: "Giá",
+      dataIndex: "basePrice",
+      key: "basePrice",
+      render: (price) =>
+        price
+          ?.toLocaleString("vi-VN", {
+            style: "currency",
+            currency: "VND",
+          })
+          .replace("₫", "VNĐ") || "0 VNĐ",
+    },
     { title: "Tạo bởi", dataIndex: "createdById", key: "createdById" },
     {
       title: "Trạng thái",
@@ -174,11 +185,15 @@ function PondDesignColumns() {
             okText="Đồng ý"
             cancelText="Hủy"
           >
-            <Button type="primary" style={{ marginRight: 8 }}>
+            <Button type="link" className="text-blue-500">
               Chấp nhận
             </Button>
           </Popconfirm>
-          <Button type="primary" danger onClick={() => showRejectModal(id)}>
+          <Button
+            type="link"
+            style={{ color: "#ff4d4f" }}
+            onClick={() => showRejectModal(id)}
+          >
             Không chấp nhận
           </Button>
         </>

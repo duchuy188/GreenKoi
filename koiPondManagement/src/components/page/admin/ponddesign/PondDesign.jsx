@@ -153,9 +153,14 @@ function PondDesign() {
               >
                 <InputNumber
                   min={0}
-                  step={0.01}
+                  formatter={(value) =>
+                    `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                  }
+                  parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
                   style={{ width: "100%" }}
-                  placeholder="Nhập giá cả"
+                  placeholder="Nhập giá cả (VNĐ)"
+                  step={1000}
+                  addonAfter="VNĐ"
                 />
               </Form.Item>
             </Col>
