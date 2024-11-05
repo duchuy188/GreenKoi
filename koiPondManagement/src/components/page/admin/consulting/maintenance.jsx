@@ -18,7 +18,7 @@ import {
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import moment from 'moment';
-
+import { SearchOutlined } from '@ant-design/icons';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('vi-VN', {
@@ -37,6 +37,7 @@ const MaintenanceRequest = () => {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [cancellationReason, setCancellationReason] = useState('');
   const [cancellingRequestId, setCancellingRequestId] = useState(null);
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     fetchMaintenanceRequests();
@@ -51,10 +52,16 @@ const MaintenanceRequest = () => {
         endpoint = '/api/maintenance-requests/completed-unpaid';
         const response = await api.get(endpoint);
         console.log("Completed maintenance requests:", response.data);
-        setMaintenanceRequests(response.data);
+        const sortedData = response.data.sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setMaintenanceRequests(sortedData);
       } else {
         const response = await api.get(endpoint);
-        setMaintenanceRequests(response.data);
+        const sortedData = response.data.sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setMaintenanceRequests(sortedData);
       }
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
@@ -204,6 +211,10 @@ const MaintenanceRequest = () => {
     }
   };
 
+  const handleSearch = (value) => {
+    setSearchText(value);
+  };
+
   const columns = [
     {
       title: "Hình Ảnh",
@@ -219,6 +230,11 @@ const MaintenanceRequest = () => {
         ) : null
       ),
     },
+    { 
+      title: "Tên khách hàng", 
+      dataIndex: "customerName", 
+      key: "customerName",
+    },
     { title: "Mã yêu cầu", dataIndex: "id", key: "id", hidden: true },
     { title: "Mã khách hàng", dataIndex: "customerId", key: "customerId", hidden: true },
     { title: "Mã dự án", dataIndex: "projectId", key: "projectId", hidden: true },
@@ -233,11 +249,11 @@ const MaintenanceRequest = () => {
         
         switch (status) {
           case "PENDING":
-            color = 'gold';
+            color = 'orange';
             text = "Đang chờ";
             break;
           case "REVIEWING":
-            color = 'blue';
+            color = 'geekblue';
             text = "Đang xem xét";
             break;
           case "CONFIRMED":
@@ -245,7 +261,7 @@ const MaintenanceRequest = () => {
             text = "Đã xác nhận";
             break;
           case "COMPLETED":
-            color = 'cyan';
+            color = 'purple';
             text = "Đã hoàn thành";
             break;
           case "CANCELLED":
@@ -298,7 +314,7 @@ const MaintenanceRequest = () => {
       key: "actions",
       render: (_, record) => (
         <Space size="middle">
-          {record.requestStatus !== "PENDING" && (
+          {statusFilter !== "PENDING" && (
             <Button onClick={() => handleViewMaintenanceDetails(record)}>
               Xem chi tiết
             </Button>
@@ -337,12 +353,6 @@ const MaintenanceRequest = () => {
       key: "cancellationReason",
       render: (text, record) => record.requestStatus === "CANCELLED" ? text : "-",
       hidden: statusFilter !== "CANCELLED"
-    },
-    { 
-      title: "Tên khách hàng", 
-      dataIndex: "customerName", 
-      key: "customerName",
-      hidden: true
     },
     { 
       title: "Số điện thoại", 
@@ -564,68 +574,93 @@ const MaintenanceRequest = () => {
 
     if (selectedRecord.requestStatus === "REVIEWING" || selectedRecord.requestStatus === "CANCELLED") {
       return (
-        <Form
-          form={form}
-          onFinish={handleUpdateMaintenanceRequest}
-          layout="vertical"
-          initialValues={{
-            ...selectedRecord,
-          }}
-        >
-          <Form.Item name="description" label="Mô tả">
-            <Input.TextArea disabled />
-          </Form.Item>
-          <Form.Item name="requestStatus" label="Trạng thái yêu cầu">
-            <Input disabled />
-          </Form.Item>
-          <Form.Item 
-            name="agreedPrice" 
-            label="Giá đã thỏa thuận"
-            rules={[{ required: true, message: 'Vui lòng nhập giá đã thỏa thuận!' }]}
+        <div>
+          <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+            <Descriptions.Item label="Tên khách hàng">{selectedRecord.customerName}</Descriptions.Item>
+            <Descriptions.Item label="Số điện thoại">{selectedRecord.customerPhone}</Descriptions.Item>
+            <Descriptions.Item label="Email">{selectedRecord.customerEmail}</Descriptions.Item>
+            <Descriptions.Item label="Địa chỉ">{selectedRecord.customerAddress}</Descriptions.Item>
+            <Descriptions.Item label="Mô tả" span={2}>{selectedRecord.description}</Descriptions.Item>
+            <Descriptions.Item label="Trạng thái yêu cầu">
+              {selectedRecord.requestStatus === "REVIEWING" ? "Đang xem xét" : "Đã hủy"}
+            </Descriptions.Item>
+          </Descriptions>
+
+          <Form
+            form={form}
+            onFinish={handleUpdateMaintenanceRequest}
+            layout="vertical"
+            initialValues={{
+              ...selectedRecord,
+            }}
           >
-            <Input
-              type="number"
-              min={0}
-              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-              addonAfter="VND"
-            />
-          </Form.Item>
-          <Button type="primary" htmlType="submit">
-            Cập nhật giá thỏa thuận
-          </Button>
-        </Form>
+            <Form.Item 
+              name="agreedPrice" 
+              label="Giá đã thỏa thuận"
+              rules={[{ required: true, message: 'Vui lòng nhập giá đã thỏa thuận!' }]}
+            >
+              <Input
+                type="number"
+                min={0}
+                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+                addonAfter="VND"
+              />
+            </Form.Item>
+            <Button type="primary" htmlType="submit">
+              Cập nhật giá thỏa thuận
+            </Button>
+          </Form>
+        </div>
       );
     }
   };
 
   const filteredRequests = maintenanceRequests.filter(request => {
-    if (statusFilter === "COMPLETED") {
-      return request.maintenanceStatus === "COMPLETED" && 
-             request.paymentStatus !== "FULLY_PAID";
-    }
-    if (statusFilter === "PENDING") return request.requestStatus === "PENDING";
-    if (statusFilter === "REVIEWING") return request.requestStatus === "REVIEWING";
-    if (statusFilter === "CANCELLED") return request.requestStatus === "CANCELLED";
-    if (statusFilter === "CONFIRMED") return request.requestStatus === "CONFIRMED";
-    if (statusFilter === "COMPLETED") return request.requestStatus === "COMPLETED"; 
-    return false;
+    const matchesStatus = (() => {
+      if (statusFilter === "COMPLETED") {
+        return request.maintenanceStatus === "COMPLETED" && 
+               request.paymentStatus !== "FULLY_PAID";
+      }
+      if (statusFilter === "PENDING") return request.requestStatus === "PENDING";
+      if (statusFilter === "REVIEWING") return request.requestStatus === "REVIEWING";
+      if (statusFilter === "CANCELLED") return request.requestStatus === "CANCELLED";
+      if (statusFilter === "CONFIRMED") return request.requestStatus === "CONFIRMED";
+      if (statusFilter === "COMPLETED") return request.requestStatus === "COMPLETED"; 
+      return false;
+    })();
+
+    const matchesSearch = request.customerName?.toLowerCase().includes(searchText.toLowerCase());
+    return matchesStatus && (searchText ? matchesSearch : true);
   });
 
   return (
     <div>
       <h1>Yêu cầu bảo trì</h1>
-      <Select
-        style={{ width: 200, marginBottom: 16 }}
-        value={statusFilter}
-        onChange={handleStatusFilterChange}
-      >
-        <Select.Option value="PENDING">Đang chờ</Select.Option>
-        <Select.Option value="REVIEWING">Đang xem xét</Select.Option>
-        <Select.Option value="CONFIRMED">Đã xác nhận</Select.Option>
-        <Select.Option value="COMPLETED">Hoàn thành - chờ thanh toán </Select.Option>
-        <Select.Option value="CANCELLED">Đã hủy</Select.Option>
-      </Select>
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col>
+          <Select
+            style={{ width: 200 }}
+            value={statusFilter}
+            onChange={handleStatusFilterChange}
+          >
+            <Select.Option value="PENDING">Đang chờ</Select.Option>
+            <Select.Option value="REVIEWING">Đang xem xét</Select.Option>
+            <Select.Option value="CONFIRMED">Đã xác nhận</Select.Option>
+            <Select.Option value="COMPLETED">Hoàn thành - chờ thanh toán </Select.Option>
+            <Select.Option value="CANCELLED">Đã hủy</Select.Option>
+          </Select>
+        </Col>
+        <Col>
+          <Input
+            placeholder="Tìm kiếm theo tên khách hàng"
+            prefix={<SearchOutlined />}
+            onChange={(e) => handleSearch(e.target.value)}
+            style={{ width: 250 }}
+          />
+        </Col>
+      </Row>
+      
       {loading ? (
         <div>Đang tải dữ liệu...</div>
       ) : filteredRequests.length > 0 ? (

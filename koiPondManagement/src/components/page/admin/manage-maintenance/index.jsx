@@ -146,14 +146,12 @@ const ManageMaintenance = () => {
       return matchesStaffFilter;
     });
 
-    // Sắp xếp theo ngày hoàn thành mới nhất cho trạng thái COMPLETED
-    if (requestStatus === "COMPLETED") {
-      filteredData.sort((a, b) => {
-        const dateA = new Date(a.completionDate);
-        const dateB = new Date(b.completionDate);
-        return dateB - dateA; 
-      });
-    }
+    // Sắp xếp tất cả các yêu cầu theo thời gian tạo mới nhất
+    filteredData.sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return dateB - dateA;
+    });
 
     return filteredData;
   };
@@ -170,9 +168,42 @@ const ManageMaintenance = () => {
 
   const columns = [
     { title: "Mã", dataIndex: "id", key: "id", hidden: true },
-    { title: "Khách hàng", dataIndex: "customerId", key: "customerId" },
-    { title: "Dự án", dataIndex: "projectId", key: "projectId" },
-    { title: "Tư vấn viên", dataIndex: "consultantId", key: "consultantId" },
+    { 
+      title: "Tên khách hàng", 
+      dataIndex: "customerName", 
+      key: "customerName",
+      render: (text) => text || "N/A"
+    },
+    { 
+      title: "Số điện thoại", 
+      dataIndex: "customerPhone", 
+      key: "customerPhone",
+      render: (text) => text || "N/A"
+    },
+    { 
+      title: "Email", 
+      dataIndex: "customerEmail", 
+      key: "customerEmail",
+      render: (text) => text || "N/A"
+    },
+    { 
+      title: "Địa chỉ", 
+      dataIndex: "customerAddress", 
+      key: "customerAddress",
+      render: (text) => text || "N/A"
+    },
+    { 
+      title: "Dự án", 
+      dataIndex: "projectName", 
+      key: "projectName",
+      render: (text) => text || "N/A"
+    },
+    { 
+      title: "Nhân viên tư vấn", 
+      dataIndex: "consultantName", 
+      key: "consultantName",
+      render: (text) => text || "N/A"
+    },
     { title: "Mô tả", dataIndex: "description", key: "description" },
     { title: "Trạng thái yêu cầu", dataIndex: "requestStatus", key: "requestStatus", hidden: requestStatus === "COMPLETED" },
     { 
