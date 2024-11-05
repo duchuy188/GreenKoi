@@ -210,7 +210,24 @@ const ManageMaintenance = () => {
       title: "Trạng thái bảo trì", 
       dataIndex: "maintenanceStatus", 
       key: "maintenanceStatus", 
-      hidden: requestStatus === "CONFIRMED" || requestStatus === "CANCELLED"
+      hidden: requestStatus === "CONFIRMED" || requestStatus === "CANCELLED",
+      render: (status) => {
+        const statusConfig = {
+          PENDING: { color: '#faad14', text: 'Đang chờ' },
+          IN_PROGRESS: { color: '#1890ff', text: 'Đang thực hiện' },
+          COMPLETED: { color: '#52c41a', text: 'Hoàn thành' },
+          CANCELLED: { color: '#ff4d4f', text: 'Đã hủy' }
+        };
+
+        return (
+          <span style={{ 
+            color: statusConfig[status]?.color || '#000000',
+            fontWeight: 'bold'
+          }}>
+            {statusConfig[status]?.text || status}
+          </span>
+        );
+      }
     },
     {
       title: "Ngày tạo",
