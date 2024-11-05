@@ -184,6 +184,8 @@ public class DesignService {
         // Xử lý trường hợp status là null
         dto.setStatus(design.getStatus() != null ? design.getStatus().name() : Design.DesignStatus.PENDING_APPROVAL.name());
         dto.setRejectionReason(design.getRejectionReason());
+        dto.setCreatedAt(design.getCreatedAt());
+        dto.setUpdatedAt(design.getUpdatedAt());
         return dto;
     }
 
