@@ -27,9 +27,6 @@ function Cusmaintenance() {
   const [searchDate, setSearchDate] = useState(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [paymentFilter, setPaymentFilter] = useState("ALL");
-  const [cancelModalVisible, setCancelModalVisible] = useState(false);
-  const [cancelReason, setCancelReason] = useState("");
-  const [selectedCancelId, setSelectedCancelId] = useState(null);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [tempFilters, setTempFilters] = useState({
     searchDate: null,
@@ -38,6 +35,8 @@ function Cusmaintenance() {
   });
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [hasReviewed, setHasReviewed] = useState(false);
+  const [cancellationModalVisible, setCancellationModalVisible] = useState(false);
+  const [selectedCancellation, setSelectedCancellation] = useState(null);
 
   const statusOptions = [
     { value: "ALL", label: "Tất Cả Trạng Thái" },
@@ -63,17 +62,8 @@ function Cusmaintenance() {
       const token = localStorage.getItem("token");
       const customerId = localStorage.getItem("customerId");
 
-      if (!customerId) {
-        message.error("Không tìm thấy thông tin khách hàng. Vui lòng đăng nhập lại.");
-        // Optionally redirect to login page
-        // window.location.href = '/login';
-        return;
-      }
-
-      if (!token) {
-        message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-        // Optionally redirect to login page
-        // window.location.href = '/login';
+      if (!customerId || !token) {
+        message.error("Vui lòng đăng nhập lại");
         return;
       }
 
@@ -87,68 +77,20 @@ function Cusmaintenance() {
       const formattedData = response.data
         .map((item) => ({
           ...item,
-          customerName: item.customerName,
-          customerPhone: item.customerPhone,
-          customerEmail: item.customerEmail,
-          customerAddress: item.customerAddress,
-          projectName: item.projectName,
-          consultantId: item.consultantId,
-          maintenanceStatus: item.maintenanceStatus,
-          agreedPrice: item.agreedPrice,
-          scheduledDate: item.scheduledDate,
-          startDate: item.startDate,
-          assignedTo: item.assignedTo,
-          cancellationReason: item.cancellationReason,
-          maintenanceNotes: item.maintenanceNotes,
-          maintenanceImages: item.maintenanceImages || [],
-          attachments: item.attachments ? item.attachments.split(',') : [],
-          key: item.id,
           review: {
             rating: item.rating || 0,
             comment: item.comment || '',
             reviewDate: item.reviewDate
           },
+          key: item.id,
         }))
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
       setMaintenanceRequests(formattedData);
     } catch (err) {
       console.error("Error fetching maintenance requests:", err);
-      message.error(
-        err.response?.data?.message || 
-        "Không thể tải danh sách yêu cầu bảo trì. Vui lòng thử lại sau."
-      );
+      message.error("Không thể tải danh sách yêu cầu bảo trì");
     }
-  };
-
-  const handleMaintenanceCancel = async (id) => {
-    try {
-      const token = localStorage.getItem("token");
-
-      await api.patch(
-        `/api/maintenance-requests/${id}/cancel`,
-        { cancellationReason: cancelReason },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      message.success("Yêu cầu bảo trì đã được huỷ thành công");
-      setCancelModalVisible(false);
-      setCancelReason("");
-      setSelectedCancelId(null);
-      fetchMaintenanceRequests();
-    } catch (err) {
-      console.error("Error cancelling maintenance request:", err);
-      message.error("Không thể huỷ yêu cầu bảo trì");
-    }
-  };
-
-  const showCancelModal = (id) => {
-    setSelectedCancelId(id);
-    setCancelModalVisible(true);
   };
 
   const handleViewDetails = (record) => {
@@ -167,12 +109,9 @@ function Cusmaintenance() {
       }
 
       const reviewData = {
-        maintenanceRequestId: selectedRequest.id,
-        projectId: selectedRequest.projectId,
-        customerId: customerId,
         rating: rating,
         comment: comment,
-        status: "SUBMITTED"
+        customerId: customerId
       };
 
       await api.post(
@@ -184,12 +123,21 @@ function Cusmaintenance() {
       );
 
       message.success("Đánh giá đã được gửi thành công");
-      setHasReviewed(true);
       setReviewModalVisible(false);
-      fetchMaintenanceRequests();
+      setRating(0);
+      setComment("");
+      
+      await fetchMaintenanceRequests();
     } catch (err) {
       console.error("Error submitting review:", err);
-      message.error("Không thể gửi đánh giá");
+      if (err.response?.status === 500) {
+        message.error("Yêu cầu này đã được đánh giá trước đó");
+      } else {
+        message.error(
+          err.response?.data?.message || 
+          "Không thể gửi đánh giá. Vui lòng thử lại sau."
+        );
+      }
     }
   };
 
@@ -322,11 +270,11 @@ function Cusmaintenance() {
           {reviewData.comment && (
             <div>
               <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>Nhận xét:</div>
-              <p>{reviewData.comment}</p>
+              <p style={{ whiteSpace: 'pre-wrap' }}>{reviewData.comment}</p>
             </div>
           )}
           <div style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>
-            Ngày đánh giá: {moment(reviewData.createdAt).format('DD/MM/YYYY HH:mm')}
+            Ngày đánh giá: {moment(reviewData.reviewDate).format('DD/MM/YYYY HH:mm')}
           </div>
         </div>
       ),
@@ -335,9 +283,64 @@ function Cusmaintenance() {
     });
   };
 
+  const handleViewCancellation = (reason) => {
+    setSelectedCancellation(reason);
+    setCancellationModalVisible(true);
+  };
+
+  const handleVNPayPayment = async (record) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await api.post(
+        `/api/maintenance-requests/${record.id}/deposit/vnpay`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      
+      if (response.data && response.data.paymentUrl) {
+        window.location.href = response.data.paymentUrl;
+      } else {
+        message.error("Không thể tạo liên kết thanh toán. Vui lòng thử lại sau.");
+      }
+    } catch (err) {
+      console.error("Error creating VNPay payment:", err);
+      message.error(
+        err.response?.data?.message || 
+        "Không thể xử lý thanh toán. Vui lòng thử lại sau."
+      );
+    }
+  };
+
+  const handleFinalVNPayPayment = async (record) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await api.post(
+        `/api/maintenance-requests/${record.id}/final/vnpay`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      
+      if (response.data && response.data.paymentUrl) {
+        window.location.href = response.data.paymentUrl;
+      } else {
+        message.error("Không thể tạo liên kết thanh toán. Vui lòng thử lại sau.");
+      }
+    } catch (err) {
+      console.error("Error creating final VNPay payment:", err);
+      message.error(
+        err.response?.data?.message || 
+        "Không thể xử lý thanh toán. Vui lòng thử lại sau."
+      );
+    }
+  };
+
   const columns = [
     {
-      title: "NGÀY YÊU CẦU",
+      title: "NGÀY TẠO",
       dataIndex: "createdAt",
       key: "createdAt",
       width: 120,
@@ -350,32 +353,36 @@ function Cusmaintenance() {
       width: 200,
     },
     {
-      title: "TRẠNG THÁI",
+      title: "TRẠNG THÁI YÊU CẦU",
       dataIndex: "requestStatus",
       key: "requestStatus",
-      width: 150,
+      width: 200,
       render: (status) => (
         <span style={{
           padding: '4px 12px',
           borderRadius: '4px',
           backgroundColor: 
             status === 'PENDING' ? '#fff7e6' :
+            status === 'REVIEWING' ? '#e6f7ff' :
             status === 'CONFIRMED' ? '#e6f7ff' :
             status === 'COMPLETED' ? '#f6ffed' :
             status === 'CANCELLED' ? '#fff1f0' : '#f0f0f0',
           color: 
             status === 'PENDING' ? '#faad14' :
+            status === 'REVIEWING' ? '#1890ff' :
             status === 'CONFIRMED' ? '#1890ff' :
             status === 'COMPLETED' ? '#52c41a' :
             status === 'CANCELLED' ? '#f5222d' : '#000000',
           border: `1px solid ${
             status === 'PENDING' ? '#ffd591' :
+            status === 'REVIEWING' ? '#91d5ff' :
             status === 'CONFIRMED' ? '#91d5ff' :
             status === 'COMPLETED' ? '#b7eb8f' :
             status === 'CANCELLED' ? '#ffa39e' : '#d9d9d9'
           }`
         }}>
-          {status === 'PENDING' ? 'Đang Xem Xét' :
+          {status === 'PENDING' ? 'Đang Giải Quyết' :
+           status === 'REVIEWING' ? 'Đang Xem Xét' :
            status === 'CONFIRMED' ? 'Đã Xác Nhận' :
            status === 'COMPLETED' ? 'Hoàn Thành' :
            status === 'CANCELLED' ? 'Đã Hủy' : status}
@@ -386,6 +393,7 @@ function Cusmaintenance() {
       title: "THANH TOÁN",
       dataIndex: "paymentStatus",
       key: "paymentStatus",
+      width: 150,
       render: (status) => (
         <span style={{
           padding: '4px 12px',
@@ -408,89 +416,155 @@ function Cusmaintenance() {
            status === 'DEPOSIT_PAID' ? 'Đã Cọc' :
            status === 'FULLY_PAID' ? 'Đã Thanh Toán' : status}
         </span>
+
       ),
     },
     {
-      title: "GHI CHÚ",
-      dataIndex: "description",
-      key: "description",
+      title: "PHƯƠNG THỨC THANH TOÁN",
+      dataIndex: "paymentMethod",
+      key: "paymentMethod",
+      width: 150,
+      render: (method) => {
+        let style = {
+          padding: '4px 12px',
+          borderRadius: '4px',
+          display: 'inline-block',
+          textAlign: 'center'
+        };
+
+        if (method === 'CASH') {
+          style = {
+            ...style,
+            backgroundColor: '#fff7e6',
+            color: '#faad14',
+            border: '1px solid #ffd591'
+          };
+          return <span style={style}>Tiền Mặt</span>;
+        } else if (method === 'VNPAY') {
+          style = {
+            ...style,
+            backgroundColor: '#e6f7ff',
+            color: '#1890ff',
+            border: '1px solid #91d5ff'
+          };
+          return <span style={style}>Ngân Hàng</span>;
+        }
+
+        return <span style={{
+          ...style,
+          backgroundColor: '#f5f5f5',
+          color: '#8c8c8c',
+          border: '1px solid #d9d9d9'
+        }}>Chưa có</span>;
+      },
     },
     {
-      title: "HÀNH ĐỘNG",
-      key: "action",
+      title: "TÀI LIỆU ĐÍNH KÈM",
+      dataIndex: "attachments",
+      key: "attachments",
       width: 150,
-      render: (_, record) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <Button
-            style={{
-              ...actionButtonStyle,
-              backgroundColor: '#ffc107',
-            }}
-            onClick={() => handleViewDetails(record)}
-          >
-            <EyeOutlined /> Xem Chi Tiết
-          </Button>
-
-          {record.requestStatus === "CONFIRMED" && (
-            <Button
-              style={{
-                ...actionButtonStyle,
-                backgroundColor: '#0d6efd',
-              }}
-            >
-              <WalletOutlined /> Thanh Toán VNPAY
-            </Button>
-          )}
-
-          {record.requestStatus === "PENDING" && (
-            <Button
-              style={{
-                ...actionButtonStyle,
-                backgroundColor: '#00bcd4',
-              }}
-              onClick={() => showCancelModal(record.id)}
-            >
-              <ToolOutlined /> Yêu Cầu Bảo Trì
-            </Button>
-          )}
-
-          {record.maintenanceStatus === "COMPLETED" && (
-            <>
-              {!record.review?.rating ? (
-                <Button
-                  style={{
-                    ...actionButtonStyle,
-                    backgroundColor: '#28a745',
-                  }}
-                  onClick={() => handleOpenReview(record)}
-                >
-                  <StarOutlined /> Đánh Giá
-                </Button>
-              ) : (
-                <Button
-                  style={{
-                    ...actionButtonStyle,
-                    backgroundColor: '#52c41a',
-                  }}
-                  onClick={() => handleViewReview(record)}
-                >
-                  <StarOutlined /> Xem Đánh Giá
-                </Button>
-              )}
-            </>
+      render: (attachments) => (
+        <div>
+          {attachments && attachments.length > 0 ? (
+            <span>{attachments.length} tệp đính kèm</span>
+          ) : (
+            "Không có"
           )}
         </div>
       ),
     },
     {
-      title: "ĐÁNH GIÁ",
-      dataIndex: "review",
-      key: "review",
+      title: "CẬP NHẬT",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
       width: 120,
-      render: (review) => review?.rating ? (
-        <Rate disabled defaultValue={review.rating} style={{ fontSize: '14px' }} />
-      ) : (
-        <span style={{ color: '#999' }}>Chưa đánh giá</span>
+      render: (text) => moment(text).format("DD/MM/YYYY"),
+    },
+    {
+      title: "LÝ DO HỦY",
+      dataIndex: "cancellationReason",
+      key: "cancellationReason",
+      width: 150,
+      render: (reason) => (
+        <Button 
+          type="link"
+          onClick={() => handleViewCancellation(reason)}
+          disabled={!reason}
+        >
+          {reason ? "Xem lý do" : "Không có"}
+        </Button>
+      ),
+    },
+   
+    {
+      title: "HÀNH ĐỘNG",
+      key: "action",
+      width: 150,
+      render: (_, record) => (
+        <div>
+          <Button
+            style={{
+              ...actionButtonStyle,
+              backgroundColor: '#ffc107',
+              marginBottom: '8px'
+            }}
+            onClick={() => handleViewDetails(record)}
+          >
+            <EyeOutlined /> Chi Tiết
+          </Button>
+          
+          {record.requestStatus === 'CONFIRMED' && record.paymentStatus === 'UNPAID' && (
+            <Button
+              style={{
+                ...actionButtonStyle,
+                backgroundColor: '#1890ff',
+                marginBottom: '8px'
+              }}
+              onClick={() => handleVNPayPayment(record)}
+            >
+              <WalletOutlined /> Thanh Toán Đặt Cọc
+            </Button>
+          )}
+
+          {record.maintenanceStatus === 'COMPLETED' && record.paymentStatus === 'DEPOSIT_PAID' && (
+            <Button
+              style={{
+                ...actionButtonStyle,
+                backgroundColor: '#52c41a',
+                marginBottom: '8px'
+              }}
+              onClick={() => handleFinalVNPayPayment(record)}
+            >
+              <WalletOutlined /> Thanh Toán Cuối Cùng
+            </Button>
+          )}
+
+          {record.paymentStatus === 'FULLY_PAID' && (
+            <>
+              {record.rating > 0 ? (
+                <Button
+                  style={{
+                    ...actionButtonStyle,
+                    backgroundColor: '#13c2c2'
+                  }}
+                  onClick={() => handleViewReview(record)}
+                >
+                  <StarOutlined /> Xem Đánh Giá
+                </Button>
+              ) : (
+                <Button
+                  style={{
+                    ...actionButtonStyle,
+                    backgroundColor: '#722ed1'
+                  }}
+                  onClick={() => handleOpenReview(record)}
+                >
+                  <StarOutlined /> Đánh Giá
+                </Button>
+              )}
+            </>
+          )}
+        </div>
       ),
     },
   ];
@@ -526,34 +600,6 @@ function Cusmaintenance() {
       );
     };
 
-    const renderPaymentStatus = (status) => {
-      const style = {
-        padding: '4px 12px',
-        borderRadius: '4px',
-        backgroundColor: 
-          status === 'UNPAID' ? '#fff1f0' :
-          status === 'DEPOSIT_PAID' ? '#fff7e6' :
-          status === 'FULLY_PAID' ? '#f6ffed' : '#f0f0f0',
-        color: 
-          status === 'UNPAID' ? '#f5222d' :
-          status === 'DEPOSIT_PAID' ? '#faad14' :
-          status === 'FULLY_PAID' ? '#52c41a' : '#000000',
-        border: `1px solid ${
-          status === 'UNPAID' ? '#ffa39e' :
-          status === 'DEPOSIT_PAID' ? '#ffd591' :
-          status === 'FULLY_PAID' ? '#b7eb8f' : '#d9d9d9'
-        }`
-      };
-
-      return (
-        <span style={style}>
-          {status === 'UNPAID' ? 'Chưa Thanh Toán' :
-           status === 'DEPOSIT_PAID' ? 'Đã Cọc' :
-           status === 'FULLY_PAID' ? 'Đã Thanh Toán' : status}
-        </span>
-      );
-    };
-
     const formatCurrency = (amount) => {
       return new Intl.NumberFormat('vi-VN', {
         style: 'currency',
@@ -563,20 +609,10 @@ function Cusmaintenance() {
 
     return (
       <Modal
-        title={`Chi tiết yêu cầu bảo trì #${selectedRequest.id}`}
+        title={`Chi tiết yêu cầu bảo trì`}
         visible={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={[
-          selectedRequest.requestStatus === "COMPLETED" && !selectedRequest.review && (
-            <Button 
-              key="submit" 
-              type="primary" 
-              onClick={handleSubmitReview}
-              disabled={!rating}
-            >
-              Gửi Đánh Giá
-            </Button>
-          ),
           <Button key="close" onClick={() => setDetailModalVisible(false)}>
             Đóng
           </Button>,
@@ -584,72 +620,38 @@ function Cusmaintenance() {
         width={800}
       >
         <Descriptions column={1} bordered>
-          <Descriptions.Item label="Thông Tin Khách Hàng">
-            <div>Tên: {selectedRequest.customerName}</div>
-            <div>SĐT: {selectedRequest.customerPhone}</div>
-            <div>Email: {selectedRequest.customerEmail}</div>
-            <div>Địa chỉ: {selectedRequest.customerAddress}</div>
+          <Descriptions.Item label="Tên Dự Án">
+            {selectedRequest.projectName}
           </Descriptions.Item>
 
-          <Descriptions.Item label="Thông Tin Dự Án">
-            <div>Mã dự án: {selectedRequest.projectId}</div>
-            <div>Tên dự án: {selectedRequest.projectName}</div>
-          </Descriptions.Item>
-
-          <Descriptions.Item label="Thời Gian">
-            <div>Ngày tạo: {moment(selectedRequest.createdAt).format("DD/MM/YYYY")}</div>
-            <div>Ngày hẹn: {moment(selectedRequest.scheduledDate).format("DD/MM/YYYY")}</div>
-            <div>Ngày bắt đầu: {selectedRequest.startDate ? moment(selectedRequest.startDate).format("DD/MM/YYYY") : "Chưa xác định"}</div>
-            <div>Ngày hoàn thành: {selectedRequest.completionDate ? moment(selectedRequest.completionDate).format("DD/MM/YYYY") : "Chưa hoàn thành"}</div>
-          </Descriptions.Item>
-          
-          <Descriptions.Item label="Trạng Thái Yêu Cầu">
-            {selectedRequest.requestStatus === 'PENDING' ? 'Đang Xem Xét' :
-             selectedRequest.requestStatus === 'CONFIRMED' ? 'Đã Xác Nhận' :
-             selectedRequest.requestStatus === 'COMPLETED' ? 'Hoàn Thành' :
-             selectedRequest.requestStatus === 'CANCELLED' ? 'Đã Hủy' : 
-             selectedRequest.requestStatus}
+          <Descriptions.Item label="Mô Tả">
+            {selectedRequest.description}
           </Descriptions.Item>
 
           <Descriptions.Item label="Trạng Thái Bảo Trì">
             {renderMaintenanceStatus(selectedRequest.maintenanceStatus)}
           </Descriptions.Item>
 
-          <Descriptions.Item label="Thông Tin Thanh Toán">
-            <div>Trạng thái: {renderPaymentStatus(selectedRequest.paymentStatus)}</div>
-            <div>Phương thức: {selectedRequest.paymentMethod === 'CASH' ? 'Tiền Mặt' : 'Chuyển Khoản'}</div>
-            <div>Giá thỏa thuận: {formatCurrency(selectedRequest.agreedPrice)}</div>
-            <div>Tiền cọc: {formatCurrency(selectedRequest.depositAmount)}</div>
-            <div>Số tiền còn lại: {formatCurrency(selectedRequest.remainingAmount)}</div>
+          <Descriptions.Item label="Giá Thỏa Thuận">
+            {formatCurrency(selectedRequest.agreedPrice)}
           </Descriptions.Item>
 
-          <Descriptions.Item label="Ghi Chú">
-            {selectedRequest.description}
+          <Descriptions.Item label="Thời Gian">
+            <div>Ngày hẹn: {moment(selectedRequest.scheduledDate).format("DD/MM/YYYY")}</div>
+            <div>Ngày bắt đầu: {selectedRequest.startDate ? moment(selectedRequest.startDate).format("DD/MM/YYYY") : "Chưa xác định"}</div>
+            <div>Ngày hoàn thành: {selectedRequest.completionDate ? moment(selectedRequest.completionDate).format("DD/MM/YYYY") : "Chưa hoàn thành"}</div>
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Nhân Viên Phụ Trách">
+            {selectedRequest.assignedToName || "Chưa phân công"}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Tư Vấn Viên">
+            {selectedRequest.consultantName || "Chưa có"}
           </Descriptions.Item>
 
           <Descriptions.Item label="Ghi Chú Bảo Trì">
             {selectedRequest.maintenanceNotes}
-          </Descriptions.Item>
-
-          {selectedRequest.cancellationReason && (
-            <Descriptions.Item label="Lý Do Hủy">
-              {selectedRequest.cancellationReason}
-            </Descriptions.Item>
-          )}
-
-          <Descriptions.Item label="Hình Ảnh Yêu Cầu">
-            {selectedRequest.attachments && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {selectedRequest.attachments.map((url, index) => (
-                  <Image
-                    key={index}
-                    width={100}
-                    src={url}
-                    alt={`Attachment ${index + 1}`}
-                  />
-                ))}
-              </div>
-            )}
           </Descriptions.Item>
 
           <Descriptions.Item label="Hình Ảnh Bảo Trì">
@@ -666,73 +668,16 @@ function Cusmaintenance() {
               </div>
             )}
           </Descriptions.Item>
-
-          {selectedRequest.requestStatus === "COMPLETED" && !selectedRequest.review && (
-            <>
-              <Descriptions.Item label="Đnh Giá">
-                <Rate 
-                  value={rating} 
-                  onChange={setRating} 
-                  style={{ fontSize: 20 }}
-                />
-              </Descriptions.Item>
-              <Descriptions.Item label="Nhận Xét">
-                <Input.TextArea 
-                  rows={4}
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="Nhập nhận xét của bạn về dịch vụ bảo trì..."
-                />
-              </Descriptions.Item>
-            </>
-          )}
-
-          {selectedRequest.review && (
-            <>
-              <Descriptions.Item label="Đánh Giá">
-                <Rate 
-                  disabled 
-                  value={selectedRequest.review.rating} 
-                  style={{ fontSize: 20 }}
-                />
-              </Descriptions.Item>
-              <Descriptions.Item label="Nhận Xét">
-                {selectedRequest.review.comment}
-              </Descriptions.Item>
-              <Descriptions.Item label="Ngày Đánh Giá">
-                {moment(selectedRequest.review.reviewDate).format("DD/MM/YYYY")}
-              </Descriptions.Item>
-            </>
-          )}
         </Descriptions>
       </Modal>
     );
   };
 
-  const renderCancelModal = () => (
-    <Modal
-      title="Huỷ Yêu Cầu Bảo Trì"
-      visible={cancelModalVisible}
-      onCancel={() => {
-        setCancelModalVisible(false);
-        setCancelReason("");
-        setSelectedCancelId(null);
-      }}
-      onOk={() => handleMaintenanceCancel(selectedCancelId)}
-      okText="Xác Nhận Huỷ"
-      cancelText="Đóng"
-      okButtonProps={{ disabled: !cancelReason.trim() }}
-    >
-      <Input.TextArea
-        rows={4}
-        value={cancelReason}
-        onChange={(e) => setCancelReason(e.target.value)}
-        placeholder="Vui lòng nhập lý do huỷ yêu cầu bảo trì..."
-      />
-    </Modal>
-  );
-
   const handleOpenReview = (record) => {
+    if (record.review?.rating) {
+      message.warning("Yêu cầu này đã được đánh giá trước đó");
+      return;
+    }
     setSelectedRequest(record);
     setReviewModalVisible(true);
     setRating(0);
@@ -757,18 +702,21 @@ function Cusmaintenance() {
         >
           Gửi Đánh Giá
         </Button>,
-        <Button key="cancel" onClick={() => {
-          setReviewModalVisible(false);
-          setRating(0);
-          setComment("");
-        }}>
+        <Button 
+          key="cancel" 
+          onClick={() => {
+            setReviewModalVisible(false);
+            setRating(0);
+            setComment("");
+          }}
+        >
           Hủy
         </Button>
       ]}
     >
       <div style={{ marginBottom: 24 }}>
         <div style={{ marginBottom: 16 }}>
-          <div style={{ marginBottom: 8, fontWeight: 'bold' }}>Đánh Giá:</div>
+          <div style={{ marginBottom: 8, fontWeight: 'bold' }}>Đánh Giá Sao:</div>
           <Rate 
             value={rating}
             onChange={setRating}
@@ -782,8 +730,34 @@ function Cusmaintenance() {
             onChange={(e) => setComment(e.target.value)}
             placeholder="Nhập nhận xét của bạn về dịch vụ..."
             rows={4}
+            maxLength={500}
+            showCount
           />
         </div>
+      </div>
+    </Modal>
+  );
+
+  const renderCancellationModal = () => (
+    <Modal
+      title="Lý Do Hủy"
+      visible={cancellationModalVisible}
+      onCancel={() => setCancellationModalVisible(false)}
+      footer={[
+        <Button key="close" onClick={() => setCancellationModalVisible(false)}>
+          Đóng
+        </Button>
+      ]}
+    >
+      <div style={{ 
+        padding: '16px',
+        background: '#f5f5f5',
+        borderRadius: '4px',
+        whiteSpace: 'pre-wrap',
+        maxHeight: '300px',
+        overflowY: 'auto'
+      }}>
+        {selectedCancellation || "Không có"}
       </div>
     </Modal>
   );
@@ -811,9 +785,9 @@ function Cusmaintenance() {
         className="maintenance-table"
       />
       {renderDetailModal()}
-      {renderCancelModal()}
       {renderFilterModal()}
       {renderReviewModal()}
+      {renderCancellationModal()}
     </div>
   );
 }
