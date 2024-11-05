@@ -8,6 +8,7 @@ import {
   Select,
   Checkbox,
   Tooltip,
+  Tag,
 } from "antd";
 import { EditOutlined, LockOutlined, UnlockOutlined } from "@ant-design/icons";
 import React, { useEffect, useState } from "react";
@@ -181,7 +182,11 @@ function UserManagement() {
       title: "Trạng thái",
       dataIndex: "active",
       key: "active",
-      render: (active) => (active ? "Hoạt động" : "Không hoạt động"),
+      render: (active) => (
+        <Tag color={active ? "success" : "error"}>
+          {active ? "Hoạt động" : "Không hoạt động"}
+        </Tag>
+      ),
     },
     {
       title: "Ngày tạo",

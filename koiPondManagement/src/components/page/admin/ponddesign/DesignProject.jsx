@@ -81,14 +81,16 @@ function DesignProject() {
   const handleDelete = async (id) => {
     try {
       setLoading(true);
-      await api.delete(`/api/pond-designs/${id}`); // Sửa dấu backtick
-      toast.success("Xóa thiết kế hồ thành công");
-      fetchDesignerPonds();
+      const response = await api.delete(`/api/pond-designs/${id}`);
+      if (response.status === 200) {
+        toast.success("Xóa thiết kế hồ thành công");
+        fetchDesignerPonds();
+      }
     } catch (err) {
-      toast.error(
-        "Xóa thiết kế hồ thất bại: " +
-          (err.response?.data?.message || err.message)
-      );
+      toast.error("Xóa thiết kế hồ thất bại", {
+        hideProgressBar: true,
+        autoClose: 2000,
+      });
     } finally {
       setLoading(false);
     }

@@ -82,7 +82,7 @@ const RevenueStatistics: React.FC<RevenueStatisticsProps> = ({ revenueData }) =>
             fontWeight: 'bold',
             color: '#00B96B'
           }}>
-            {revenueData.totalRevenue}%
+            {revenueData.totalRevenue} VNĐ
           </span>   
           <span style={{ 
             color: '#00B96B',

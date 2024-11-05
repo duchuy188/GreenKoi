@@ -92,7 +92,7 @@ function PondDesign() {
       };
 
       if (pondData) {
-        await api.put(`/api/pond-designs/${pondData.id}`, pondValues); // Sửa dấu backtick
+        await api.put(`/api/pond-designs/${pondData.id}`, pondValues);
         toast.success("Cập nhật thiết kế hồ thành công");
         navigate("/dashboard/designproject");
       } else {
@@ -101,16 +101,16 @@ function PondDesign() {
         navigate("/dashboard/ponddesign");
       }
       form.resetFields();
-      setDescriptionData(""); // Reset CKEditor
+      setDescriptionData("");
     } catch (err) {
       toast.error(
         "Không thể " +
           (pondData ? "cập nhật" : "tạo") +
           " thiết kế hồ: " +
-          (err.response?.data?.message || err.message)
+          (err.response?.data?.message || "Đã xảy ra lỗi")
       );
     } finally {
-      setLoading(false); // Set loading về false sau khi hoàn tất
+      setLoading(false);
     }
   };
 
