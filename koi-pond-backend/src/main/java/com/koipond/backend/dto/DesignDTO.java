@@ -2,6 +2,7 @@ package com.koipond.backend.dto;
 
 import lombok.Data;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 public class DesignDTO {
@@ -16,4 +17,6 @@ public class DesignDTO {
     private String createdById;
     private String status;
     private String rejectionReason;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
