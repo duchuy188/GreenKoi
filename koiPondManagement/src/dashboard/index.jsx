@@ -247,6 +247,15 @@ const Dashboard = () => {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user) {
+      const roleId = Number(user.roleId);
+      const defaultKeys = getDefaultOpenKeys(roleId);
+      setOpenKeys(defaultKeys);
+    }
+  }, []);
+
   return (
     <Layout
       style={{

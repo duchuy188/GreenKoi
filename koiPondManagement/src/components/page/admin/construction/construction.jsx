@@ -103,9 +103,19 @@ const ProjectTasks = () => {
         `/api/tasks/${taskId}/status?newStatus=${newStatus}&completionPercentage=${newPercentage}`
       );
 
-      if (projectInfo && projectInfo.id) {
-        await fetchProjectTasks(projectInfo.id);
-      }
+      const updatedTasks = tasks.map(task => 
+        task.id === taskId 
+          ? { ...task, status: newStatus, completionPercentage: newPercentage }
+          : task
+      );
+      setTasks(updatedTasks);
+
+      const totalProgress = updatedTasks.reduce((sum, task) => sum + (task.completionPercentage || 0), 0);
+      const averageProgress = totalProgress / updatedTasks.length;
+      setProjectInfo(prev => ({
+        ...prev,
+        progressPercentage: Math.round(averageProgress)
+      }));
 
       toast.success("Cập nhật nhiệm vụ thành công");
     } catch (error) {
@@ -198,6 +208,10 @@ const ProjectTasks = () => {
             statusText = "CHỜ XỬ LÝ";
             color = "blue";
             break;
+          case "TECHNICALLY_COMPLETED":
+            statusText = "HOÀN THÀNH KỸ THUẬT";
+            color = "green";
+            break;
           default:
             statusText = "N/A";
             color = "default";
@@ -270,7 +284,20 @@ const ProjectTasks = () => {
           </Space>
 
           <Space direction="vertical" style={{ width: "100%", marginTop: 16 }}>
-            <Text>Trạng thái: {projectInfo.statusName || "N/A"}</Text>
+            <Text>Trạng thái: {(() => {
+              switch (projectInfo.statusName?.toUpperCase()) {
+                case "COMPLETED":
+                  return "HOÀN THÀNH";
+                case "IN PROCESS":
+                  return "ĐANG XỬ LÝ";
+                case "PENDING":
+                  return "CHỜ XỬ LÝ";
+                case "TECHNICALLY_COMPLETED":
+                  return "HOÀN THÀNH KỸ THUẬT";
+                default:
+                  return projectInfo.statusName || "N/A";
+              }
+            })()}</Text>
 
             <Text>
               Ngày bắt đầu:{" "}
@@ -294,7 +321,7 @@ const ProjectTasks = () => {
                 onClick={markTechnicallyCompleted}
                 style={{ marginTop: 16 }}
               >
-                Mark as Technically Completed
+                Đã hoàn thành về mặt kỹ thuật
               </Button>
             )}
         </Card>
