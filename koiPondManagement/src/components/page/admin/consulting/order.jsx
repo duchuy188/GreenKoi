@@ -199,12 +199,14 @@ const Orders = () => {
       dataIndex: "totalPrice",
       key: "totalPrice",
       width: 100,
+      render: (price) => price?.toLocaleString('vi-VN') + ' VND'
     },
     {
       title: "Tiền cọc",
       dataIndex: "depositAmount",
       key: "depositAmount",
       width: 100,
+      render: (price) => price?.toLocaleString('vi-VN') + ' VND'
     },
     {
       title: "Ngày bắt đầu",

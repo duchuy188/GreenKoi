@@ -168,12 +168,11 @@ const OrdersCustomer = () => {
       fetchOrders();
     } catch (error) {
       console.error("Error submitting review:", error);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-        console.error("Response headers:", error.response.headers);
+      if (error.response?.data?.message === "A review already exists for this project") {
+        toast.error("Dự án này đã được đánh giá trước đó");
+      } else {
+        toast.error(`Không thể gửi đánh giá: ${error.message}`);
       }
-      toast.error(`Không thể gửi đánh giá: ${error.message}`);
     }
   };
 
@@ -291,6 +290,8 @@ const OrdersCustomer = () => {
                         ? "BẢO TRÌ"
                         : order.statusName === "TECHNICALLY_COMPLETED"
                         ? "ĐÃ HOÀN THÀNH KỸ THUẬT"
+                        : order.statusName === "COMPLETED"
+                        ? "HOÀN THÀNH"
                         : order.statusName}
                     </span>
                   </div>
@@ -440,6 +441,8 @@ const OrdersCustomer = () => {
                       ? "BẢO TRÌ"
                       : selectedOrder.statusName === "TECHNICALLY_COMPLETED"
                       ? "ĐÃ HOÀN THÀNH KỸ THUẬT"
+                      : selectedOrder.statusName === "COMPLETED"
+                      ? "HOÀN THÀNH"
                       : selectedOrder.statusName || "N/A"}
                   </span>
                 </p>
@@ -504,9 +507,11 @@ const OrdersCustomer = () => {
                       <td>{task.name}</td>
                       <td>
                         {task.status === "COMPLETED"
-                          ? "HON THÀNH"
+                          ? "HOÀN THÀNH"
                           : task.status === "PENDING"
                           ? "ĐANG CHỜ"
+                          : task.status === "IN_PROGRESS"
+                          ? "ĐANG THỰC HIỆN"
                           : task.status}
                       </td>
                       <td>

@@ -364,11 +364,13 @@ const OrdersList = () => {
       title: "Tổng giá",
       dataIndex: "totalPrice",
       key: "totalPrice",
+      render: (price) => price?.toLocaleString('vi-VN') + ' VND'
     },
     {
       title: "Số tiền đặt cọc",
       dataIndex: "depositAmount",
       key: "depositAmount",
+      render: (price) => price?.toLocaleString('vi-VN') + ' VND'
     },
     {
       title: "Ngày bắt đầu",
@@ -607,7 +609,7 @@ const OrdersList = () => {
               <Text strong>
                 <DollarOutlined /> Tổng giá:
               </Text>
-              <Text>{order.totalPrice || 0}</Text>
+              <Text>{(order.totalPrice || 0).toLocaleString('vi-VN')} VND</Text>
 
               <Text strong>
                 <CalendarOutlined /> Ngày tạo:
@@ -707,7 +709,7 @@ const OrdersList = () => {
   // Cập nhật Modal phân công
   const renderAssignModal = () => (
     <Modal
-      title={<div className="assign-modal-title">Phân công nhà thầu</div>}
+      title={<div className="assign-modal-title">Phân công xây dựng</div>}
       open={isAssignModalVisible}
       onCancel={() => {
         setIsAssignModalVisible(false);
@@ -716,7 +718,7 @@ const OrdersList = () => {
       }}
       onOk={() => {
         if (!selectedConstructor) {
-          toast.warning("Vui lòng chọn nhà thầu");
+          toast.warning("Vui lòng chọn nhân viên xây dựng");
           return;
         }
         handleAssignConstructor();
@@ -727,7 +729,7 @@ const OrdersList = () => {
     >
       <div className="assign-modal-content">
         <Input.Search
-          placeholder="Tìm kiếm nhà thầu..."
+          placeholder="Tìm kiếm nhân viên xây dựng..."
           className="search-box"
           value={searchConstructor}
           onChange={(e) => setSearchConstructor(e.target.value)}
@@ -766,8 +768,8 @@ const OrdersList = () => {
             <Empty
               description={
                 searchConstructor
-                  ? "Không tìm thấy nhà thầu phù hợp"
-                  : "Không có nhà thầu"
+                  ? "Không tìm thấy nhân viên xây dựng phù hợp"
+                  : "Không có nhân viên xây dựng"
               }
             />
           )}
