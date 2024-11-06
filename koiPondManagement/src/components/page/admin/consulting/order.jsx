@@ -12,6 +12,8 @@ import {
   Menu,
   Tooltip,
   Space,
+  Tag,
+  Select,
 } from "antd";
 import api from "../../../config/axios";
 import moment from "moment";
@@ -32,6 +34,8 @@ const Orders = () => {
   const [selectedDescription, setSelectedDescription] = useState("");
   const [isShowingDetail, setIsShowingDetail] = useState(false);
   const [descriptionModalVisible, setDescriptionModalVisible] = useState(false);
+  const [statusFilter, setStatusFilter] = useState(null);
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState(null);
 
   const createMarkup = (htmlContent) => {
     return { __html: htmlContent };
@@ -63,21 +67,37 @@ const Orders = () => {
       ...record,
       startDate: moment(record.startDate),
       endDate: moment(record.endDate),
+      createdAt: moment(record.createdAt).format("DD/MM/YYYY HH:mm")
     });
     setIsModalVisible(true);
   };
   const statusOptions = [
-    { value: "PENDING", label: "Chờ duyệt" },
-    { value: "APPROVED", label: "Đã duyệt" },
-    { value: "PLANNING", label: "Đang lên kế hoạch" },
-    { value: "IN_PROGRESS", label: "Đang thực hiện" },
-    { value: "ON_HOLD", label: "Tạm dừng" },
-    { value: "CANCELLED", label: "Đã hủy" },
-    { value: "MAINTENANCE", label: "Bảo trì" },
-    { value: "TECHNICALLY_COMPLETED", label: "Đã hoàn thành kỹ thuật" },
+    { value: "PENDING", label: "Chờ duyệt", color: "orange" },
+    { value: "APPROVED", label: "Đã duyệt", color: "green" },
+    { value: "PLANNING", label: "Đang lên kế hoạch", color: "blue" },
+    { value: "IN_PROGRESS", label: "Đang thực hiện", color: "processing" },
+    { value: "ON_HOLD", label: "Tạm dừng", color: "warning" },
+    { value: "CANCELLED", label: "Đã hủy", color: "red" },
+    { value: "MAINTENANCE", label: "Bảo trì", color: "cyan" },
+    { value: "TECHNICALLY_COMPLETED", label: "Đã hoàn thành kỹ thuật", color: "lime" },
 
     // Add more statuses as needed
   ];
+  const statusOptionsWithAll = [
+    { value: "ALL", label: "Tất cả", color: "default" },
+    ...statusOptions
+  ];
+
+  const paymentStatusOptions = [
+    { value: "UNPAID", label: "Chưa thanh toán", color: "red" },
+    { value: "DEPOSIT_PAID", label: "Đã cọc", color: "gold" },
+    { value: "FULLY_PAID", label: "Đã thanh toán", color: "green" },
+  ];
+  const paymentStatusOptionsWithAll = [
+    { value: "ALL", label: "Tất cả", color: "default" },
+    ...paymentStatusOptions
+  ];
+
   const handleUpdate = async (values) => {
     try {
       await api.put(`/api/projects/${editingOrder.id}`, {
@@ -127,14 +147,23 @@ const Orders = () => {
     }));
   };
 
-  const paymentStatusOptions = [
-    { value: "UNPAID", label: "Chưa thanh toán" },
-    { value: "DEPOSIT_PAID", label: "Đã cọc" },
-    { value: "FULLY_PAID", label: "Đã thanh toán" },
-  ];
-
-  const updatePaymentStatus = async (id, newStatus) => {
+  const updatePaymentStatus = async (id, newStatus, currentStatus) => {
     try {
+      if (currentStatus === "FULLY_PAID") {
+        toast.error("Không thể thay đổi trạng thái khi đã thanh toán đầy đủ");
+        return;
+      }
+
+      if (currentStatus === "DEPOSIT_PAID" && newStatus === "UNPAID") {
+        toast.error("Không thể chuyển từ trạng thái đã cọc về chưa thanh toán");
+        return;
+      }
+
+      if (currentStatus === "UNPAID" && newStatus === "FULLY_PAID") {
+        toast.error("Không thể chuyển trực tiếp từ chưa thanh toán sang đã thanh toán đầy đủ");
+        return;
+      }
+
       await api.patch(`/api/projects/${id}/payment-status`, {
         paymentStatus: newStatus,
       });
@@ -199,26 +228,28 @@ const Orders = () => {
       dataIndex: "totalPrice",
       key: "totalPrice",
       width: 100,
-      render: (price) => price?.toLocaleString('vi-VN') + ' VND'
+      render: (price) => price?.toLocaleString('vi-VN') + ' VNĐ'
     },
     {
       title: "Tiền cọc",
       dataIndex: "depositAmount",
       key: "depositAmount",
       width: 100,
-      render: (price) => price?.toLocaleString('vi-VN') + ' VND'
+      render: (price) => price?.toLocaleString('vi-VN') + ' VNĐ'
     },
     {
       title: "Ngày bắt đầu",
       dataIndex: "startDate",
       key: "startDate",
-      width: 100,
+      width: 120,
+      render: (date) => moment(date).format("DD/MM/YYYY"),
     },
     {
       title: "Ngày kết thúc",
       dataIndex: "endDate",
       key: "endDate",
-      width: 100,
+      width: 120,
+      render: (date) => moment(date).format("DD/MM/YYYY"),
     },
     {
       title: "Khách hàng",
@@ -241,7 +272,7 @@ const Orders = () => {
       width: 120,
       render: (statusName) => {
         const status = statusOptions.find((s) => s.value === statusName);
-        return status ? status.label : statusName;
+        return status ? <Tag color={status.color}>{status.label}</Tag> : statusName;
       },
     },
     {
@@ -249,7 +280,9 @@ const Orders = () => {
       dataIndex: "createdAt",
       key: "createdAt",
       width: 150,
-      render: (date) => moment(date).format("YYYY-MM-DD HH:mm:ss"),
+      render: (date) => moment(date).format("DD/MM/YYYY HH:mm"),
+      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      sortDirections: ["descend", "ascend"],
     },
     {
       title: "Thanh toán",
@@ -257,22 +290,34 @@ const Orders = () => {
       key: "paymentStatus",
       width: 150,
       render: (paymentStatus, record) => {
+        const currentStatus = paymentStatusOptions.find((s) => s.value === paymentStatus);
+        
+        let availableStatuses = [...paymentStatusOptions];
+        if (paymentStatus === "FULLY_PAID") {
+          availableStatuses = [];
+        } else if (paymentStatus === "DEPOSIT_PAID") {
+          availableStatuses = paymentStatusOptions.filter(s => s.value === "FULLY_PAID");
+        } else if (paymentStatus === "UNPAID") {
+          availableStatuses = paymentStatusOptions.filter(s => s.value === "DEPOSIT_PAID");
+        }
+
         const menuItems = {
-          items: paymentStatusOptions.map((status) => ({
+          items: availableStatuses.map((status) => ({
             key: status.value,
-            label: status.label,
+            label: (
+              <Tag color={status.color}>{status.label}</Tag>
+            ),
           })),
-          onClick: ({ key }) => updatePaymentStatus(record.id, key),
+          onClick: ({ key }) => updatePaymentStatus(record.id, key, paymentStatus),
         };
 
-        const currentStatus =
-          paymentStatusOptions.find((s) => s.value === paymentStatus)?.label ||
-          "Chưa thanh toán";
-
         return (
-          <Dropdown menu={menuItems}>
+          <Dropdown menu={menuItems} disabled={paymentStatus === "FULLY_PAID"}>
             <Button>
-              {currentStatus} <DownOutlined />
+              <Tag color={currentStatus?.color || 'default'}>
+                {currentStatus?.label || "Chưa thanh toán"}
+              </Tag>
+              <DownOutlined />
             </Button>
           </Dropdown>
         );
@@ -309,12 +354,42 @@ const Orders = () => {
     },
   ];
 
+  const filteredOrders = orders.filter(order => {
+    const matchesStatus = !statusFilter || statusFilter === "ALL" || order.statusName === statusFilter;
+    const matchesPayment = !paymentStatusFilter || paymentStatusFilter === "ALL" || order.paymentStatus === paymentStatusFilter;
+    return matchesStatus && matchesPayment;
+  });
+
   return (
     <div>
       <h1>Đơn hàng của khách hàng</h1>
+      <div style={{ marginBottom: 16, display: 'flex', gap: 16 }}>
+        <Select
+          style={{ width: 200 }}
+          placeholder="Lọc theo trạng thái"
+          allowClear
+          onChange={setStatusFilter}
+          defaultValue="ALL"
+          options={statusOptionsWithAll.map(status => ({
+            value: status.value,
+            label: status.label
+          }))}
+        />
+        <Select
+          style={{ width: 200 }}
+          placeholder="Lọc theo thanh toán"
+          allowClear
+          onChange={setPaymentStatusFilter}
+          defaultValue="ALL"
+          options={paymentStatusOptionsWithAll.map(status => ({
+            value: status.value,
+            label: status.label
+          }))}
+        />
+      </div>
       <Table
         columns={columns.filter((column) => !column.hidden)}
-        dataSource={orders}
+        dataSource={filteredOrders}
         loading={loading}
         rowKey="id"
         pagination={{ defaultSortOrder: "descend" }}
@@ -329,7 +404,7 @@ const Orders = () => {
           <Form.Item
             name="name"
             label="Tên khách hàng"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Vui lòng nhập tên khách hàng' }]}
           >
             <Input readOnly />
           </Form.Item>
@@ -367,28 +442,42 @@ const Orders = () => {
           <Form.Item
             name="totalPrice"
             label="Tổng giá tiền"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Vui lòng nhập tổng giá tiền' }]}
           >
-            <InputNumber min={0} />
+            <InputNumber 
+              min={0}
+              formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+              parser={value => value.replace(/\./g, '')}
+            />
           </Form.Item>
           <Form.Item name="depositAmount" label="Số tiền gửi">
-            <InputNumber min={0} />
+            <InputNumber 
+              min={0}
+              formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+              parser={value => value.replace(/\./g, '')}
+            />
           </Form.Item>
           <Form.Item
             name="startDate"
             label="Ngày bắt đầu"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
             readOnly
           >
-            <DatePicker readOnly />
+            <DatePicker 
+              format="DD/MM/YYYY"
+              readOnly 
+            />
           </Form.Item>
           <Form.Item
             name="endDate"
             label="Ngày kết thúc"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc' }]}
             readOnly
           >
-            <DatePicker readOnly />
+            <DatePicker 
+              format="DD/MM/YYYY"
+              readOnly 
+            />
           </Form.Item>
           <Form.Item name="customerId" label="Customer ID" hidden>
             <Input />
@@ -397,7 +486,10 @@ const Orders = () => {
             <Input />
           </Form.Item>
           <Form.Item name="createdAt" label="Được tạo ngày" readOnly>
-            <Input readOnly />
+            <Input 
+              readOnly 
+              value={moment(form.getFieldValue("createdAt")).format("DD/MM/YYYY HH:mm")}
+            />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
