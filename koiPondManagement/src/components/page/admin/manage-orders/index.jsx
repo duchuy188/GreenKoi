@@ -52,6 +52,7 @@ const OrdersList = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [isPolling, setIsPolling] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState(null);
 
   useEffect(() => {
     initialFetch();
@@ -149,15 +150,15 @@ const OrdersList = () => {
     }
   };
   const statusOptions = [
-    { value: "PENDING", label: "Chờ duyệt" },
-    { value: "APPROVED", label: "Đã duyệt" },
-    { value: "PLANNING", label: "Đang lên kế hoạch" },
-    { value: "IN_PROGRESS", label: "Đang thực hiện" },
-    { value: "ON_HOLD", label: "Tạm dừng" },
-    { value: "CANCELLED", label: "Đã hủy" },
-    { value: "MAINTENANCE", label: "Bảo trì" },
-    { value: "COMPLETED", label: "Hoàn thành" },
-    { value: "TECHNICALLY_COMPLETED", label: "Đã hoàn thành kỹ thuật" },
+    { value: "PENDING", label: "Chờ duyệt", color: "orange" },
+    { value: "APPROVED", label: "Đã duyệt", color: "green" },
+    { value: "PLANNING", label: "Đang lên kế hoạch", color: "blue" },
+    { value: "IN_PROGRESS", label: "Đang thực hiện", color: "processing" },
+    { value: "ON_HOLD", label: "Tạm dừng", color: "warning" },
+    { value: "CANCELLED", label: "Đã hủy", color: "red" },
+    { value: "MAINTENANCE", label: "Bảo trì", color: "cyan" },
+    { value: "COMPLETED", label: "Hoàn thành", color: "success" },
+    { value: "TECHNICALLY_COMPLETED", label: "Đã hoàn thành kỹ thuật", color: "lime" },
   ];
   const cancelProject = async (id) => {
     try {
@@ -401,7 +402,11 @@ const OrdersList = () => {
       width: 120,
       render: (statusName) => {
         const status = statusOptions.find((s) => s.value === statusName);
-        return status ? status.label : statusName;
+        return status ? (
+          <Tag color={status.color}>{status.label}</Tag>
+        ) : (
+          statusName
+        );
       },
     },
     {
@@ -678,16 +683,8 @@ const OrdersList = () => {
   );
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case "P51":
-        return "processing";
-      case "P52":
-        return "warning";
-      case "P54":
-        return "success";
-      default:
-        return "default";
-    }
+    const statusOption = statusOptions.find(s => s.value === status);
+    return statusOption?.color || "default";
   };
 
   // Lọc danh sách nhà thầu theo tìm kiếm
@@ -778,10 +775,9 @@ const OrdersList = () => {
     </Modal>
   );
 
-  return (
-    <div>
-      <h1>Danh sách đơn hàng</h1>
-      <div style={{ marginBottom: 16 }}>
+  const renderFilters = () => (
+    <div style={{ marginBottom: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
+      <div>
         <span style={{ marginRight: 8 }}>Chế độ xem:</span>
         <Switch
           checkedChildren="Thẻ"
@@ -790,16 +786,179 @@ const OrdersList = () => {
           onChange={(checked) => setViewMode(checked ? "card" : "list")}
         />
       </div>
+      <div>
+        <span style={{ marginRight: 8 }}>Lọc theo trạng thái:</span>
+        <Select
+          style={{ width: 200 }}
+          placeholder="Chọn trạng thái"
+          allowClear
+          value={statusFilter}
+          onChange={(value) => setStatusFilter(value)}
+        >
+          {statusOptions.map(option => (
+            <Option key={option.value} value={option.value}>
+              {option.label}
+            </Option>
+          ))}
+        </Select>
+      </div>
+    </div>
+  );
+
+  const filteredOrders = orders.filter(order => {
+    if (!statusFilter) return true;
+    return order.statusName === statusFilter;
+  });
+
+  return (
+    <div>
+      <h1>Danh sách đơn hàng</h1>
+      {renderFilters()}
       {viewMode === "list" ? (
         <Table
           columns={columns}
-          dataSource={orders}
+          dataSource={filteredOrders}
           loading={initialLoading}
           rowKey="id"
           pagination={{ pageSize: 10 }}
         />
       ) : (
-        renderCardView()
+        <Row gutter={[16, 16]}>
+          {filteredOrders.map((order, index) => (
+            <Col xs={24} sm={12} md={8} lg={6} key={order.id}>
+              <Card
+                title={
+                  <Space>
+                    <Title level={5}>Đơn hàng {index + 1}</Title>
+                    <Tag color={getStatusColor(order.statusId)}>
+                      {order.statusId}
+                    </Tag>
+                  </Space>
+                }
+                extra={
+                  <Space>
+                    <Button danger size="small">
+                      Hủy
+                    </Button>
+                    {order.statusId !== "P54" && (
+                      <Popconfirm
+                        title="Bạn có chắc chắn rằng tất cả công việc đã hoàn thành và muốn đánh dấu dự án này là hoàn thành không?"
+                        onConfirm={() => completeProject(order.id)}
+                        okText="Có"
+                        cancelText="Không"
+                      >
+                        <Button type="primary" size="small">
+                          Hoàn thành
+                        </Button>
+                      </Popconfirm>
+                    )}
+                  </Space>
+                }
+                hoverable
+              >
+                <Space direction="vertical" size="small">
+                  <Text strong>
+                    <FileTextOutlined /> Tên:
+                  </Text>
+                  <Text>{order.name}</Text>
+
+                  <Text strong>
+                    <FileTextOutlined /> Mô tả:
+                  </Text>
+                  {(() => {
+                    const tempDiv = document.createElement("div");
+                    tempDiv.innerHTML = order.description;
+                    const plainText = tempDiv.textContent || tempDiv.innerText;
+                    return (
+                      <>
+                        <Text>
+                          {plainText.length > 50
+                            ? plainText.slice(0, 50) + "..."
+                            : plainText}
+                        </Text>
+                        {plainText.length > 50 && (
+                          <Button
+                            type="link"
+                            onClick={() =>
+                              toggleDescription(order.id, order.description)
+                            }
+                          >
+                            Xem thêm
+                          </Button>
+                        )}
+                      </>
+                    );
+                  })()}
+
+                  <Text strong>
+                    <DollarOutlined /> Tổng giá:
+                  </Text>
+                  <Text>{(order.totalPrice || 0).toLocaleString('vi-VN')} VND</Text>
+
+                  <Text strong>
+                    <CalendarOutlined /> Ngày tạo:
+                  </Text>
+                  <Text>
+                    {moment(order.createdAt).format("YYYY-MM-DD HH:mm:ss")}
+                  </Text>
+
+                  <Text strong>
+                    <CalendarOutlined /> Tiến độ công việc:
+                  </Text>
+                  {projectTasks[order.id] && (
+                    <>
+                      <Progress
+                        percent={Math.round(
+                          (projectTasks[order.id].filter(
+                            (task) => task.status === "completed"
+                          ).length /
+                            projectTasks[order.id].length) *
+                          100
+                        )}
+                        size="small"
+                      />
+                      <Text>{`${
+                        projectTasks[order.id].filter(
+                          (task) => task.status === "completed"
+                        ).length
+                      }/${
+                        projectTasks[order.id].length
+                      } công việc đã hoàn thành`}</Text>
+                    </>
+                  )}
+
+                  <Text strong>
+                    <UserOutlined /> Nhân viên xây dựng:
+                  </Text>
+                  <Text>
+                    {order.constructorId
+                      ? `${order.constructorName || "Đã phân công"}`
+                      : "Chưa phân công"}
+                  </Text>
+
+                  <Text strong>
+                    <StarOutlined /> Đnh giá của khách hàng:
+                  </Text>
+                  {order.statusId === "PS6" ? (
+                    projectReviews[order.id] ? (
+                      <>
+                        <Rate
+                          disabled
+                          defaultValue={projectReviews[order.id].rating}
+                        />
+                        <Text>{projectReviews[order.id].comment}</Text>
+                      </>
+                    ) : (
+                      <Text>Chưa có đánh giá</Text>
+                    )
+                  ) : (
+                    <Text>Chưa hoàn thành</Text>
+                  )}
+                </Space>
+              </Card>
+            </Col>
+          ))}
+        </Row>
       )}
       {renderAssignModal()}
       {renderDescriptionModal()}
