@@ -349,7 +349,7 @@ function MaintenanceRequests() {
               }}
               onClick={() => showCancelModal(record.id)}
             >
-              <ToolOutlined /> Yêu Cầu Bảo Trì
+              <ToolOutlined /> Huỷ Bảo Trì
             </Button>
           )}
         </div>
@@ -367,14 +367,17 @@ function MaintenanceRequests() {
         backgroundColor: 
           status === 'NOT_STARTED' ? '#f0f0f0' :
           status === 'IN_PROGRESS' ? '#e6f7ff' :
+          status === 'ASSIGNED' ? '#fff7e6' :
           status === 'COMPLETED' ? '#f6ffed' : '#f0f0f0',
         color: 
           status === 'NOT_STARTED' ? '#000000' :
           status === 'IN_PROGRESS' ? '#1890ff' :
+          status === 'ASSIGNED' ? '#faad14' :
           status === 'COMPLETED' ? '#52c41a' : '#000000',
         border: `1px solid ${
           status === 'NOT_STARTED' ? '#d9d9d9' :
           status === 'IN_PROGRESS' ? '#91d5ff' :
+          status === 'ASSIGNED' ? '#ffd591' :
           status === 'COMPLETED' ? '#b7eb8f' : '#d9d9d9'
         }`
       };
@@ -383,6 +386,7 @@ function MaintenanceRequests() {
         <span style={style}>
           {status === 'NOT_STARTED' ? 'Chưa Bắt Đầu' :
            status === 'IN_PROGRESS' ? 'Đang Thực Hiện' :
+           status === 'ASSIGNED' ? 'Đã Phân Công' :
            status === 'COMPLETED' ? 'Hoàn Thành' : status}
         </span>
       );

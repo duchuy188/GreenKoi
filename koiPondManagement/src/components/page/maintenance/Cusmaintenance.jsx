@@ -578,14 +578,17 @@ function Cusmaintenance() {
         borderRadius: '4px',
         backgroundColor: 
           status === 'NOT_STARTED' ? '#f0f0f0' :
+          status === 'ASSIGNED' ? '#fff7e6' :
           status === 'IN_PROGRESS' ? '#e6f7ff' :
           status === 'COMPLETED' ? '#f6ffed' : '#f0f0f0',
         color: 
           status === 'NOT_STARTED' ? '#000000' :
+          status === 'ASSIGNED' ? '#faad14' :
           status === 'IN_PROGRESS' ? '#1890ff' :
           status === 'COMPLETED' ? '#52c41a' : '#000000',
         border: `1px solid ${
           status === 'NOT_STARTED' ? '#d9d9d9' :
+          status === 'ASSIGNED' ? '#ffd591' :
           status === 'IN_PROGRESS' ? '#91d5ff' :
           status === 'COMPLETED' ? '#b7eb8f' : '#d9d9d9'
         }`
@@ -594,6 +597,7 @@ function Cusmaintenance() {
       return (
         <span style={style}>
           {status === 'NOT_STARTED' ? 'Chưa Bắt Đầu' :
+           status === 'ASSIGNED' ? 'Đã Phân Công' :
            status === 'IN_PROGRESS' ? 'Đang Thực Hiện' :
            status === 'COMPLETED' ? 'Hoàn Thành' : status}
         </span>
