@@ -215,7 +215,7 @@ const OrdersList = () => {
       }
     } catch (error) {
       console.error("Error fetching constructors:", error);
-      toast.error("Không thể tải danh sách nhà thầu");
+      toast.error("Không thể tải danh sách nhân viên xây dựng");
     }
   };
 
@@ -226,7 +226,7 @@ const OrdersList = () => {
       );
 
       if (response.status === 200) {
-        toast.success("Đã phân công nhà thầu thành công");
+        toast.success("Đã phân công nhân viên xây dựng thành công");
         setIsAssignModalVisible(false);
 
         // Cập nhật danh sách orders
@@ -424,7 +424,7 @@ const OrdersList = () => {
             <Button danger>Hủy dự án</Button>
           </Popconfirm>
           <Button onClick={() => showAssignModal(record.id)}>
-            Phân công nhà thầu
+            Phân công nhân viên xây dựng
           </Button>
           {record.statusId !== "PS6" && (
             <Popconfirm
@@ -468,7 +468,7 @@ const OrdersList = () => {
       },
     },
     {
-      title: "Nhà thầu",
+      title: "Nhân viên xây dựng",
       dataIndex: "constructorId",
       key: "constructor",
       render: (constructorId) => (
@@ -644,7 +644,7 @@ const OrdersList = () => {
               )}
 
               <Text strong>
-                <UserOutlined /> Nhà thầu:
+                <UserOutlined /> Nhân viên xây dựng:
               </Text>
               <Text>
                 {order.constructorId
@@ -709,7 +709,7 @@ const OrdersList = () => {
   // Cập nhật Modal phân công
   const renderAssignModal = () => (
     <Modal
-      title={<div className="assign-modal-title">Phân công xây dựng</div>}
+      title={<div className="assign-modal-title">Phân công nhân viên xây dựng</div>}
       open={isAssignModalVisible}
       onCancel={() => {
         setIsAssignModalVisible(false);
