@@ -36,7 +36,6 @@ const { Option } = Select;
 const OrdersList = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState("list"); // 'list' or 'card'
   const [projectTasks, setProjectTasks] = useState({});
   const [isAssignModalVisible, setIsAssignModalVisible] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
@@ -413,7 +412,7 @@ const OrdersList = () => {
       title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",
-      render: (date) => moment(date).format("YYYY-MM-DD HH:mm:ss"),
+      render: (date) => moment(date).format("DD/MM/YYYY HH:mm:ss"),
     },
     {
       title: "Hành động",
@@ -543,150 +542,6 @@ const OrdersList = () => {
     },
   ];
 
-  const renderCardView = () => (
-    <Row gutter={[16, 16]}>
-      {orders.map((order, index) => (
-        <Col xs={24} sm={12} md={8} lg={6} key={order.id}>
-          <Card
-            title={
-              <Space>
-                <Title level={5}>Đơn hàng {index + 1}</Title>
-                <Tag color={getStatusColor(order.statusId)}>
-                  {order.statusId}
-                </Tag>
-              </Space>
-            }
-            extra={
-              <Space>
-                <Button danger size="small">
-                  Hủy
-                </Button>
-                {order.statusId !== "P54" && (
-                  <Popconfirm
-                    title="Bạn có chắc chắn rằng tất cả công việc đã hoàn thành và muốn đánh dấu dự án này là hoàn thành không?"
-                    onConfirm={() => completeProject(order.id)}
-                    okText="Có"
-                    cancelText="Không"
-                  >
-                    <Button type="primary" size="small">
-                      Hoàn thành
-                    </Button>
-                  </Popconfirm>
-                )}
-              </Space>
-            }
-            hoverable
-          >
-            <Space direction="vertical" size="small">
-              <Text strong>
-                <FileTextOutlined /> Tên:
-              </Text>
-              <Text>{order.name}</Text>
-
-              <Text strong>
-                <FileTextOutlined /> Mô tả:
-              </Text>
-              {(() => {
-                const tempDiv = document.createElement("div");
-                tempDiv.innerHTML = order.description;
-                const plainText = tempDiv.textContent || tempDiv.innerText;
-                return (
-                  <>
-                    <Text>
-                      {plainText.length > 50
-                        ? plainText.slice(0, 50) + "..."
-                        : plainText}
-                    </Text>
-                    {plainText.length > 50 && (
-                      <Button
-                        type="link"
-                        onClick={() =>
-                          toggleDescription(order.id, order.description)
-                        }
-                      >
-                        Xem thêm
-                      </Button>
-                    )}
-                  </>
-                );
-              })()}
-
-              <Text strong>
-                <DollarOutlined /> Tổng giá:
-              </Text>
-              <Text>{(order.totalPrice || 0).toLocaleString('vi-VN')} VND</Text>
-
-              <Text strong>
-                <CalendarOutlined /> Ngày tạo:
-              </Text>
-              <Text>
-                {moment(order.createdAt).format("YYYY-MM-DD HH:mm:ss")}
-              </Text>
-
-              <Text strong>
-                <CalendarOutlined /> Tiến độ công việc:
-              </Text>
-              {projectTasks[order.id] && (
-                <>
-                  <Progress
-                    percent={Math.round(
-                      (projectTasks[order.id].filter(
-                        (task) => task.status === "completed"
-                      ).length /
-                        projectTasks[order.id].length) *
-                        100
-                    )}
-                    size="small"
-                  />
-                  <Text>{`${
-                    projectTasks[order.id].filter(
-                      (task) => task.status === "completed"
-                    ).length
-                  }/${
-                    projectTasks[order.id].length
-                  } công việc đã hoàn thành`}</Text>
-                </>
-              )}
-
-              <Text strong>
-                <UserOutlined /> Nhân viên xây dựng:
-              </Text>
-              <Text>
-                {order.constructorId
-                  ? `${order.constructorName || "Đã phân công"}`
-                  : "Chưa phân công"}
-              </Text>
-
-              <Text strong>
-                <StarOutlined /> Đnh giá của khách hàng:
-              </Text>
-              {order.statusId === "PS6" ? (
-                projectReviews[order.id] ? (
-                  <>
-                    <Rate
-                      disabled
-                      defaultValue={projectReviews[order.id].rating}
-                    />
-                    <Text>{projectReviews[order.id].comment}</Text>
-                  </>
-                ) : (
-                  <Text>Chưa có đánh giá</Text>
-                )
-              ) : (
-                <Text>Chưa hoàn thành</Text>
-              )}
-            </Space>
-          </Card>
-        </Col>
-      ))}
-    </Row>
-  );
-
-  const getStatusColor = (status) => {
-    const statusOption = statusOptions.find(s => s.value === status);
-    return statusOption?.color || "default";
-  };
-
   // Lọc danh sách nhà thầu theo tìm kiếm
   const filteredConstructors = constructors.filter((constructor) => {
     // Kiểm tra xem constructor có đang làm dự án nào chưa hoàn thành không
@@ -778,15 +633,6 @@ const OrdersList = () => {
   const renderFilters = () => (
     <div style={{ marginBottom: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
       <div>
-        <span style={{ marginRight: 8 }}>Chế độ xem:</span>
-        <Switch
-          checkedChildren="Thẻ"
-          unCheckedChildren="Danh sách"
-          checked={viewMode === "card"}
-          onChange={(checked) => setViewMode(checked ? "card" : "list")}
-        />
-      </div>
-      <div>
         <span style={{ marginRight: 8 }}>Lọc theo trạng thái:</span>
         <Select
           style={{ width: 200 }}
@@ -814,152 +660,13 @@ const OrdersList = () => {
     <div>
       <h1>Danh sách đơn hàng</h1>
       {renderFilters()}
-      {viewMode === "list" ? (
-        <Table
-          columns={columns}
-          dataSource={filteredOrders}
-          loading={initialLoading}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-        />
-      ) : (
-        <Row gutter={[16, 16]}>
-          {filteredOrders.map((order, index) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={order.id}>
-              <Card
-                title={
-                  <Space>
-                    <Title level={5}>Đơn hàng {index + 1}</Title>
-                    <Tag color={getStatusColor(order.statusId)}>
-                      {order.statusId}
-                    </Tag>
-                  </Space>
-                }
-                extra={
-                  <Space>
-                    <Button danger size="small">
-                      Hủy
-                    </Button>
-                    {order.statusId !== "P54" && (
-                      <Popconfirm
-                        title="Bạn có chắc chắn rằng tất cả công việc đã hoàn thành và muốn đánh dấu dự án này là hoàn thành không?"
-                        onConfirm={() => completeProject(order.id)}
-                        okText="Có"
-                        cancelText="Không"
-                      >
-                        <Button type="primary" size="small">
-                          Hoàn thành
-                        </Button>
-                      </Popconfirm>
-                    )}
-                  </Space>
-                }
-                hoverable
-              >
-                <Space direction="vertical" size="small">
-                  <Text strong>
-                    <FileTextOutlined /> Tên:
-                  </Text>
-                  <Text>{order.name}</Text>
-
-                  <Text strong>
-                    <FileTextOutlined /> Mô tả:
-                  </Text>
-                  {(() => {
-                    const tempDiv = document.createElement("div");
-                    tempDiv.innerHTML = order.description;
-                    const plainText = tempDiv.textContent || tempDiv.innerText;
-                    return (
-                      <>
-                        <Text>
-                          {plainText.length > 50
-                            ? plainText.slice(0, 50) + "..."
-                            : plainText}
-                        </Text>
-                        {plainText.length > 50 && (
-                          <Button
-                            type="link"
-                            onClick={() =>
-                              toggleDescription(order.id, order.description)
-                            }
-                          >
-                            Xem thêm
-                          </Button>
-                        )}
-                      </>
-                    );
-                  })()}
-
-                  <Text strong>
-                    <DollarOutlined /> Tổng giá:
-                  </Text>
-                  <Text>{(order.totalPrice || 0).toLocaleString('vi-VN')} VND</Text>
-
-                  <Text strong>
-                    <CalendarOutlined /> Ngày tạo:
-                  </Text>
-                  <Text>
-                    {moment(order.createdAt).format("YYYY-MM-DD HH:mm:ss")}
-                  </Text>
-
-                  <Text strong>
-                    <CalendarOutlined /> Tiến độ công việc:
-                  </Text>
-                  {projectTasks[order.id] && (
-                    <>
-                      <Progress
-                        percent={Math.round(
-                          (projectTasks[order.id].filter(
-                            (task) => task.status === "completed"
-                          ).length /
-                            projectTasks[order.id].length) *
-                          100
-                        )}
-                        size="small"
-                      />
-                      <Text>{`${
-                        projectTasks[order.id].filter(
-                          (task) => task.status === "completed"
-                        ).length
-                      }/${
-                        projectTasks[order.id].length
-                      } công việc đã hoàn thành`}</Text>
-                    </>
-                  )}
-
-                  <Text strong>
-                    <UserOutlined /> Nhân viên xây dựng:
-                  </Text>
-                  <Text>
-                    {order.constructorId
-                      ? `${order.constructorName || "Đã phân công"}`
-                      : "Chưa phân công"}
-                  </Text>
-
-                  <Text strong>
-                    <StarOutlined /> Đnh giá của khách hàng:
-                  </Text>
-                  {order.statusId === "PS6" ? (
-                    projectReviews[order.id] ? (
-                      <>
-                        <Rate
-                          disabled
-                          defaultValue={projectReviews[order.id].rating}
-                        />
-                        <Text>{projectReviews[order.id].comment}</Text>
-                      </>
-                    ) : (
-                      <Text>Chưa có đánh giá</Text>
-                    )
-                  ) : (
-                    <Text>Chưa hoàn thành</Text>
-                  )}
-                </Space>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      )}
+      <Table
+        columns={columns}
+        dataSource={filteredOrders}
+        loading={initialLoading}
+        rowKey="id"
+        pagination={{ pageSize: 10 }}
+      />
       {renderAssignModal()}
       {renderDescriptionModal()}
     </div>
