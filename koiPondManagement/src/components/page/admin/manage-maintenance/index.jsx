@@ -34,6 +34,8 @@ const ManageMaintenance = () => {
   const [selectedStaffFilter, setSelectedStaffFilter] = useState(null);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [currentReview, setCurrentReview] = useState(null);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
 
   const paymentStatusOptions = [
     { value: 'UNPAID', label: 'Chưa thanh toán' },
@@ -131,7 +133,7 @@ const ManageMaintenance = () => {
       setIsAssignModalVisible(false);
       fetchMaintenanceRequests();
     } catch (error) {
-      message.error("Không thể phân công nhân viên.");
+      message.error("Nhân viên này đã được phân công cho yêu cầu khác.");
     }
   };
 
@@ -162,61 +164,29 @@ const ManageMaintenance = () => {
       setCurrentReview(response.data);
       setReviewModalVisible(true);
     } catch (error) {
-      message.error("Không thể tải đánh giá.");
+      message.error("Chưa có đánh giá nào cho yêu cầu này.");
     }
   };
 
+  const handleViewDetails = (record) => {
+    setSelectedRecord(record);
+    setDetailsModalVisible(true);
+  };
+
   const columns = [
-    { title: "Mã", dataIndex: "id", key: "id", hidden: true },
-    { 
-      title: "Tên khách hàng", 
-      dataIndex: "customerName", 
-      key: "customerName",
-      render: (text) => text || "N/A"
-    },
-    { 
-      title: "Số điện thoại", 
-      dataIndex: "customerPhone", 
-      key: "customerPhone",
-      render: (text) => text || "N/A"
-    },
-    { 
-      title: "Email", 
-      dataIndex: "customerEmail", 
-      key: "customerEmail",
-      render: (text) => text || "N/A"
-    },
-    { 
-      title: "Địa chỉ", 
-      dataIndex: "customerAddress", 
-      key: "customerAddress",
-      render: (text) => text || "N/A"
-    },
-    { 
-      title: "Dự án", 
-      dataIndex: "projectName", 
-      key: "projectName",
-      render: (text) => text || "N/A"
-    },
-    { 
-      title: "Nhân viên tư vấn", 
-      dataIndex: "consultantName", 
-      key: "consultantName",
-      render: (text) => text || "N/A"
-    },
+    { title: "Dự án", dataIndex: "projectName", key: "projectName", render: (text) => text || "N/A" },
+    { title: "Nhân viên tư vấn", dataIndex: "consultantName", key: "consultantName", render: (text) => text || "N/A" },
     { title: "Mô tả", dataIndex: "description", key: "description" },
-    { title: "Trạng thái yêu cầu", dataIndex: "requestStatus", key: "requestStatus", hidden: requestStatus === "COMPLETED" },
-    { 
-      title: "Trạng thái bảo trì", 
-      dataIndex: "maintenanceStatus", 
-      key: "maintenanceStatus", 
-      hidden: requestStatus === "CONFIRMED" || requestStatus === "CANCELLED",
+    {
+      title: "Trạng thái yêu cầu",
+      dataIndex: "requestStatus",
+      key: "requestStatus",
       render: (status) => {
         const statusConfig = {
-          PENDING: { color: '#faad14', text: 'Đang chờ' },
-          IN_PROGRESS: { color: '#1890ff', text: 'Đang thực hiện' },
-          COMPLETED: { color: '#52c41a', text: 'Hoàn thành' },
-          CANCELLED: { color: '#ff4d4f', text: 'Đã hủy' }
+          PENDING: { color: '#faad14', text: 'Chờ xác nhận' },
+          CONFIRMED: { color: '#1890ff', text: 'Đã xác nhận' },
+          CANCELLED: { color: '#ff4d4f', text: 'Đã hủy' },
+          COMPLETED: { color: '#52c41a', text: 'Hoàn thành' }
         };
 
         return (
@@ -229,50 +199,25 @@ const ManageMaintenance = () => {
         );
       }
     },
-    {
-      title: "Ngày tạo",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (date) => moment(date).format("DD-MM-YYYY HH:mm:ss"),
-    },
-    {
-      title: "Ngày cập nhật",
-      dataIndex: "updatedAt",
-      key: "updatedAt",
-      render: (date) => moment(date).format("DD-MM-YYYY HH:mm:ss"),
-    },
-    {
-      title: "Ngày lên lịch",
-      dataIndex: "scheduleDate",
-      key: "scheduleDate",
-      hidden: true,
-      render: (date) => moment(date).format("DD-MM-YYYY") || "N/A",
-    },
-    {
-      title: "Ngày bắt đầu",
-      dataIndex: "startDate",
-      key: "startDate",
-      hidden: true,
-      render: (date) => moment(date).format("DD-MM-YYYY") || "N/A",
-    },
-    {
-      title: "Ngày hoàn thành",
-      dataIndex: "completionDate",
-      key: "completionDate",
-      hidden: requestStatus === "CONFIRMED",
-      render: (date) => date ? moment(date).format("DD-MM-YYYY") : "N/A"
-    },
     { 
       title: "Trạng thái thanh toán", 
       dataIndex: "paymentStatus", 
       key: "paymentStatus",
       render: (status) => {
-        const statusMap = {
-          UNPAID: 'Chưa thanh toán',
-          DEPOSIT_PAID: 'Đã cọc',
-          FULLY_PAID: 'Đã thanh toán'
+        const statusConfig = {
+          UNPAID: { color: '#ff4d4f', text: 'Chưa thanh toán' },
+          DEPOSIT_PAID: { color: '#faad14', text: 'Đã cọc' },
+          FULLY_PAID: { color: '#52c41a', text: 'Đã thanh toán' }
         };
-        return statusMap[status] || status;
+
+        return (
+          <span style={{ 
+            color: statusConfig[status]?.color || '#000000',
+            fontWeight: 'bold'
+          }}>
+            {statusConfig[status]?.text || status}
+          </span>
+        );
       }
     },
     { 
@@ -291,34 +236,19 @@ const ManageMaintenance = () => {
       title: "Tiền đặt cọc", 
       dataIndex: "depositAmount", 
       key: "depositAmount",
-      render: (amount) => new Intl.NumberFormat('vi-VN', { 
-        style: 'currency', 
-        currency: 'VND',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(amount || 0)
+      render: (amount) => `${amount?.toLocaleString() || 0} VNĐ`
     },
     { 
       title: "Số tiền còn lại", 
       dataIndex: "remainingAmount", 
       key: "remainingAmount",
-      render: (amount) => new Intl.NumberFormat('vi-VN', { 
-        style: 'currency', 
-        currency: 'VND',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(amount || 0)
+      render: (amount) => `${amount?.toLocaleString() || 0} VNĐ`
     },
     { 
       title: "Giá thỏa thuận", 
       dataIndex: "agreedPrice", 
       key: "agreedPrice",
-      render: (price) => new Intl.NumberFormat('vi-VN', { 
-        style: 'currency', 
-        currency: 'VND',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(price || 0)
+      render: (price) => `${price?.toLocaleString() || 0} VNĐ`
     },
     { 
       title: "Nhân viên được giao", 
@@ -335,11 +265,20 @@ const ManageMaintenance = () => {
       key: "actions",
       render: (_, record) => (
         <>
+          <Button 
+            onClick={() => handleViewDetails(record)} 
+            icon={<EyeOutlined />} 
+            style={{ marginRight: 8 }}
+          >
+            Xem chi tiết
+          </Button>
           {requestStatus === "CONFIRMED" && (
             <>
-              <Button onClick={() => handleAssign(record)} style={{ marginRight: 8 }}>
-                Phân công nhân viên
-              </Button>
+              {record.paymentStatus === "DEPOSIT_PAID" && (
+                <Button onClick={() => handleAssign(record)} style={{ marginRight: 8 }}>
+                  Phân công nhân viên
+                </Button>
+              )}
               <Button onClick={() => handleCancel(record)}>Hủy yêu cầu</Button>
             </>
           )}
@@ -431,6 +370,8 @@ const ManageMaintenance = () => {
         open={isAssignModalVisible}
         onOk={handleAssignSubmit}
         onCancel={() => setIsAssignModalVisible(false)}
+        okText="Đồng ý"
+        cancelText="Huỷ"
       >
         <Select
           style={{ width: "100%" }}
@@ -441,6 +382,7 @@ const ManageMaintenance = () => {
             <Option key={staff.id} value={staff.id}>
               {staff.name}
             </Option>
+
           ))}
         </Select>
       </Modal>
@@ -472,6 +414,37 @@ const ManageMaintenance = () => {
           </div>
         ) : (
           <p>Chưa có đánh giá</p>
+        )}
+      </Modal>
+
+      {/* Details Modal */}
+      <Modal
+        title="Chi tiết yêu cầu bảo trì"
+        open={detailsModalVisible}
+        onCancel={() => setDetailsModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setDetailsModalVisible(false)}>
+            Đóng
+          </Button>
+        ]}
+        width={800}
+      >
+        {selectedRecord && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <p><strong>Tên khách hàng:</strong> {selectedRecord.customerName || 'N/A'}</p>
+              <p><strong>Số điện thoại:</strong> {selectedRecord.customerPhone || 'N/A'}</p>
+              <p><strong>Email:</strong> {selectedRecord.customerEmail || 'N/A'}</p>
+              <p><strong>Địa chỉ:</strong> {selectedRecord.customerAddress || 'N/A'}</p>
+            </div>
+            <div>
+              <p><strong>Ngày tạo:</strong> {moment(selectedRecord.createdAt).format("DD-MM-YYYY HH:mm:ss")}</p>
+              <p><strong>Ngày cập nhật:</strong> {moment(selectedRecord.updatedAt).format("DD-MM-YYYY HH:mm:ss")}</p>
+              {requestStatus === "COMPLETED" && (
+                <p><strong>Ngày hoàn thành:</strong> {selectedRecord.completionDate ? moment(selectedRecord.completionDate).format("DD-MM-YYYY") : 'N/A'}</p>
+              )}
+            </div>
+          </div>
         )}
       </Modal>
     </div>
