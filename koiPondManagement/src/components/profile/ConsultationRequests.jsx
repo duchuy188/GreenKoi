@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, Popconfirm, Modal, Form, Input, message } from "antd";
+import { Table, Button, Popconfirm, Modal, Form, Input, Tag } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import api from "/src/components/config/axios";
 import moment from "moment";
+import { toast } from "react-toastify";
 
 function ConsultationRequests() {
   const [consultationRequests, setConsultationRequests] = useState([]);
@@ -11,7 +12,7 @@ function ConsultationRequests() {
 
   useEffect(() => {
     fetchConsultationRequests();
-    
+
     const interval = setInterval(() => {
       fetchConsultationRequests();
     }, 10000);
@@ -45,7 +46,7 @@ function ConsultationRequests() {
       setConsultationRequests(filteredRequests);
     } catch (err) {
       console.error("Lỗi khi tìm kiếm yêu cầu tư vấn:", err);
-      message.error("Không tải được yêu cầu tư vấn");
+      toast.error("Không tải được yêu cầu tư vấn");
     }
   };
 
@@ -78,13 +79,13 @@ function ConsultationRequests() {
       );
 
       if (response.status === 200) {
-        message.success("Yêu cầu đã được cập nhật thành công");
+        toast.success("Yêu cầu đã được cập nhật thành công");
         setEditingRequest(null);
         fetchConsultationRequests();
       }
     } catch (err) {
       console.error("Lỗi khi cập nhật yêu cầu tư vấn:", err);
-      message.error("Không thể cập nhật yêu cầu tư vấn");
+      toast.error("Không thể cập nhật yêu cầu tư vấn");
     }
   };
 
@@ -96,11 +97,11 @@ function ConsultationRequests() {
           Authorization: `Bearer ${token}`,
         },
       });
-      message.success("Yêu cầu đã được xóa thành công");
+      toast.success("Yêu cầu đã được xóa thành công");
       fetchConsultationRequests();
     } catch (err) {
       console.error("Lỗi khi xóa yêu cầu tư vấn:", err);
-      message.error("Không thể xóa yêu cầu tư vấn");
+      toast.error("Không thể xóa yêu cầu tư vấn");
     }
   };
 
@@ -120,13 +121,27 @@ function ConsultationRequests() {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      render: (status) => {
+        const statusConfig = {
+          PENDING: { color: "gold", text: "Đang chờ" },
+          COMPLETED: { color: "green", text: "Hoàn thành" },
+          CANCELLED: { color: "red", text: "Đã hủy" },
+        };
+
+        const config = statusConfig[status] || {
+          color: "default",
+          text: status,
+        };
+        return <Tag color={config.color}>{config.text}</Tag>;
+      },
     },
-     {
-    title: "Ngày cập nhật",
-    dataIndex: "updatedAt",
-    key: "updatedAt",
-    render: (text) => text ? new Date(text).toLocaleDateString() : "Chưa cập nhật",
-  },
+    {
+      title: "Ngày cập nhật",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
+      render: (text) =>
+        text ? new Date(text).toLocaleDateString() : "Chưa cập nhật",
+    },
     {
       title: "Ghi chú",
       dataIndex: "notes",
@@ -135,7 +150,7 @@ function ConsultationRequests() {
     {
       title: "Hành động",
       key: "action",
-      render: (_, record) => (
+      render: (_, record) =>
         record.status === "PENDING" && (
           <span>
             <Button
@@ -156,8 +171,7 @@ function ConsultationRequests() {
               </Button>
             </Popconfirm>
           </span>
-        )
-      ),
+        ),
     },
   ];
 

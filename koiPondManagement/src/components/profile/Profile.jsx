@@ -115,7 +115,7 @@ function Profile() {
                       user?.email}
                   </h5>
                   <span className="author-card-position">
-                    Joined{" "}
+                    Ngày đăng nhập{" "}
                     {new Date(
                       profileData?.createdAt || user?.createdAt || Date.now()
                     ).toLocaleDateString()}

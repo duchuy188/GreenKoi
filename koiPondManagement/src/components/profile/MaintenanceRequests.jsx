@@ -5,7 +5,6 @@ import {
   Popconfirm,
   Modal,
   Descriptions,
-  message,
   Image,
   Rate,
   Input,
@@ -14,9 +13,17 @@ import {
   Card,
   DatePicker,
 } from "antd";
-import { DeleteOutlined, SearchOutlined, EyeOutlined, WalletOutlined, ToolOutlined, StarOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  SearchOutlined,
+  EyeOutlined,
+  WalletOutlined,
+  ToolOutlined,
+  StarOutlined,
+} from "@ant-design/icons";
 import api from "/src/components/config/axios";
 import moment from "moment";
+import { toast } from "react-toastify";
 
 function MaintenanceRequests() {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
@@ -32,7 +39,7 @@ function MaintenanceRequests() {
   const [tempFilters, setTempFilters] = useState({
     searchDate: null,
     statusFilter: "ALL",
-    paymentFilter: "ALL"
+    paymentFilter: "ALL",
   });
 
   const statusOptions = [
@@ -60,16 +67,14 @@ function MaintenanceRequests() {
       const customerId = localStorage.getItem("customerId");
 
       if (!customerId) {
-        message.error("Không tìm thấy thông tin khách hàng. Vui lòng đăng nhập lại.");
-        // Optionally redirect to login page
-        // window.location.href = '/login';
+        toast.error(
+          "Không tìm thấy thông tin khách hàng. Vui lòng đăng nhập lại."
+        );
         return;
       }
 
       if (!token) {
-        message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-        // Optionally redirect to login page
-        // window.location.href = '/login';
+        toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
         return;
       }
 
@@ -97,7 +102,7 @@ function MaintenanceRequests() {
           cancellationReason: item.cancellationReason,
           maintenanceNotes: item.maintenanceNotes,
           maintenanceImages: item.maintenanceImages || [],
-          attachments: item.attachments ? item.attachments.split(',') : [],
+          attachments: item.attachments ? item.attachments.split(",") : [],
           key: item.id,
         }))
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -105,9 +110,9 @@ function MaintenanceRequests() {
       setMaintenanceRequests(formattedData);
     } catch (err) {
       console.error("Error fetching maintenance requests:", err);
-      message.error(
-        err.response?.data?.message || 
-        "Không thể tải danh sách yêu cầu bảo trì. Vui lòng thử lại sau."
+      toast.error(
+        err.response?.data?.message ||
+          "Không thể tải danh sách yêu cầu bảo trì. Vui lòng thử lại sau."
       );
     }
   };
@@ -126,14 +131,14 @@ function MaintenanceRequests() {
         }
       );
 
-      message.success("Yêu cầu bảo trì đã được huỷ thành công");
+      toast.success("Yêu cầu bảo trì đã được huỷ thành công");
       setCancelModalVisible(false);
       setCancelReason("");
       setSelectedCancelId(null);
       fetchMaintenanceRequests();
     } catch (err) {
       console.error("Error cancelling maintenance request:", err);
-      message.error("Không thể huỷ yêu cầu bảo trì");
+      toast.error("Không thể huỷ yêu cầu bảo trì");
     }
   };
 
@@ -148,13 +153,15 @@ function MaintenanceRequests() {
   };
 
   const getFilteredData = () => {
-    return maintenanceRequests.filter(item => {
-      const matchStatus = statusFilter === "ALL" ? true : 
-        item.requestStatus === statusFilter;
-      const matchPayment = paymentFilter === "ALL" ? true : 
-        item.paymentStatus === paymentFilter;
-      const matchDate = !searchDate ? true : 
-        moment(item.createdAt).format('YYYY-MM-DD') === searchDate.format('YYYY-MM-DD');
+    return maintenanceRequests.filter((item) => {
+      const matchStatus =
+        statusFilter === "ALL" ? true : item.requestStatus === statusFilter;
+      const matchPayment =
+        paymentFilter === "ALL" ? true : item.paymentStatus === paymentFilter;
+      const matchDate = !searchDate
+        ? true
+        : moment(item.createdAt).format("YYYY-MM-DD") ===
+          searchDate.format("YYYY-MM-DD");
       return matchStatus && matchPayment && matchDate;
     });
   };
@@ -170,7 +177,7 @@ function MaintenanceRequests() {
     setTempFilters({
       searchDate: null,
       statusFilter: "ALL",
-      paymentFilter: "ALL"
+      paymentFilter: "ALL",
     });
     setSearchDate(null);
     setStatusFilter("ALL");
@@ -195,14 +202,16 @@ function MaintenanceRequests() {
         </Button>,
       ]}
     >
-      <Space direction="vertical" style={{ width: '100%' }} size="middle">
+      <Space direction="vertical" style={{ width: "100%" }} size="middle">
         <div>
           <div style={{ marginBottom: 8 }}>Ngày Yêu Cầu:</div>
           <DatePicker
             placeholder="Chọn ngày yêu cầu"
             value={tempFilters.searchDate}
-            onChange={value => setTempFilters({...tempFilters, searchDate: value})}
-            style={{ width: '100%' }}
+            onChange={(value) =>
+              setTempFilters({ ...tempFilters, searchDate: value })
+            }
+            style={{ width: "100%" }}
             format="DD/MM/YYYY"
             allowClear
           />
@@ -211,8 +220,10 @@ function MaintenanceRequests() {
           <div style={{ marginBottom: 8 }}>Trạng Thái:</div>
           <Select
             value={tempFilters.statusFilter}
-            onChange={value => setTempFilters({...tempFilters, statusFilter: value})}
-            style={{ width: '100%' }}
+            onChange={(value) =>
+              setTempFilters({ ...tempFilters, statusFilter: value })
+            }
+            style={{ width: "100%" }}
             options={statusOptions}
           />
         </div>
@@ -220,8 +231,10 @@ function MaintenanceRequests() {
           <div style={{ marginBottom: 8 }}>Thanh Toán:</div>
           <Select
             value={tempFilters.paymentFilter}
-            onChange={value => setTempFilters({...tempFilters, paymentFilter: value})}
-            style={{ width: '100%' }}
+            onChange={(value) =>
+              setTempFilters({ ...tempFilters, paymentFilter: value })
+            }
+            style={{ width: "100%" }}
             options={paymentOptions}
           />
         </div>
@@ -230,17 +243,17 @@ function MaintenanceRequests() {
   );
 
   const actionButtonStyle = {
-    width: '100%',
-    marginBottom: '8px',
-    borderRadius: '4px',
-    height: '32px',
-    border: 'none',
-    color: '#fff',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
+    width: "100%",
+    marginBottom: "8px",
+    borderRadius: "4px",
+    height: "32px",
+    border: "none",
+    color: "#fff",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
   };
 
   const columns = [
@@ -263,32 +276,56 @@ function MaintenanceRequests() {
       key: "requestStatus",
       width: 150,
       render: (status) => (
-        <span style={{
-          padding: '4px 12px',
-          borderRadius: '4px',
-          backgroundColor: 
-            status === 'PENDING' ? '#fff7e6' :
-            status === 'REVIEWING' ? '#fff7e6' :
-            status === 'CONFIRMED' ? '#e6f7ff' :
-            status === 'COMPLETED' ? '#f6ffed' :
-            status === 'CANCELLED' ? '#fff1f0' : '#f0f0f0',
-          color: 
-            status === 'PENDING' ? '#faad14' :
-            status === 'CONFIRMED' ? '#1890ff' :
-            status === 'COMPLETED' ? '#52c41a' :
-            status === 'CANCELLED' ? '#f5222d' : '#000000',
-          border: `1px solid ${
-            status === 'PENDING' ? '#ffd591' :
-            status === 'CONFIRMED' ? '#91d5ff' :
-            status === 'COMPLETED' ? '#b7eb8f' :
-            status === 'CANCELLED' ? '#ffa39e' : '#d9d9d9'
-          }`
-        }}>
-          {status === 'PENDING' ? 'Đang Xem Xét' :
-           status === 'REVIEWING' ? 'Đang Xem Xét' :
-           status === 'CONFIRMED' ? 'Đã Xác Nhận' :
-           status === 'COMPLETED' ? 'Hoàn Thành' :
-           status === 'CANCELLED' ? 'Đã Hủy' : status}
+        <span
+          style={{
+            padding: "4px 12px",
+            borderRadius: "4px",
+            backgroundColor:
+              status === "PENDING"
+                ? "#fff7e6"
+                : status === "REVIEWING"
+                ? "#fff7e6"
+                : status === "CONFIRMED"
+                ? "#e6f7ff"
+                : status === "COMPLETED"
+                ? "#f6ffed"
+                : status === "CANCELLED"
+                ? "#fff1f0"
+                : "#f0f0f0",
+            color:
+              status === "PENDING"
+                ? "#faad14"
+                : status === "CONFIRMED"
+                ? "#1890ff"
+                : status === "COMPLETED"
+                ? "#52c41a"
+                : status === "CANCELLED"
+                ? "#f5222d"
+                : "#000000",
+            border: `1px solid ${
+              status === "PENDING"
+                ? "#ffd591"
+                : status === "CONFIRMED"
+                ? "#91d5ff"
+                : status === "COMPLETED"
+                ? "#b7eb8f"
+                : status === "CANCELLED"
+                ? "#ffa39e"
+                : "#d9d9d9"
+            }`,
+          }}
+        >
+          {status === "PENDING"
+            ? "Đang Xem Xét"
+            : status === "REVIEWING"
+            ? "Đang Xem Xét"
+            : status === "CONFIRMED"
+            ? "Đã Xác Nhận"
+            : status === "COMPLETED"
+            ? "Hoàn Thành"
+            : status === "CANCELLED"
+            ? "Đã Hủy"
+            : status}
         </span>
       ),
     },
@@ -297,26 +334,44 @@ function MaintenanceRequests() {
       dataIndex: "paymentStatus",
       key: "paymentStatus",
       render: (status) => (
-        <span style={{
-          padding: '4px 12px',
-          borderRadius: '4px',
-          backgroundColor: 
-            status === 'UNPAID' ? '#fff1f0' :
-            status === 'DEPOSIT_PAID' ? '#fff7e6' :
-            status === 'FULLY_PAID' ? '#f6ffed' : '#f0f0f0',
-          color: 
-            status === 'UNPAID' ? '#f5222d' :
-            status === 'DEPOSIT_PAID' ? '#faad14' :
-            status === 'FULLY_PAID' ? '#52c41a' : '#000000',
-          border: `1px solid ${
-            status === 'UNPAID' ? '#ffa39e' :
-            status === 'DEPOSIT_PAID' ? '#ffd591' :
-            status === 'FULLY_PAID' ? '#b7eb8f' : '#d9d9d9'
-          }`
-        }}>
-          {status === 'UNPAID' ? 'Chưa Thanh Toán' :
-           status === 'DEPOSIT_PAID' ? 'Đã Cọc' :
-           status === 'FULLY_PAID' ? 'Đã Thanh Toán' : status}
+        <span
+          style={{
+            padding: "4px 12px",
+            borderRadius: "4px",
+            backgroundColor:
+              status === "UNPAID"
+                ? "#fff1f0"
+                : status === "DEPOSIT_PAID"
+                ? "#fff7e6"
+                : status === "FULLY_PAID"
+                ? "#f6ffed"
+                : "#f0f0f0",
+            color:
+              status === "UNPAID"
+                ? "#f5222d"
+                : status === "DEPOSIT_PAID"
+                ? "#faad14"
+                : status === "FULLY_PAID"
+                ? "#52c41a"
+                : "#000000",
+            border: `1px solid ${
+              status === "UNPAID"
+                ? "#ffa39e"
+                : status === "DEPOSIT_PAID"
+                ? "#ffd591"
+                : status === "FULLY_PAID"
+                ? "#b7eb8f"
+                : "#d9d9d9"
+            }`,
+          }}
+        >
+          {status === "UNPAID"
+            ? "Chưa Thanh Toán"
+            : status === "DEPOSIT_PAID"
+            ? "Đã Cọc"
+            : status === "FULLY_PAID"
+            ? "Đã Thanh Toán"
+            : status}
         </span>
       ),
     },
@@ -330,11 +385,11 @@ function MaintenanceRequests() {
       key: "action",
       width: 150,
       render: (_, record) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           <Button
             style={{
               ...actionButtonStyle,
-              backgroundColor: '#ffc107',
+              backgroundColor: "#ffc107",
             }}
             onClick={() => handleViewDetails(record)}
           >
@@ -345,7 +400,7 @@ function MaintenanceRequests() {
             <Button
               style={{
                 ...actionButtonStyle,
-                backgroundColor: '#00bcd4',
+                backgroundColor: "#00bcd4",
               }}
               onClick={() => showCancelModal(record.id)}
             >
@@ -362,68 +417,104 @@ function MaintenanceRequests() {
 
     const renderMaintenanceStatus = (status) => {
       const style = {
-        padding: '4px 12px',
-        borderRadius: '4px',
-        backgroundColor: 
-          status === 'NOT_STARTED' ? '#f0f0f0' :
-          status === 'IN_PROGRESS' ? '#e6f7ff' :
-          status === 'ASSIGNED' ? '#fff7e6' :
-          status === 'COMPLETED' ? '#f6ffed' : '#f0f0f0',
-        color: 
-          status === 'NOT_STARTED' ? '#000000' :
-          status === 'IN_PROGRESS' ? '#1890ff' :
-          status === 'ASSIGNED' ? '#faad14' :
-          status === 'COMPLETED' ? '#52c41a' : '#000000',
+        padding: "4px 12px",
+        borderRadius: "4px",
+        backgroundColor:
+          status === "NOT_STARTED"
+            ? "#f0f0f0"
+            : status === "IN_PROGRESS"
+            ? "#e6f7ff"
+            : status === "ASSIGNED"
+            ? "#fff7e6"
+            : status === "COMPLETED"
+            ? "#f6ffed"
+            : "#f0f0f0",
+        color:
+          status === "NOT_STARTED"
+            ? "#000000"
+            : status === "IN_PROGRESS"
+            ? "#1890ff"
+            : status === "ASSIGNED"
+            ? "#faad14"
+            : status === "COMPLETED"
+            ? "#52c41a"
+            : "#000000",
         border: `1px solid ${
-          status === 'NOT_STARTED' ? '#d9d9d9' :
-          status === 'IN_PROGRESS' ? '#91d5ff' :
-          status === 'ASSIGNED' ? '#ffd591' :
-          status === 'COMPLETED' ? '#b7eb8f' : '#d9d9d9'
-        }`
+          status === "NOT_STARTED"
+            ? "#d9d9d9"
+            : status === "IN_PROGRESS"
+            ? "#91d5ff"
+            : status === "ASSIGNED"
+            ? "#ffd591"
+            : status === "COMPLETED"
+            ? "#b7eb8f"
+            : "#d9d9d9"
+        }`,
       };
 
       return (
         <span style={style}>
-          {status === 'NOT_STARTED' ? 'Chưa Bắt Đầu' :
-           status === 'IN_PROGRESS' ? 'Đang Thực Hiện' :
-           status === 'ASSIGNED' ? 'Đã Phân Công' :
-           status === 'COMPLETED' ? 'Hoàn Thành' : status}
+          {status === "NOT_STARTED"
+            ? "Chưa Bắt Đầu"
+            : status === "IN_PROGRESS"
+            ? "Đang Thực Hiện"
+            : status === "ASSIGNED"
+            ? "Đã Phân Công"
+            : status === "COMPLETED"
+            ? "Hoàn Thành"
+            : status}
         </span>
       );
     };
 
     const renderPaymentStatus = (status) => {
       const style = {
-        padding: '4px 12px',
-        borderRadius: '4px',
-        backgroundColor: 
-          status === 'UNPAID' ? '#fff1f0' :
-          status === 'DEPOSIT_PAID' ? '#fff7e6' :
-          status === 'FULLY_PAID' ? '#f6ffed' : '#f0f0f0',
-        color: 
-          status === 'UNPAID' ? '#f5222d' :
-          status === 'DEPOSIT_PAID' ? '#faad14' :
-          status === 'FULLY_PAID' ? '#52c41a' : '#000000',
+        padding: "4px 12px",
+        borderRadius: "4px",
+        backgroundColor:
+          status === "UNPAID"
+            ? "#fff1f0"
+            : status === "DEPOSIT_PAID"
+            ? "#fff7e6"
+            : status === "FULLY_PAID"
+            ? "#f6ffed"
+            : "#f0f0f0",
+        color:
+          status === "UNPAID"
+            ? "#f5222d"
+            : status === "DEPOSIT_PAID"
+            ? "#faad14"
+            : status === "FULLY_PAID"
+            ? "#52c41a"
+            : "#000000",
         border: `1px solid ${
-          status === 'UNPAID' ? '#ffa39e' :
-          status === 'DEPOSIT_PAID' ? '#ffd591' :
-          status === 'FULLY_PAID' ? '#b7eb8f' : '#d9d9d9'
-        }`
+          status === "UNPAID"
+            ? "#ffa39e"
+            : status === "DEPOSIT_PAID"
+            ? "#ffd591"
+            : status === "FULLY_PAID"
+            ? "#b7eb8f"
+            : "#d9d9d9"
+        }`,
       };
 
       return (
         <span style={style}>
-          {status === 'UNPAID' ? 'Chưa Thanh Toán' :
-           status === 'DEPOSIT_PAID' ? 'Đã Cọc' :
-           status === 'FULLY_PAID' ? 'Đã Thanh Toán' : status}
+          {status === "UNPAID"
+            ? "Chưa Thanh Toán"
+            : status === "DEPOSIT_PAID"
+            ? "Đã Cọc"
+            : status === "FULLY_PAID"
+            ? "Đã Thanh Toán"
+            : status}
         </span>
       );
     };
 
     const formatCurrency = (amount) => {
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
+      return new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
       }).format(amount);
     };
 
@@ -453,18 +544,37 @@ function MaintenanceRequests() {
           </Descriptions.Item>
 
           <Descriptions.Item label="Thời Gian">
-            <div>Ngày tạo: {moment(selectedRequest.createdAt).format("DD/MM/YYYY")}</div>
-            <div>Ngày hẹn: {moment(selectedRequest.scheduledDate).format("DD/MM/YYYY")}</div>
-            <div>Ngày bắt đầu: {selectedRequest.startDate ? moment(selectedRequest.startDate).format("DD/MM/YYYY") : "Chưa xác định"}</div>
-            <div>Ngày hoàn thành: {selectedRequest.completionDate ? moment(selectedRequest.completionDate).format("DD/MM/YYYY") : "Chưa hoàn thành"}</div>
+            <div>
+              Ngày tạo: {moment(selectedRequest.createdAt).format("DD/MM/YYYY")}
+            </div>
+            <div>
+              Ngày hẹn:{" "}
+              {moment(selectedRequest.scheduledDate).format("DD/MM/YYYY")}
+            </div>
+            <div>
+              Ngày bắt đầu:{" "}
+              {selectedRequest.startDate
+                ? moment(selectedRequest.startDate).format("DD/MM/YYYY")
+                : "Chưa xác định"}
+            </div>
+            <div>
+              Ngày hoàn thành:{" "}
+              {selectedRequest.completionDate
+                ? moment(selectedRequest.completionDate).format("DD/MM/YYYY")
+                : "Chưa hoàn thành"}
+            </div>
           </Descriptions.Item>
-          
+
           <Descriptions.Item label="Trạng Thái Yêu Cầu">
-            {selectedRequest.requestStatus === 'PENDING' ? 'Đang Xem Xét' :
-             selectedRequest.requestStatus === 'CONFIRMED' ? 'Đã Xác Nhận' :
-             selectedRequest.requestStatus === 'COMPLETED' ? 'Hoàn Thành' :
-             selectedRequest.requestStatus === 'CANCELLED' ? 'Đã Hủy' : 
-             selectedRequest.requestStatus}
+            {selectedRequest.requestStatus === "PENDING"
+              ? "Đang Xem Xét"
+              : selectedRequest.requestStatus === "CONFIRMED"
+              ? "Đã Xác Nhận"
+              : selectedRequest.requestStatus === "COMPLETED"
+              ? "Hoàn Thành"
+              : selectedRequest.requestStatus === "CANCELLED"
+              ? "Đã Hủy"
+              : selectedRequest.requestStatus}
           </Descriptions.Item>
 
           <Descriptions.Item label="Trạng Thái Bảo Trì">
@@ -472,11 +582,22 @@ function MaintenanceRequests() {
           </Descriptions.Item>
 
           <Descriptions.Item label="Thông Tin Thanh Toán">
-            <div>Trạng thái: {renderPaymentStatus(selectedRequest.paymentStatus)}</div>
-            <div>Phương thức: {selectedRequest.paymentMethod === 'CASH' ? 'Tiền Mặt' : 'Chuyển Khoản'}</div>
-            <div>Giá thỏa thuận: {formatCurrency(selectedRequest.agreedPrice)}</div>
+            <div>
+              Trạng thái: {renderPaymentStatus(selectedRequest.paymentStatus)}
+            </div>
+            <div>
+              Phương thức:{" "}
+              {selectedRequest.paymentMethod === "CASH"
+                ? "Tiền Mặt"
+                : "Chuyển Khoản"}
+            </div>
+            <div>
+              Giá thỏa thuận: {formatCurrency(selectedRequest.agreedPrice)}
+            </div>
             <div>Tiền cọc: {formatCurrency(selectedRequest.depositAmount)}</div>
-            <div>Số tiền còn lại: {formatCurrency(selectedRequest.remainingAmount)}</div>
+            <div>
+              Số tiền còn lại: {formatCurrency(selectedRequest.remainingAmount)}
+            </div>
           </Descriptions.Item>
 
           <Descriptions.Item label="Ghi Chú">
@@ -495,7 +616,7 @@ function MaintenanceRequests() {
 
           <Descriptions.Item label="Hình Ảnh Yêu Cầu">
             {selectedRequest.attachments && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {selectedRequest.attachments.map((url, index) => (
                   <Image
                     key={index}
@@ -510,7 +631,7 @@ function MaintenanceRequests() {
 
           <Descriptions.Item label="Hình Ảnh Bảo Trì">
             {selectedRequest.maintenanceImages && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {selectedRequest.maintenanceImages.map((url, index) => (
                   <Image
                     key={index}
@@ -530,7 +651,7 @@ function MaintenanceRequests() {
   const renderCancelModal = () => (
     <Modal
       title="Huỷ Yêu Cầu Bảo Trì"
-      open={cancelModalVisible} 
+      open={cancelModalVisible}
       onCancel={() => {
         setCancelModalVisible(false);
         setCancelReason("");
@@ -551,23 +672,23 @@ function MaintenanceRequests() {
   );
 
   return (
-    <div style={{ padding: '20px' }}>
-      <div style={{ marginBottom: 16, textAlign: 'right' }}>
-        <Button 
-          type="primary" 
+    <div style={{ padding: "20px" }}>
+      <div style={{ marginBottom: 16, textAlign: "right" }}>
+        <Button
+          type="primary"
           onClick={() => setFilterModalVisible(true)}
-          style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}
+          style={{ display: "flex", alignItems: "center", marginLeft: "auto" }}
         >
           <SearchOutlined /> Lọc
         </Button>
       </div>
-      <Table 
-        dataSource={getFilteredData()} 
-        columns={columns} 
+      <Table
+        dataSource={getFilteredData()}
+        columns={columns}
         rowKey="id"
-        pagination={{ 
+        pagination={{
           pageSize: 10,
-          showTotal: (total, range) => 
+          showTotal: (total, range) =>
             `${range[0]}-${range[1]} của ${total} yêu cầu`,
         }}
         className="maintenance-table"

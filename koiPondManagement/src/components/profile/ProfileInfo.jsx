@@ -1,5 +1,6 @@
 import React from "react";
-import { Form, Input, Button, message } from "antd";
+import { Form, Input, Button } from "antd";
+import { toast } from "react-toastify";
 import api from "/src/components/config/axios";
 
 function ProfileInfo({ profileData, setProfileData }) {
@@ -15,11 +16,11 @@ function ProfileInfo({ profileData, setProfileData }) {
       });
       if (response.status === 200) {
         setProfileData(response.data);
-        message.success("Thông tin đã được cập nhật thành công");
+        toast.success("Thông tin đã được cập nhật thành công");
       }
     } catch (err) {
       console.error("Error updating profile:", err);
-      message.error("Không thể cập nhật thông tin. Vui lòng thử lại.");
+      toast.error("Không thể cập nhật thông tin. Vui lòng thử lại.");
     }
   };
 
