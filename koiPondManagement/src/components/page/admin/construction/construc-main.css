@@ -1,0 +1,14 @@
+/* Modal styles */
+.ant-modal {
+  border-radius: 8px;
+}
+
+/* Button styles */
+.ant-btn-primary {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
+.ant-btn {
+  border-radius: 4px;
+}

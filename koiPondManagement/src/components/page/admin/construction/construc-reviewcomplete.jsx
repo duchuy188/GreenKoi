@@ -77,24 +77,28 @@ const ConstrucReviewComplete = () => {
       key: 'agreedPrice',
       width: 130,
       render: (price) => `${price?.toLocaleString('vi-VN')} VNĐ`
+      
     },
     {
       title: 'Ngày lên lịch',
       dataIndex: 'scheduledDate',
       key: 'scheduledDate',
       width: 150,
+      render: (date) => moment(date).format('DD-MM-YYYY')
     },
     {
       title: 'Ngày bắt đầu',
       dataIndex: 'startDate',
       key: 'startDate',
       width: 150,
+      render: (date) => moment(date).format('DD-MM-YYYY')
     },
     {
       title: 'Ngày hoàn thành',
       dataIndex: 'completionDate',
       key: 'completionDate',
       width: 150,
+      render: (date) => moment(date).format('DD-MM-YYYY')
     },
     {
       title: 'Thông tin bảo trì',
@@ -243,7 +247,7 @@ const ConstrucReviewComplete = () => {
           <div>
             <p><strong>Số sao:</strong> {selectedReview.rating}/5</p>
             <p><strong>Nhận xét:</strong> {selectedReview.comment}</p>
-            <p><strong>Ngày đánh giá:</strong> {moment(selectedReview.reviewDate).format('DD/MM/YYYY HH:mm:ss')}</p>
+            <p><strong>Ngày đánh giá:</strong> {moment(selectedReview.reviewDate).format('DD-MM-YYYY HH:mm:ss')}</p>
             <p><strong>Trạng thái:</strong> {selectedReview.status}</p>
           </div>
         )}
@@ -264,8 +268,8 @@ const ConstrucReviewComplete = () => {
             <p><strong>Địa chỉ:</strong> {selectedCustomer.customerAddress}</p>
             <p><strong>Nhân viên tư vấn:</strong> {selectedCustomer.consultantName}</p>
             <p><strong>Dự án:</strong> {selectedCustomer.projectName}</p>
-            <p><strong>Ngày tạo:</strong> {moment(selectedCustomer.createdAt).format('DD/MM/YYYY HH:mm:ss')}</p>
-            <p><strong>Ngày cập nhật:</strong> {moment(selectedCustomer.updatedAt).format('DD/MM/YYYY HH:mm:ss')}</p>
+            <p><strong>Ngày tạo:</strong> {moment(selectedCustomer.createdAt).format('DD-MM-YYYY HH:mm:ss')}</p>
+            <p><strong>Ngày cập nhật:</strong> {moment(selectedCustomer.updatedAt).format('DD-MM-YYYY HH:mm:ss')}</p>
           </div>
         )}
       </Modal>

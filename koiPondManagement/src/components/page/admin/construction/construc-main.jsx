@@ -3,7 +3,7 @@ import { Table, message, Card, Typography, Tag, Space, Spin, Button, DatePicker,
 import api from "../../../config/axios";
 import moment from 'moment';
 import { toast } from 'react-toastify';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, EyeOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;
 
@@ -172,6 +172,15 @@ const ConstrucMain = () => {
     }
   };
 
+  const showDescriptionModal = (description) => {
+    Modal.info({
+      title: 'Chi tiết mô tả',
+      content: <p>{description}</p>,
+      width: 300,
+      okText: 'Đồng ý',
+    });
+  };
+
   const columns = [
     {
       title: 'Thông tin khách hàng',
@@ -192,6 +201,7 @@ const ConstrucMain = () => {
               </div>
             ),
             width: 500,
+            okText: 'Đồng ý',
           })}>
             Xem thông tin
           </Button>
@@ -204,6 +214,15 @@ const ConstrucMain = () => {
       key: 'description',
       ellipsis: true,
       width: 250,
+      render: (description) => (
+        <Space>
+          <Button type="link"  style={{ color: 'black' }} onClick={() => showDescriptionModal(description)}>
+            
+            <EyeOutlined />
+          </Button>
+        </Space>
+      ),
+      
     },
     {
       title: 'Tài liệu đính kèm',
@@ -425,6 +444,8 @@ const ConstrucMain = () => {
           setMaintenanceImages([]);
           setSelectedMaintenanceId(null);
         }}
+        okText="Đồng ý"
+        cancelText="Hủy"
       >
         <Form layout="vertical">
           <Form.Item 
@@ -453,7 +474,7 @@ const ConstrucMain = () => {
               {maintenanceImages.length >= 8 ? null : (
                 <div>
                   <PlusOutlined />
-                  <div style={{ marginTop: 8 }}>Upload</div>
+                  <div style={{ marginTop: 8 }}>Tải ảnh</div>
                 </div>
               )}
             </Upload>

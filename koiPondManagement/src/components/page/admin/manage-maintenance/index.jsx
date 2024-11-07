@@ -173,10 +173,31 @@ const ManageMaintenance = () => {
     setDetailsModalVisible(true);
   };
 
+  const handleViewDescription = (record) => {
+    Modal.info({
+      title: "Chi tiết mô tả",
+      content: <p>{record.description || "Không có mô tả"}</p>,
+      okText: "Đồng ý",
+    });
+  };
+
   const columns = [
     { title: "Dự án", dataIndex: "projectName", key: "projectName", render: (text) => text || "N/A" },
     { title: "Nhân viên tư vấn", dataIndex: "consultantName", key: "consultantName", render: (text) => text || "N/A" },
-    { title: "Mô tả", dataIndex: "description", key: "description" },
+    {
+      title: "Mô tả",
+      dataIndex: "description",
+      key: "description",
+      render: (text, record) => (
+        <>
+          <Button
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDescription(record)}
+            style={{ marginLeft: 8 }}
+          />
+        </>
+      ),
+    },
     {
       title: "Trạng thái yêu cầu",
       dataIndex: "requestStatus",
@@ -192,7 +213,11 @@ const ManageMaintenance = () => {
         return (
           <span style={{ 
             color: statusConfig[status]?.color || '#000000',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            border: `1px solid ${statusConfig[status]?.color || '#000000'}`,
+            borderRadius: '4px',
+            padding: '2px 8px',
+            display: 'inline-block'
           }}>
             {statusConfig[status]?.text || status}
           </span>
@@ -213,7 +238,11 @@ const ManageMaintenance = () => {
         return (
           <span style={{ 
             color: statusConfig[status]?.color || '#000000',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            border: `1px solid ${statusConfig[status]?.color || '#000000'}`,
+            borderRadius: '4px',
+            padding: '2px 8px',
+            display: 'inline-block'
           }}>
             {statusConfig[status]?.text || status}
           </span>
@@ -345,6 +374,7 @@ const ManageMaintenance = () => {
         open={viewCancelReasonModalVisible}
         onOk={() => setViewCancelReasonModalVisible(false)}
         onCancel={() => setViewCancelReasonModalVisible(false)}
+        okText="Đồng ý"
       >
         <p>{currentCancelReason}</p>
       </Modal>
@@ -355,6 +385,7 @@ const ManageMaintenance = () => {
         open={cancelModalVisible}
         onOk={submitCancel}
         onCancel={() => setCancelModalVisible(false)}
+        okText="Đồng ý"
       >
         <TextArea
           rows={4}
@@ -382,7 +413,6 @@ const ManageMaintenance = () => {
             <Option key={staff.id} value={staff.id}>
               {staff.name}
             </Option>
-
           ))}
         </Select>
       </Modal>
