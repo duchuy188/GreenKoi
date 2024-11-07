@@ -3,23 +3,32 @@ package com.koipond.backend.service;
 import com.koipond.backend.dto.DesignDTO;
 import com.koipond.backend.model.Design;
 import com.koipond.backend.model.User;
+import com.koipond.backend.model.DesignRequest;
 import com.koipond.backend.repository.DesignRepository;
 import com.koipond.backend.repository.UserRepository;
+import com.koipond.backend.repository.DesignRequestRepository;
 import com.koipond.backend.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 @Service
 public class DesignService {
 
     private final DesignRepository designRepository;
     private final UserRepository userRepository;
+    private final DesignRequestRepository designRequestRepository;
 
-    public DesignService(DesignRepository designRepository, UserRepository userRepository) {
+    public DesignService(
+            DesignRepository designRepository,
+            UserRepository userRepository,
+            DesignRequestRepository designRequestRepository) {
         this.designRepository = designRepository;
         this.userRepository = userRepository;
+        this.designRequestRepository = designRequestRepository;
     }
 
     public DesignDTO createDesign(DesignDTO designDTO, String designerUsername) {
@@ -31,10 +40,77 @@ public class DesignService {
             updateDesignFromDTO(design, designDTO);
             design.setCreatedBy(designer);
             design.setStatus(Design.DesignStatus.PENDING_APPROVAL);
+            design.setPublic(false);
+            design.setCustom(false);
 
             Design savedDesign = designRepository.save(design);
             return convertToDTO(savedDesign);
         }
+    }
+
+    public DesignDTO createFromDesignRequest(DesignDTO designDTO, String designerUsername, String requestId) {
+        synchronized (designerUsername.intern()) {
+            User designer = userRepository.findByUsername(designerUsername)
+                    .orElseThrow(() -> new ResourceNotFoundException("Designer not found"));
+
+            Design design = new Design();
+            updateDesignFromDTO(design, designDTO);
+            design.setCreatedBy(designer);
+            design.setStatus(Design.DesignStatus.PENDING_APPROVAL);
+            design.setPublic(false);
+            design.setCustom(true);
+
+            Design savedDesign = designRepository.save(design);
+            return convertToDTO(savedDesign);
+        }
+    }
+
+    public DesignDTO approvePublicDesign(String designId, String username) {
+        synchronized (designId.intern()) {
+            Design design = findDesignById(designId);
+            
+            if (!design.isCustom()) {
+                throw new IllegalStateException("Only custom designs need customer approval");
+            }
+            
+            DesignRequest designRequest = designRequestRepository.findByDesignId(designId)
+                .orElseThrow(() -> new ResourceNotFoundException("Design request not found"));
+            
+            if (designRequest.getStatus() != DesignRequest.DesignRequestStatus.APPROVED) {
+                throw new IllegalStateException("Design request must be approved before public approval");
+            }
+            
+            if (!designRequest.getConsultation().getCustomer().getUsername().equals(username)) {
+                throw new IllegalStateException("Only project owner can approve public display");
+            }
+            
+            design.setCustomerApprovedPublic(true);
+            design.setCustomerApprovalDate(LocalDateTime.now());
+            
+            Design updatedDesign = designRepository.save(design);
+            return convertToDTO(updatedDesign);
+        }
+    }
+
+    public DesignDTO publishDesign(String designId) {
+        synchronized (designId.intern()) {
+            Design design = findDesignById(designId);
+            
+            if (design.isCustom() && !Boolean.TRUE.equals(design.getCustomerApprovedPublic())) {
+                throw new IllegalStateException("Custom design must be approved by customer first");
+            }
+            
+            design.setPublic(true);
+            Design updatedDesign = designRepository.save(design);
+            return convertToDTO(updatedDesign);
+        }
+    }
+
+    public List<DesignDTO> getPublicDesigns() {
+        return designRepository.findByIsPublicTrueAndActiveTrue()
+            .stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
     }
 
     public DesignDTO getDesign(String id) {
@@ -65,7 +141,6 @@ public class DesignService {
         synchronized (id.intern()) {
             Design design = findDesignById(id);
             
-            // Validate status transition
             if (design.getStatus() == Design.DesignStatus.APPROVED) {
                 throw new IllegalStateException("Cannot update approved design");
             }
@@ -80,13 +155,22 @@ public class DesignService {
         synchronized (id.intern()) {
             Design design = findDesignById(id);
             
-            // Validate current status
             if (design.getStatus() != Design.DesignStatus.PENDING_APPROVAL) {
                 throw new IllegalStateException(
                     "Can only approve designs in PENDING_APPROVAL status. Current status: " + design.getStatus());
             }
             
             design.setStatus(Design.DesignStatus.APPROVED);
+            
+            if (!design.isCustom()) {
+                design.setPublic(true);
+            }
+            else {
+                design.setPublic(false);
+                design.setCustomerApprovedPublic(null);
+                design.setCustomerApprovalDate(null);
+            }
+            
             Design updatedDesign = designRepository.save(design);
             return convertToDTO(updatedDesign);
         }
@@ -96,7 +180,6 @@ public class DesignService {
         synchronized (id.intern()) {
             Design design = findDesignById(id);
             
-            // Validate current status
             if (design.getStatus() != Design.DesignStatus.PENDING_APPROVAL) {
                 throw new IllegalStateException(
                     "Can only reject designs in PENDING_APPROVAL status. Current status: " + design.getStatus());
@@ -117,7 +200,6 @@ public class DesignService {
         synchronized (id.intern()) {
             Design design = findDesignById(id);
             
-            // Validate if design can be deleted
             if (design.getStatus() == Design.DesignStatus.APPROVED) {
                 throw new IllegalStateException("Cannot delete approved design");
             }
@@ -133,7 +215,6 @@ public class DesignService {
     }
 
     private void updateDesignFromDTO(Design design, DesignDTO dto) {
-        // Validate required fields
         if (dto.getName() == null || dto.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Design name is required");
         }
@@ -149,7 +230,6 @@ public class DesignService {
         design.setDimensions(dto.getDimensions());
         design.setFeatures(dto.getFeatures());
         
-        // Status validation and update
         if (dto.getStatus() != null) {
             try {
                 Design.DesignStatus newStatus = Design.DesignStatus.valueOf(dto.getStatus());
@@ -158,6 +238,17 @@ public class DesignService {
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Invalid status: " + dto.getStatus());
             }
+        }
+
+        if (design.getId() == null && dto.isCustom() != design.isCustom()) {
+            design.setCustom(dto.isCustom());
+        }
+        
+        if (dto.getReferenceDesignId() != null && 
+            (design.getReferenceDesign() == null || 
+             !design.getReferenceDesign().getId().equals(dto.getReferenceDesignId()))) {
+            Design referenceDesign = findDesignById(dto.getReferenceDesignId());
+            design.setReferenceDesign(referenceDesign);
         }
     }
 
@@ -181,11 +272,21 @@ public class DesignService {
         dto.setDimensions(design.getDimensions());
         dto.setFeatures(design.getFeatures());
         dto.setCreatedById(design.getCreatedBy().getId());
-        // Xử lý trường hợp status là null
         dto.setStatus(design.getStatus() != null ? design.getStatus().name() : Design.DesignStatus.PENDING_APPROVAL.name());
         dto.setRejectionReason(design.getRejectionReason());
         dto.setCreatedAt(design.getCreatedAt());
         dto.setUpdatedAt(design.getUpdatedAt());
+        dto.setPublic(design.isPublic());
+        dto.setCustom(design.isCustom());
+        dto.setCustomerApprovedPublic(design.getCustomerApprovedPublic());
+        dto.setCustomerApprovalDate(design.getCustomerApprovalDate());
+        
+        if (design.getReferenceDesign() != null) {
+            dto.setReferenceDesignId(design.getReferenceDesign().getId());
+            dto.setReferenceDesignName(design.getReferenceDesign().getName());
+            dto.setReferenceDesignDescription(design.getReferenceDesign().getDescription());
+        }
+        
         return dto;
     }
 
@@ -193,5 +294,25 @@ public class DesignService {
         return designRepository.findByNameContainingIgnoreCaseAndActiveTrue(name).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    public DesignDTO suggestPublicDesign(String designId) {
+        synchronized (designId.intern()) {
+            Design design = findDesignById(designId);
+            
+            if (!design.isCustom()) {
+                throw new IllegalStateException("Only custom designs can be suggested for public");
+            }
+            
+            if (design.isPublic()) {
+                throw new IllegalStateException("Design is already public");
+            }
+            
+            design.setCustomerApprovedPublic(null);
+            design.setCustomerApprovalDate(null);
+            
+            Design updatedDesign = designRepository.save(design);
+            return convertToDTO(updatedDesign);
+        }
     }
 }

@@ -25,6 +25,7 @@ import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.authorization.AuthorityAuthorizationManager;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,6 +33,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
@@ -101,6 +103,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/blog/posts/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/pond-designs/approved").permitAll()
                         .requestMatchers("/api/payments/vnpay-return").permitAll()
+                        .requestMatchers("/api/payments/verify-payment").permitAll()
+                        .requestMatchers("/api/maintenance-requests/verify-vnpay").permitAll()
                         // Specific endpoints
                         .requestMatchers(HttpMethod.PUT, "/api/ConsultationRequests/*/status").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.GET, "/api/projects/customer").access(loggedAuthorizationManager("/api/projects/customer", AuthorityAuthorizationManager.hasAuthority("ROLE_5")))
@@ -123,16 +127,21 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/projects").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.PUT, "/api/projects/**").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.PATCH, "/api/projects/*/payment-status").hasAuthority("ROLE_2")
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/status").hasAnyAuthority("ROLE_1", "ROLE_2")
 
                         // Designer endpoints (ROLE_3)
                         .requestMatchers(HttpMethod.POST, "/api/pond-designs").hasAuthority("ROLE_3")
                         .requestMatchers(HttpMethod.GET, "/api/pond-designs/designer").hasAuthority("ROLE_3")
+                        .requestMatchers(HttpMethod.PUT, "/api/pond-designs/{id}/suggest-public").hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.PUT, "/api/pond-designs/*/approve-public").hasAuthority("ROLE_5")
+                        .requestMatchers(HttpMethod.PUT, "/api/pond-designs/*/publish").hasAuthority("ROLE_1")
                         .requestMatchers(HttpMethod.PUT, "/api/pond-designs/**").hasAuthority("ROLE_3")
                         .requestMatchers(HttpMethod.DELETE, "/api/pond-designs/**").hasAuthority("ROLE_3")
 
                         // Constructor endpoints (ROLE_4)
                         .requestMatchers(HttpMethod.PATCH, "/api/tasks/*/status").hasAuthority("ROLE_4")
                         .requestMatchers(HttpMethod.GET, "/api/projects/constructor").hasAuthority("ROLE_4")
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/mark-technically-completed").hasAuthority("ROLE_4")
 
                         // Shared endpoints
                         .requestMatchers(HttpMethod.GET, "/api/projects/*/tasks").hasAnyAuthority("ROLE_1", "ROLE_4")
@@ -194,6 +203,63 @@ public class SecurityConfig {
                         // VNPay payment endpoints (for customers)
                         .requestMatchers(HttpMethod.POST, "/api/maintenance-requests/*/deposit/vnpay").hasAuthority("ROLE_5")
                         .requestMatchers(HttpMethod.POST, "/api/maintenance-requests/*/final/vnpay").hasAuthority("ROLE_5")
+
+                        // Design Request endpoints
+                        .requestMatchers(HttpMethod.POST, "/api/design-requests/*/design")
+                            .hasAuthority("ROLE_3")  // Chỉ Designer được tạo design mới
+                        
+                        .requestMatchers(HttpMethod.GET, "/api/design-requests/designer")
+                            .hasAuthority("ROLE_3")  // Chỉ Designer xem danh sách của mình
+                        
+                        .requestMatchers(HttpMethod.GET, "/api/design-requests/customer")
+                            .hasAuthority("ROLE_5")  // Chỉ Customer xem danh sách của mình
+                        
+                        .requestMatchers(HttpMethod.PUT, "/api/design-requests/*/link-design/**")
+                            .hasAuthority("ROLE_3")  // Chỉ Designer được liên kết design
+                        
+                        .requestMatchers(HttpMethod.PUT, "/api/design-requests/**")
+                            .hasAnyAuthority("ROLE_3", "ROLE_2", "ROLE_1")  // Designer, Staff và Admin có thể cập nhật
+
+                        // Thêm vào phần Design Request endpoints
+                        .requestMatchers(HttpMethod.POST, "/api/design-requests/*/submit-review")
+                            .hasAuthority("ROLE_3")  // Chỉ Designer được submit review
+
+                        .requestMatchers(HttpMethod.POST, "/api/design-requests/*/consultant-review")
+                            .hasAuthority("ROLE_2")  // Chỉ Consultant được review
+
+                        .requestMatchers(HttpMethod.POST, "/api/design-requests/*/customer-approval")
+                            .hasAuthority("ROLE_5")  // Chỉ Customer được approval
+
+                        // Thêm rules mới cho quy trình công khai thiết kế
+                        .requestMatchers(HttpMethod.PUT, "/api/pond-designs/{id}/suggest-public")
+                            .hasAuthority("ROLE_1")
+
+                        .requestMatchers(HttpMethod.PUT, "/api/pond-designs/*/approve-public")
+                            .hasAuthority("ROLE_5")  // Chỉ Customer được approve công khai
+
+                        .requestMatchers(HttpMethod.PUT, "/api/pond-designs/*/publish")
+                            .hasAuthority("ROLE_1")  // Chỉ Manager được publish
+
+                        .requestMatchers(HttpMethod.GET, "/api/pond-designs/public")
+                            .permitAll()  // Ai cũng xem được thiết kế public
+
+                        // Thêm rule mới cho việc xem danh sách chờ review
+                        .requestMatchers(HttpMethod.GET, "/api/design-requests/pending-review")
+                            .hasAuthority("ROLE_2")  // Chỉ Consultant được xem danh sách chờ review
+
+                        // Design Request endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/design-requests/pending-assignment")
+                            .hasAuthority("ROLE_1")  // Chỉ Manager được xem danh sách chờ phân công
+
+                        // Project status endpoints
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/status")
+                            .hasAnyAuthority("ROLE_1", "ROLE_2")
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/cancel")
+                            .hasAnyAuthority("ROLE_1", "ROLE_2")
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/complete")
+                            .hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.PATCH, "/api/projects/*/mark-technically-completed")
+                            .hasAuthority("ROLE_4")
 
                         // Catch-all rule
                         .anyRequest().authenticated();

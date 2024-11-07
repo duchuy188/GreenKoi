@@ -1,6 +1,6 @@
 package com.koipond.backend.controller;
 
-import com.koipond.backend.dto.ConsultationRequest;
+import com.koipond.backend.dto.ConsultationRequestDTO;
 import com.koipond.backend.service.ConsultationRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +23,7 @@ public class ConsultationRequestController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createRequest(@RequestBody ConsultationRequest dto, Authentication authentication) {
+    public ResponseEntity<?> createRequest(@RequestBody ConsultationRequestDTO dto, Authentication authentication) {
         try {
             String username = authentication.getName();
             com.koipond.backend.model.ConsultationRequest createdRequest = consultationRequestService.createRequest(dto, username);
@@ -34,19 +34,19 @@ public class ConsultationRequestController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ConsultationRequest>> getConsultationRequests(Authentication authentication) {
+    public ResponseEntity<List<ConsultationRequestDTO>> getConsultationRequests(Authentication authentication) {
         String username = authentication.getName();
-        List<ConsultationRequest> requests = consultationRequestService.getConsultationRequests(username);
+        List<ConsultationRequestDTO> requests = consultationRequestService.getConsultationRequests(username);
         return ResponseEntity.ok(requests);
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<ConsultationRequest> updateStatus(
+    public ResponseEntity<ConsultationRequestDTO> updateStatus(
             @PathVariable String id,
             @RequestParam String newStatus,
             Authentication authentication) {
         String username = authentication.getName();
-        ConsultationRequest updatedRequest = consultationRequestService.updateStatus(id, newStatus, username);
+        ConsultationRequestDTO updatedRequest = consultationRequestService.updateStatus(id, newStatus, username);
         return ResponseEntity.ok(updatedRequest);
     }
 
@@ -56,22 +56,22 @@ public class ConsultationRequestController {
     }
 
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<ConsultationRequest>> getConsultationRequestsByCustomerId(
+    public ResponseEntity<List<ConsultationRequestDTO>> getConsultationRequestsByCustomerId(
             @PathVariable String customerId,
             Authentication authentication) {
         // Có thể thêm kiểm tra quyền truy cập ở đây nếu cần
-        List<ConsultationRequest> requests = consultationRequestService.getConsultationRequestsByCustomerId(customerId);
+        List<ConsultationRequestDTO> requests = consultationRequestService.getConsultationRequestsByCustomerId(customerId);
         return ResponseEntity.ok(requests);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCustomerRequest(
             @PathVariable String id,
-            @RequestBody ConsultationRequest updatedDTO,
+            @RequestBody ConsultationRequestDTO updatedDTO,
             Authentication authentication) {
         try {
             String username = authentication.getName();
-            ConsultationRequest updatedRequest = consultationRequestService.updateCustomerRequest(id, updatedDTO, username);
+            ConsultationRequestDTO updatedRequest = consultationRequestService.updateCustomerRequest(id, updatedDTO, username);
             return ResponseEntity.ok(updatedRequest);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

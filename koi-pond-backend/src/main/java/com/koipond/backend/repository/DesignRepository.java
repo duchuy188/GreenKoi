@@ -18,4 +18,29 @@ public interface DesignRepository extends JpaRepository<Design, String> {
     // Thêm các phương thức mới để đếm số lượng thiết kế
     long countByActiveTrue();
     long countByStatusAndActiveTrue(Design.DesignStatus status);
+
+    // Thêm các method mới cho mẫu thiết kế
+    // 1. Lấy mẫu thiết kế public
+    List<Design> findByIsPublicTrueAndStatusAndActiveTrue(Design.DesignStatus status);
+    
+    // 2. Lấy mẫu thiết kế thông thường (không phải custom)
+    List<Design> findByIsPublicTrueAndIsCustomFalseAndStatusAndActiveTrue(
+        Design.DesignStatus status);
+    
+    // 3. Lấy thiết kế theo yêu cầu của khách
+    List<Design> findByIsCustomTrueAndCreatedBy_IdAndActiveTrue(String customerId);
+    
+    // 4. Đếm số lượng theo loại
+    long countByIsCustomTrueAndActiveTrue(); // Đếm thiết kế theo yêu cầu
+    long countByIsPublicTrueAndActiveTrue(); // Đếm mẫu public
+    
+    // 5. Tìm kiếm nâng cao
+    List<Design> findByIsPublicTrueAndStatusAndActiveTrueOrderByCreatedAtDesc(
+        Design.DesignStatus status); // Mẫu mới nhất
+        
+    List<Design> findByIsCustomTrueAndStatusAndActiveTrueOrderByCreatedAtDesc(
+        Design.DesignStatus status); // Thiết kế theo yêu cầu mới nhất
+
+    // Sửa lại method lấy thiết kế public
+    List<Design> findByIsPublicTrueAndActiveTrue();  // Bỏ tham số status
 }

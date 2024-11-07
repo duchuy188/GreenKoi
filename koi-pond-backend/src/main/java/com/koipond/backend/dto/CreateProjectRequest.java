@@ -19,6 +19,7 @@ public class CreateProjectRequest {
     private LocalDate endDate;
 
     private String designId;
+    private String designRequestId;
     private String promotionId;
     private String address;
     private String customerId;

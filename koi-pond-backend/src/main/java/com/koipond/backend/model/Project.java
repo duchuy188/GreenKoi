@@ -33,6 +33,10 @@ public class Project {
     private Design design;
 
     @ManyToOne
+    @JoinColumn(name = "design_request_id", columnDefinition = "NVARCHAR(36)")
+    private DesignRequest designRequest;
+
+    @ManyToOne
     @JoinColumn(name = "promotion_id")
     private Promotion promotion;
 

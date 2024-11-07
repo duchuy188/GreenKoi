@@ -110,4 +110,38 @@ public class PondDesignController {
         List<DesignDTO> designs = designService.searchDesignsByName(name);
         return ResponseEntity.ok(designs);
     }
+
+
+    @PutMapping("/{id}/approve-public")
+    @PreAuthorize("hasAuthority('ROLE_5')")  // Customer
+    @Operation(summary = "Approve design for public display")
+    public ResponseEntity<DesignDTO> approvePublicDesign(
+            @PathVariable String id,
+            Authentication authentication) {
+        return ResponseEntity.ok(
+            designService.approvePublicDesign(id, authentication.getName())
+        );
+    }
+
+    @GetMapping("/public")
+    @Operation(summary = "Get public designs")
+    public ResponseEntity<List<DesignDTO>> getPublicDesigns() {
+        return ResponseEntity.ok(designService.getPublicDesigns());
+    }
+
+    @PutMapping("/{id}/suggest-public")
+    @PreAuthorize("hasAuthority('ROLE_1')")  // Manager
+    @Operation(summary = "Suggest design for public display", 
+          description = "Manager suggests a custom design for public display")
+    public ResponseEntity<DesignDTO> suggestPublicDesign(@PathVariable String id) {
+        return ResponseEntity.ok(designService.suggestPublicDesign(id));
+    }
+
+    @PutMapping("/{id}/publish")
+    @PreAuthorize("hasAuthority('ROLE_1')")  // Manager
+    @Operation(summary = "Publish design", 
+          description = "Manager publishes a design after customer approval")
+    public ResponseEntity<DesignDTO> publishDesign(@PathVariable String id) {
+        return ResponseEntity.ok(designService.publishDesign(id));
+    }
 }

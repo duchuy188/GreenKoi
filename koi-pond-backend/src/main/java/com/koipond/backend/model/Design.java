@@ -67,7 +67,7 @@ public class Design {
     }
 
     public enum DesignStatus {
-        PENDING_APPROVAL, APPROVED, REJECTED
+        PENDING_APPROVAL, APPROVED, REJECTED, ARCHIVED
     }
 
     @Column(columnDefinition = "TEXT")
@@ -79,5 +79,61 @@ public class Design {
 
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
+    }
+
+    @Column(name = "is_public", nullable = false)
+    private boolean isPublic = false;
+
+    @Column(name = "is_custom", nullable = false)
+    private boolean isCustom = false;
+
+    @Column(name = "customer_approved_public")
+    private Boolean customerApprovedPublic;
+
+    @Column(name = "customer_approval_date")
+    private LocalDateTime customerApprovalDate;
+
+    @ManyToOne
+    @JoinColumn(name = "reference_design_id")
+    private Design referenceDesign;
+
+    public boolean isPublic() {
+        return isPublic;
+    }
+
+    public void setPublic(boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    public boolean isCustom() {
+        return isCustom;
+    }
+
+    public void setCustom(boolean isCustom) {
+        this.isCustom = isCustom;
+    }
+
+    public Boolean getCustomerApprovedPublic() {
+        return customerApprovedPublic;
+    }
+
+    public void setCustomerApprovedPublic(Boolean customerApprovedPublic) {
+        this.customerApprovedPublic = customerApprovedPublic;
+    }
+
+    public LocalDateTime getCustomerApprovalDate() {
+        return customerApprovalDate;
+    }
+
+    public void setCustomerApprovalDate(LocalDateTime customerApprovalDate) {
+        this.customerApprovalDate = customerApprovalDate;
+    }
+
+    public Design getReferenceDesign() {
+        return referenceDesign;
+    }
+
+    public void setReferenceDesign(Design referenceDesign) {
+        this.referenceDesign = referenceDesign;
     }
 }

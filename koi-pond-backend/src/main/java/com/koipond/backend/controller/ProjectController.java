@@ -105,21 +105,24 @@ public class ProjectController {
 
     @PatchMapping("/{id}/cancel")
     @PreAuthorize("hasAnyRole('ROLE_1', 'ROLE_2')")
-    @Operation(summary = "Cancel a project", description = "Cancels an existing project. Managers can cancel any project, consultants can only request cancellation for their assigned projects.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Project cancelled successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "403", description = "Access denied"),
-            @ApiResponse(responseCode = "404", description = "Project not found")
-    })
-    public ResponseEntity<ProjectDTO> cancelProject(
-            @PathVariable String id, 
-            @Valid @RequestBody CancelProjectRequest request, 
+    public ResponseEntity<?> cancelProject(
+            @PathVariable String id,
+            @Valid @RequestBody CancelProjectRequest request,
             Authentication authentication) {
         String username = getUsernameFromAuthentication(authentication);
-        // Bỏ tham số isManager vì đã check trong service
-        ProjectDTO cancelledProject = projectService.cancelProject(id, request, username);
-        return ResponseEntity.ok(cancelledProject);
+        try {
+            ProjectDTO cancelledProject = projectService.cancelProject(id, request, username);
+            return ResponseEntity.ok(cancelledProject);
+        } catch (IllegalStateException e) {
+            logger.warn("Cannot cancel project {}: {}", id, e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        } catch (AccessDeniedException e) {
+            logger.warn("Access denied for user {} to cancel project {}", username, id);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            logger.error("Project not found: {}", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(e.getMessage()));
+        }
     }
 
     @PatchMapping("/{id}/assign-constructor")
