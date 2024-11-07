@@ -4,6 +4,7 @@ import api from "../../../config/axios";
 import { toast } from 'react-toastify';
 import moment from 'moment';
 import locale from 'antd/es/date-picker/locale/vi_VN';
+import { EyeOutlined } from '@ant-design/icons';
 
 const ConstrucReviewComplete = () => {
   const [data, setData] = useState([]);
@@ -16,6 +17,8 @@ const ConstrucReviewComplete = () => {
   const [selectedReview, setSelectedReview] = useState(null);
   const [infoModalVisible, setInfoModalVisible] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [descriptionModalVisible, setDescriptionModalVisible] = useState(false);
+  const [selectedDescription, setSelectedDescription] = useState('');
 
   const showNoteModal = (note) => {
     setSelectedNote(note);
@@ -46,6 +49,11 @@ const ConstrucReviewComplete = () => {
     setInfoModalVisible(true);
   };
 
+  const showDescriptionModal = (description) => {
+    setSelectedDescription(description);
+    setDescriptionModalVisible(true);
+  };
+
   const columns = [
     {
       title: 'Thông tin',
@@ -69,7 +77,11 @@ const ConstrucReviewComplete = () => {
       title: 'Mô tả',
       dataIndex: 'description',
       key: 'description',
-      width: 200,
+      width: 100,
+      render: (text) => (
+        <Button icon={<EyeOutlined />} onClick={() => showDescriptionModal(text)}>
+        </Button>
+      ),
     },
     {
       title: 'Giá thỏa thuận',
@@ -248,7 +260,6 @@ const ConstrucReviewComplete = () => {
             <p><strong>Số sao:</strong> {selectedReview.rating}/5</p>
             <p><strong>Nhận xét:</strong> {selectedReview.comment}</p>
             <p><strong>Ngày đánh giá:</strong> {moment(selectedReview.reviewDate).format('DD-MM-YYYY HH:mm:ss')}</p>
-            <p><strong>Trạng thái:</strong> {selectedReview.status}</p>
           </div>
         )}
       </Modal>
@@ -272,6 +283,16 @@ const ConstrucReviewComplete = () => {
             <p><strong>Ngày cập nhật:</strong> {moment(selectedCustomer.updatedAt).format('DD-MM-YYYY HH:mm:ss')}</p>
           </div>
         )}
+      </Modal>
+      <Modal
+        title="Chi tiết Mô tả"
+        open={descriptionModalVisible}
+        onOk={() => setDescriptionModalVisible(false)}
+        onCancel={() => setDescriptionModalVisible(false)}
+        cancelText="Huỷ"
+        okText="Đồng ý"
+      >
+        <p>{selectedDescription}</p>
       </Modal>
     </>
   );
