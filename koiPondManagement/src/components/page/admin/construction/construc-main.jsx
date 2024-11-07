@@ -49,7 +49,7 @@ const ConstrucMain = () => {
       setMaintenanceRequests(transformedData);
     } catch (error) {
       console.error('Error fetching maintenance requests:', error);
-      message.error("Failed to load maintenance requests");
+      message.error("Không thể tải danh sách yêu cầu bảo trì");
     } finally {
       setLoading(false);
     }
@@ -61,12 +61,12 @@ const ConstrucMain = () => {
         maintenanceStatus: 'IN_PROGRESS'
       });
       if (response.status === 200) {
-        toast.success("Maintenance process started successfully");
+        toast.success("Bắt đầu bảo trì thành công");
         fetchMaintenanceRequests();
       }
     } catch (error) {
       console.error('Error starting maintenance:', error);
-      message.error("Failed to start maintenance");
+      message.error("Không thể bắt đầu bảo trì");
     }
   };
 
@@ -74,7 +74,7 @@ const ConstrucMain = () => {
     const dates = selectedDates[id] || {};
     
     if (!dates.scheduledDate) {
-      message.error("Please select scheduled date");
+      message.error("Vui lòng chọn ngày lên lịch");
       return;
     }
 
@@ -85,7 +85,7 @@ const ConstrucMain = () => {
       });
 
       if (response.status === 200) {
-        toast.success("Schedule updated successfully");
+        toast.success("Cập nhật lịch thành công");
         fetchMaintenanceRequests();
         setSelectedDates(prev => ({ ...prev, [id]: {} }));
         setEditingIds(prev => {
@@ -96,7 +96,7 @@ const ConstrucMain = () => {
       }
     } catch (error) {
       console.error('Error updating schedule:', error);
-      message.error("Failed to update schedule");
+      message.error("Không thể cập nhật lịch");
     }
   };
 
@@ -109,12 +109,12 @@ const ConstrucMain = () => {
     try {
       // Validate
       if (!maintenanceNotes.trim()) {
-        message.error("Please enter maintenance notes");
+        toast.error("Vui lòng nhập ghi chú bảo trì");
         return;
       }
 
       if (maintenanceImages.length === 0) {
-        message.error("Please upload at least one image");
+        toast.error("Vui lòng tải lên ít nhất một hình ảnh");
         return;
       }
 
@@ -144,7 +144,7 @@ const ConstrucMain = () => {
       );
 
       if (response.status === 200) {
-        toast.success("Maintenance completed successfully");
+        toast.success("Hoàn thành bảo trì thành công");
         setIsCompleteModalVisible(false);
         setMaintenanceNotes('');
         setMaintenanceImages([]);
@@ -153,36 +153,57 @@ const ConstrucMain = () => {
       }
     } catch (error) {
       console.error('Error completing maintenance:', error);
-      message.error(error.response?.data?.message || "Failed to complete maintenance");
+      message.error(error.response?.data?.message || "Không thể hoàn thành bảo trì");
+    }
+  };
+
+  const getRequestStatusText = (status) => {
+    switch (status) {
+      case 'PENDING':
+        return 'Chờ xử lý';
+      case 'CONFIRMED':
+        return 'Đã xác nhận';
+      case 'REJECTED':
+        return 'Đã từ chối';
+      case 'CANCELLED':
+        return 'Đã hủy';
+      default:
+        return status;
     }
   };
 
   const columns = [
     {
-      title: 'Khách hàng',
-      dataIndex: 'customerName',
-      key: 'customerName',
-    },
-    {
-      title: 'Số điện thoại',
-      dataIndex: 'customerPhone',
-      key: 'customerPhone',
-    },
-    {
-      title: 'Email',
-      dataIndex: 'customerEmail',
-      key: 'customerEmail',
-    },
-    {
-      title: 'Tư vấn viên',
-      dataIndex: 'consultantName',
-      key: 'consultantName',
+      title: 'Thông tin khách hàng',
+      key: 'customerInfo',
+      width: 250,
+      render: (_, record) => (
+        <Space direction="vertical">
+          <div><strong>{record.customerName}</strong></div>
+          <Button type="link" onClick={() => Modal.info({
+            title: 'Thông tin chi tiết',
+            content: (
+              <div>
+                <p><strong>Số điện thoại:</strong> {record.customerPhone}</p>
+                <p><strong>Email:</strong> {record.customerEmail}</p>
+                <p><strong>Tư vấn viên:</strong> {record.consultantName}</p>
+                <p><strong>Ngày tạo:</strong> {moment(record.createdAt).format('DD-MM-YYYY HH:mm:ss')}</p>
+                <p><strong>Ngày cập nhật:</strong> {moment(record.updatedAt).format('DD-MM-YYYY HH:mm:ss')}</p>
+              </div>
+            ),
+            width: 500,
+          })}>
+            Xem thông tin
+          </Button>
+        </Space>
+      ),
     },
     {
       title: 'Mô tả',
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
+      width: 250,
     },
     {
       title: 'Tài liệu đính kèm',
@@ -213,7 +234,7 @@ const ConstrucMain = () => {
       key: 'requestStatus',
       render: (status) => (
         <Tag color={status === 'CONFIRMED' ? 'green' : 'default'}>
-          {status}
+          {getRequestStatusText(status)}
         </Tag>
       ),
     },
@@ -245,18 +266,6 @@ const ConstrucMain = () => {
       dataIndex: 'completionDate',
       key: 'completionDate',
       render: (date) => date?.format('DD-MM-YYYY') || '-',
-    },
-    {
-      title: 'Ngày tạo',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (date) => moment(date).format('DD-MM-YYYY HH:mm:ss'),
-    },
-    {
-      title: 'Ngày cập nhật',
-      dataIndex: 'updatedAt',
-      key: 'updatedAt',
-      render: (date) => moment(date).format('DD-MM-YYYY HH:mm:ss'),
     },
     {
       title: 'Hành động',
@@ -402,7 +411,7 @@ const ConstrucMain = () => {
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total) => `Total ${total} items`
+            showTotal: (total) => `Tổng cộng ${total} mục`
           }}
         />
       )}

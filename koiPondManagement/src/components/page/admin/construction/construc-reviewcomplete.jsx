@@ -12,6 +12,10 @@ const ConstrucReviewComplete = () => {
   const [selectedNote, setSelectedNote] = useState('');
   const [selectedImages, setSelectedImages] = useState([]);
   const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [selectedReview, setSelectedReview] = useState(null);
+  const [infoModalVisible, setInfoModalVisible] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   const showNoteModal = (note) => {
     setSelectedNote(note);
@@ -23,48 +27,43 @@ const ConstrucReviewComplete = () => {
     setImageModalVisible(true);
   };
 
+  const showReviewModal = async (id) => {
+    try {
+      const response = await api.get(`/api/maintenance-requests/${id}/review`);
+      if (response?.data) {
+        setSelectedReview(response.data);
+        setReviewModalVisible(true);
+      } else {
+        toast.warning('Không có dữ liệu đánh giá');
+      }
+    } catch (error) {
+      toast.error('Không thể tải đánh giá. Vì chưa có đánh giá nào');
+    }
+  };
+
+  const showInfoModal = (record) => {
+    setSelectedCustomer(record);
+    setInfoModalVisible(true);
+  };
+
   const columns = [
+    {
+      title: 'Thông tin',
+      key: 'info',
+      width: 120,
+      fixed: 'left',
+      render: (_, record) => (
+        <Button onClick={() => showInfoModal(record)}>
+          Xem thông tin
+        </Button>
+      ),
+    },
     {
       title: 'ID',
       key: 'index',
       width: 80,
+      hidden: true,
       render: (text, record, index) => index + 1,
-    },
-    {
-      title: 'Khách hàng',
-      dataIndex: 'customerName',
-      key: 'customerName',
-      width: 150,
-    },
-    {
-      title: 'SĐT',
-      dataIndex: 'customerPhone',
-      key: 'customerPhone',
-      width: 120,
-    },
-    {
-      title: 'Email',
-      dataIndex: 'customerEmail',
-      key: 'customerEmail',
-      width: 150,
-    },
-    {
-      title: 'Dự án',
-      dataIndex: 'projectName',
-      key: 'projectName',
-      width: 150,
-    },
-    {
-      title: 'Nhân viên tư vấn',
-      dataIndex: 'consultantName',
-      key: 'consultantName',
-      width: 150,
-    },
-    {
-      title: 'Địa chỉ',
-      dataIndex: 'customerAddress',
-      key: 'customerAddress',
-      width: 200,
     },
     {
       title: 'Mô tả',
@@ -77,7 +76,7 @@ const ConstrucReviewComplete = () => {
       dataIndex: 'agreedPrice',
       key: 'agreedPrice',
       width: 130,
-      render: (price) => price?.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
+      render: (price) => `${price?.toLocaleString('vi-VN')} VNĐ`
     },
     {
       title: 'Ngày lên lịch',
@@ -98,38 +97,26 @@ const ConstrucReviewComplete = () => {
       width: 150,
     },
     {
-      title: 'Ngày tạo',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
+      title: 'Thông tin bảo trì',
+      key: 'maintenanceInfo',
       width: 150,
-      render: (date) => moment(date).format('DD/MM/YYYY HH:mm:ss')
-    },
-    {
-      title: 'Ngày cập nhật',
-      dataIndex: 'updatedAt',
-      key: 'updatedAt',
-      width: 150,
-      render: (date) => moment(date).format('DD/MM/YYYY HH:mm:ss')
-    },
-    {
-      title: 'Ghi chú bảo trì',
-      dataIndex: 'maintenanceNotes',
-      key: 'maintenanceNotes',
-      width: 150,
-      render: (text) => (
-        <Button onClick={() => showNoteModal(text)}>
-          Xem ghi chú
+      render: (_, record) => (
+        <Button onClick={() => {
+          setSelectedNote(record.maintenanceNotes);
+          setSelectedImages(record.maintenanceImages);
+          setModalVisible(true);
+        }}>
+          Xem chi tiết
         </Button>
       ),
     },
     {
-      title: 'Hình ảnh bảo trì',
-      dataIndex: 'maintenanceImages',
-      key: 'maintenanceImages',
-      width: 150,
-      render: (images) => (
-        <Button onClick={() => showImageModal(images)}>
-          Xem hình ảnh ({images.length})
+      title: 'Xem đánh giá',
+      key: 'review',
+      width: 120,
+      render: (_, record) => (
+        <Button onClick={() => showReviewModal(record.id)}>
+          Xem đánh giá
         </Button>
       ),
     },
@@ -195,12 +182,32 @@ const ConstrucReviewComplete = () => {
         rowKey="id"
       />
       <Modal
-        title="Chi tiết ghi chú"
+        title="Chi tiết bảo trì"
         open={modalVisible}
         onOk={() => setModalVisible(false)}
         onCancel={() => setModalVisible(false)}
+        width={800}
+        cancelText="Huỷ"
+        okText="Đồng ý"
       >
-        <p>{selectedNote}</p>
+        <div>
+          <h3>Ghi chú:</h3>
+          <p>{selectedNote}</p>
+          
+          <h3>Hình ảnh:</h3>
+          <Image.PreviewGroup>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+              {selectedImages.map((image, index) => (
+                <Image
+                  key={index}
+                  src={image}
+                  alt={`Maintenance image ${index + 1}`}
+                  style={{ width: '100%', objectFit: 'cover' }}
+                />
+              ))}
+            </div>
+          </Image.PreviewGroup>
+        </div>
       </Modal>
       <Modal
         title="Hình ảnh bảo trì"
@@ -208,6 +215,8 @@ const ConstrucReviewComplete = () => {
         onOk={() => setImageModalVisible(false)}
         onCancel={() => setImageModalVisible(false)}
         width={800}
+        cancelText="Huỷ"
+        okText="Đồng ý"
       >
         <Image.PreviewGroup>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
@@ -221,6 +230,44 @@ const ConstrucReviewComplete = () => {
             ))}
           </div>
         </Image.PreviewGroup>
+      </Modal>
+      <Modal
+        title="Chi tiết đánh giá"
+        open={reviewModalVisible}
+        onOk={() => setReviewModalVisible(false)}
+        onCancel={() => setReviewModalVisible(false)}
+        cancelText="Huỷ"
+        okText="Đồng ý"
+      >
+        {selectedReview && (
+          <div>
+            <p><strong>Số sao:</strong> {selectedReview.rating}/5</p>
+            <p><strong>Nhận xét:</strong> {selectedReview.comment}</p>
+            <p><strong>Ngày đánh giá:</strong> {moment(selectedReview.reviewDate).format('DD/MM/YYYY HH:mm:ss')}</p>
+            <p><strong>Trạng thái:</strong> {selectedReview.status}</p>
+          </div>
+        )}
+      </Modal>
+      <Modal
+        title="Thông tin khách hàng"
+        open={infoModalVisible}
+        onOk={() => setInfoModalVisible(false)}
+        onCancel={() => setInfoModalVisible(false)}
+        cancelText="Huỷ"
+        okText="Đồng ý"
+      >
+        {selectedCustomer && (
+          <div>
+            <p><strong>Khách hàng:</strong> {selectedCustomer.customerName}</p>
+            <p><strong>Số điện thoại:</strong> {selectedCustomer.customerPhone}</p>
+            <p><strong>Email:</strong> {selectedCustomer.customerEmail}</p>
+            <p><strong>Địa chỉ:</strong> {selectedCustomer.customerAddress}</p>
+            <p><strong>Nhân viên tư vấn:</strong> {selectedCustomer.consultantName}</p>
+            <p><strong>Dự án:</strong> {selectedCustomer.projectName}</p>
+            <p><strong>Ngày tạo:</strong> {moment(selectedCustomer.createdAt).format('DD/MM/YYYY HH:mm:ss')}</p>
+            <p><strong>Ngày cập nhật:</strong> {moment(selectedCustomer.updatedAt).format('DD/MM/YYYY HH:mm:ss')}</p>
+          </div>
+        )}
       </Modal>
     </>
   );
