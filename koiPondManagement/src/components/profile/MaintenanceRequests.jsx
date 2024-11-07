@@ -20,6 +20,7 @@ import {
   WalletOutlined,
   ToolOutlined,
   StarOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import api from "/src/components/config/axios";
 import moment from "moment";
@@ -41,6 +42,8 @@ function MaintenanceRequests() {
     statusFilter: "ALL",
     paymentFilter: "ALL",
   });
+  const [noteModalVisible, setNoteModalVisible] = useState(false);
+  const [selectedNote, setSelectedNote] = useState("");
 
   const statusOptions = [
     { value: "ALL", label: "Tất Cả Trạng Thái" },
@@ -256,19 +259,49 @@ function MaintenanceRequests() {
     gap: "8px",
   };
 
+  const handleViewNote = (note) => {
+    setSelectedNote(note);
+    setNoteModalVisible(true);
+  };
+
+  const renderNoteModal = () => (
+    <Modal
+      title={
+        <div style={{ 
+          borderBottom: '1px solid #f0f0f0',
+          padding: '16px 24px',
+          fontSize: '16px',
+          fontWeight: 500,
+          margin: '-20px -24px 20px'
+        }}>
+          Chi Tiết Ghi Chú
+        </div>
+      }
+      open={noteModalVisible}
+      onCancel={() => setNoteModalVisible(false)}
+      footer={[
+        <Button 
+          key="close"
+          onClick={() => setNoteModalVisible(false)}
+        >
+          Đóng
+        </Button>
+      ]}
+      width={500}
+      centered
+    >
+      <div style={{ padding: '0 0 20px' }}>
+        {selectedNote || "Không có ghi chú"}
+      </div>
+    </Modal>
+  );
+
   const columns = [
-    {
-      title: "NGÀY YÊU CẦU",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      width: 120,
-      render: (text) => moment(text).format("DD/MM/YYYY"),
-    },
     {
       title: "TÊN DỰ ÁN",
       dataIndex: "projectName",
       key: "projectName",
-      width: 200,
+      width: 130,
     },
     {
       title: "TRẠNG THÁI",
@@ -379,22 +412,23 @@ function MaintenanceRequests() {
       title: "GHI CHÚ",
       dataIndex: "description",
       key: "description",
+      render: (text) => (
+        <Button
+          type="text"
+          onClick={() => handleViewNote(text)}
+          icon={<FileTextOutlined />}
+          style={{ color: '#1890ff' }}
+        >
+          Xem ghi chú
+        </Button>
+      ),
     },
     {
       title: "HÀNH ĐỘNG",
       key: "action",
-      width: 150,
+      width: 130,
       render: (_, record) => (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <Button
-            style={{
-              ...actionButtonStyle,
-              backgroundColor: "#ffc107",
-            }}
-            onClick={() => handleViewDetails(record)}
-          >
-            <EyeOutlined /> Xem Chi Tiết
-          </Button>
 
           {record.requestStatus === "PENDING" && (
             <Button
@@ -518,156 +552,66 @@ function MaintenanceRequests() {
       }).format(amount);
     };
 
-    return (
-      <Modal
-        title="Chi tiết yêu cầu bảo trì"
-        visible={detailModalVisible}
-        onCancel={() => setDetailModalVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setDetailModalVisible(false)}>
-            Đóng
-          </Button>,
-        ]}
-        width={800}
-      >
-        <Descriptions column={1} bordered>
-          <Descriptions.Item label="Thông Tin Khách Hàng">
-            <div>Tên: {selectedRequest.customerName}</div>
-            <div>SĐT: {selectedRequest.customerPhone}</div>
-            <div>Email: {selectedRequest.customerEmail}</div>
-            <div>Địa chỉ: {selectedRequest.customerAddress}</div>
-          </Descriptions.Item>
-
-          <Descriptions.Item label="Thông Tin Dự Án">
-            <div>Mã dự án: {selectedRequest.projectId}</div>
-            <div>Tên dự án: {selectedRequest.projectName}</div>
-          </Descriptions.Item>
-
-          <Descriptions.Item label="Thời Gian">
-            <div>
-              Ngày tạo: {moment(selectedRequest.createdAt).format("DD/MM/YYYY")}
-            </div>
-            <div>
-              Ngày hẹn:{" "}
-              {moment(selectedRequest.scheduledDate).format("DD/MM/YYYY")}
-            </div>
-            <div>
-              Ngày bắt đầu:{" "}
-              {selectedRequest.startDate
-                ? moment(selectedRequest.startDate).format("DD/MM/YYYY")
-                : "Chưa xác định"}
-            </div>
-            <div>
-              Ngày hoàn thành:{" "}
-              {selectedRequest.completionDate
-                ? moment(selectedRequest.completionDate).format("DD/MM/YYYY")
-                : "Chưa hoàn thành"}
-            </div>
-          </Descriptions.Item>
-
-          <Descriptions.Item label="Trạng Thái Yêu Cầu">
-            {selectedRequest.requestStatus === "PENDING"
-              ? "Đang Xem Xét"
-              : selectedRequest.requestStatus === "CONFIRMED"
-              ? "Đã Xác Nhận"
-              : selectedRequest.requestStatus === "COMPLETED"
-              ? "Hoàn Thành"
-              : selectedRequest.requestStatus === "CANCELLED"
-              ? "Đã Hủy"
-              : selectedRequest.requestStatus}
-          </Descriptions.Item>
-
-          <Descriptions.Item label="Trạng Thái Bảo Trì">
-            {renderMaintenanceStatus(selectedRequest.maintenanceStatus)}
-          </Descriptions.Item>
-
-          <Descriptions.Item label="Thông Tin Thanh Toán">
-            <div>
-              Trạng thái: {renderPaymentStatus(selectedRequest.paymentStatus)}
-            </div>
-            <div>
-              Phương thức:{" "}
-              {selectedRequest.paymentMethod === "CASH"
-                ? "Tiền Mặt"
-                : "Chuyển Khoản"}
-            </div>
-            <div>
-              Giá thỏa thuận: {formatCurrency(selectedRequest.agreedPrice)}
-            </div>
-            <div>Tiền cọc: {formatCurrency(selectedRequest.depositAmount)}</div>
-            <div>
-              Số tiền còn lại: {formatCurrency(selectedRequest.remainingAmount)}
-            </div>
-          </Descriptions.Item>
-
-          <Descriptions.Item label="Ghi Chú">
-            {selectedRequest.description}
-          </Descriptions.Item>
-
-          <Descriptions.Item label="Ghi Chú Bảo Trì">
-            {selectedRequest.maintenanceNotes}
-          </Descriptions.Item>
-
-          {selectedRequest.cancellationReason && (
-            <Descriptions.Item label="Lý Do Hủy">
-              {selectedRequest.cancellationReason}
-            </Descriptions.Item>
-          )}
-
-          <Descriptions.Item label="Hình Ảnh Yêu Cầu">
-            {selectedRequest.attachments && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {selectedRequest.attachments.map((url, index) => (
-                  <Image
-                    key={index}
-                    width={100}
-                    src={url}
-                    alt={`Attachment ${index + 1}`}
-                  />
-                ))}
-              </div>
-            )}
-          </Descriptions.Item>
-
-          <Descriptions.Item label="Hình Ảnh Bảo Trì">
-            {selectedRequest.maintenanceImages && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {selectedRequest.maintenanceImages.map((url, index) => (
-                  <Image
-                    key={index}
-                    width={100}
-                    src={url}
-                    alt={`Maintenance Image ${index + 1}`}
-                  />
-                ))}
-              </div>
-            )}
-          </Descriptions.Item>
-        </Descriptions>
-      </Modal>
-    );
+    
   };
 
   const renderCancelModal = () => (
     <Modal
-      title="Huỷ Yêu Cầu Bảo Trì"
+      title={
+        <div style={{ 
+          borderBottom: '1px solid #f0f0f0',
+          padding: '16px 24px',
+          fontSize: '16px',
+          fontWeight: 500,
+          margin: '-20px -24px 20px'
+        }}>
+          Huỷ Yêu Cầu Bảo Trì
+        </div>
+      }
       open={cancelModalVisible}
       onCancel={() => {
         setCancelModalVisible(false);
         setCancelReason("");
         setSelectedCancelId(null);
       }}
-      onOk={() => handleMaintenanceCancel(selectedCancelId)}
-      okText="Xác Nhận Huỷ"
-      cancelText="Đóng"
-      okButtonProps={{ disabled: !cancelReason.trim() }}
+      footer={[
+        <Button 
+          key="cancel"
+          onClick={() => {
+            setCancelModalVisible(false);
+            setCancelReason("");
+            setSelectedCancelId(null);
+          }}
+          style={{ marginRight: 8 }}
+        >
+          Đóng
+        </Button>,
+        <Button
+          key="submit"
+          type="primary"
+          disabled={!cancelReason.trim()}
+          onClick={() => handleMaintenanceCancel(selectedCancelId)}
+          style={{ backgroundColor: '#1890ff' }}
+        >
+          Xác Nhận Huỷ
+        </Button>
+      ]}
+      width={500}
+      centered
     >
-      <Input.TextArea
-        rows={4}
-        value={cancelReason}
-        onChange={(e) => setCancelReason(e.target.value)}
-        placeholder="Vui lòng nhập lý do huỷ yêu cầu bảo trì..."
-      />
+      <div style={{ padding: '0 0 20px' }}>
+        <Input.TextArea
+          rows={4}
+          value={cancelReason}
+          onChange={(e) => setCancelReason(e.target.value)}
+          placeholder="Vui lòng nhập lý do huỷ yêu cầu bảo trì..."
+          style={{ 
+            padding: '12px',
+            borderRadius: '6px',
+            resize: 'none'
+          }}
+        />
+      </div>
     </Modal>
   );
 
@@ -696,6 +640,7 @@ function MaintenanceRequests() {
       {renderDetailModal()}
       {renderCancelModal()}
       {renderFilterModal()}
+      {renderNoteModal()}
     </div>
   );
 }

@@ -17,6 +17,7 @@ import {
 import { DeleteOutlined, SearchOutlined, EyeOutlined, WalletOutlined, ToolOutlined, StarOutlined } from "@ant-design/icons";
 import api from "/src/components/config/axios";
 import moment from "moment";
+import "./Cusmaintenance.css";
 
 function Cusmaintenance() {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
@@ -340,13 +341,6 @@ function Cusmaintenance() {
 
   const columns = [
     {
-      title: "NGÀY TẠO",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      width: 120,
-      render: (text) => moment(text).format("DD/MM/YYYY"),
-    },
-    {
       title: "TÊN DỰ ÁN",
       dataIndex: "projectName",
       key: "projectName",
@@ -356,7 +350,7 @@ function Cusmaintenance() {
       title: "TRẠNG THÁI YÊU CẦU",
       dataIndex: "requestStatus",
       key: "requestStatus",
-      width: 200,
+      width: 150,
       render: (status) => (
         <span style={{
           padding: '4px 12px',
@@ -768,11 +762,26 @@ function Cusmaintenance() {
 
   return (
     <div style={{ padding: '20px' }}>
-      <div style={{ marginBottom: 16, textAlign: 'right' }}>
+      <div style={{ 
+        marginBottom: '24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+
+      }}>
+        <h1 style={{ 
+          margin: 0,
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#1890ff'
+        }}>
+          <ToolOutlined style={{ marginRight: '8px' }} />
+          Danh Sách Yêu Cầu Bảo Trì
+        </h1>
         <Button 
           type="primary" 
           onClick={() => setFilterModalVisible(true)}
-          style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}
+          style={{ display: 'flex', alignItems: 'center' }}
         >
           <SearchOutlined /> Lọc
         </Button>
