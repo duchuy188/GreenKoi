@@ -23,7 +23,7 @@ DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS project_statuses;
 DROP TABLE IF EXISTS task_templates;
-
+DROP TABLE IF EXISTS design_requests ;
 PRINT 'All tables have been dropped successfully.';
 */
 
@@ -66,8 +66,8 @@ CREATE TABLE users (
     FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
--- Bảng designs (đã cập nhật)
-CREATE TABLE designs (
+-- Bảng designs 
+CREATE TABLE designs (	
     id NVARCHAR(36) PRIMARY KEY,
     name NVARCHAR(100) NOT NULL,
     description NVARCHAR(MAX),
@@ -76,13 +76,24 @@ CREATE TABLE designs (
     shape NVARCHAR(50),
     dimensions NVARCHAR(50),
     features NVARCHAR(MAX),
+    -- Thông tin quản lý
     created_by NVARCHAR(36),
     status NVARCHAR(20),
-    rejection_reason NVARCHAR(MAX), 
+    rejection_reason NVARCHAR(MAX),
     is_active BIT NOT NULL DEFAULT 1,
+    -- Phân loại và quản lý public
+    is_public BIT NOT NULL DEFAULT 0,              -- Mẫu public/private
+    is_custom BIT NOT NULL DEFAULT 0,              -- Thiết kế theo yêu cầu
+    customer_approved_public BIT DEFAULT NULL,      -- Khách đồng ý public
+    customer_approval_date DATETIME2 DEFAULT NULL,  -- Ngày khách đồng ý
+    reference_design_id NVARCHAR(36) DEFAULT NULL, -- Mẫu tham khảo
     created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
-    FOREIGN KEY (created_by) REFERENCES users(id)
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (reference_design_id) REFERENCES designs(id),
+    CONSTRAINT CHK_design_status CHECK (
+        status IN ('PENDING_APPROVAL','APPROVED','REJECTED','ARCHIVED')
+    )
 );
 
 -- Bảng promotions
@@ -139,16 +150,74 @@ CREATE TABLE projects (
 CREATE TABLE consultation_requests (
     id NVARCHAR(36) PRIMARY KEY,
     customer_id NVARCHAR(36),
-    design_id NVARCHAR(36),
+    consultant_id NVARCHAR(36),          -- Nhân viên tư vấn
+    design_id NVARCHAR(36),              -- Mẫu thiết kế (nếu chọn mẫu có sẵn)
+    is_custom_design BIT DEFAULT 0,       -- Đánh dấu thiết kế riêng
+    -- Thông tin chung
     status NVARCHAR(20) NOT NULL,
     notes NVARCHAR(MAX),
+    -- Thông tin thiết kế riêng
+    requirements NVARCHAR(MAX),           -- Yêu cầu thiết kế
+    preferred_style NVARCHAR(100),        -- Phong cách mong muốn
+    dimensions NVARCHAR(50),              -- Kích thước dự kiến
+    budget DECIMAL(10, 2),                -- Ngân sách dự kiến
+    consultation_notes NVARCHAR(MAX),     -- Ghi chú của nhân viên tư vấn
+    estimated_cost DECIMAL(10, 2),        -- Chi phí ước tính
     created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
     FOREIGN KEY (customer_id) REFERENCES users(id),
-    FOREIGN KEY (design_id) REFERENCES designs(id)
+    FOREIGN KEY (consultant_id) REFERENCES users(id),
+    FOREIGN KEY (design_id) REFERENCES designs(id),
+   
+    CONSTRAINT CHK_consultation_status CHECK (
+        status IN ('PENDING',           -- Mới gửi yêu cầu
+                  'IN_PROGRESS',        -- Đang tư vấn
+                  'COMPLETED',          -- Đã tư vấn xong
+                  'PROCEED_DESIGN',     -- Chuyển sang thiết kế (cho thiết kế riêng)
+                  'CANCELLED')          -- Hủy yêu cầu
+    )
 );
+-- Bảng design_requests
+CREATE TABLE design_requests (
+    id NVARCHAR(36) PRIMARY KEY,
+    consultation_id NVARCHAR(36),         -- Liên kết với yêu cầu tư vấn
+    designer_id NVARCHAR(36),             -- Designer được phân công
+    design_id NVARCHAR(36),               -- Liên kết với design được tạo
+    
+    -- Thông tin thiết kế
+    design_notes NVARCHAR(MAX),           -- Ghi chú của designer
+    estimated_cost DECIMAL(10, 2),        -- Chi phí thiết kế
+    rejection_reason NVARCHAR(MAX),       -- Lý do từ chối từ khách hàng
+    
+    -- Thông tin review nội bộ
+    review_date DATETIME2,                -- Ngày tư vấn viên review
+    reviewer_id NVARCHAR(36),             -- ID của tư vấn viên review
+    review_notes NVARCHAR(MAX),           -- Ghi chú của tư vấn viên
+    revision_count INT DEFAULT 0,         -- Số lần chỉnh sửa
+    
+    -- Tracking
+    status nvarchar(30) NOT NULL DEFAULT 'PENDING',
+    created_at DATETIME2 NOT NULL DEFAULT GETDATE(),
+    updated_at DATETIME2 NOT NULL DEFAULT GETDATE(),
 
-
+    -- Foreign keys
+    FOREIGN KEY (consultation_id) REFERENCES consultation_requests(id),
+    FOREIGN KEY (designer_id) REFERENCES users(id),
+    FOREIGN KEY (design_id) REFERENCES designs(id),
+    FOREIGN KEY (reviewer_id) REFERENCES users(id),
+    
+    -- Status constraint
+    CONSTRAINT CHK_design_request_status CHECK (
+        status IN ('PENDING',                    -- Chờ thiết kế
+                  'IN_PROGRESS',                 -- Đang thiết kế
+                  'COMPLETED',                   -- Designer hoàn thành
+                  'IN_REVIEW',                   -- Tư vấn viên đang review
+                  'PENDING_CUSTOMER_APPROVAL',    -- Chờ khách duyệt
+                  'APPROVED',                    -- Khách duyệt
+                  'REJECTED',                    -- Khách từ chối
+                  'CANCELLED')                   -- Hủy yêu cầu
+    )
+);
 
 CREATE TABLE payments (
     id NVARCHAR(36) PRIMARY KEY,
@@ -286,33 +355,6 @@ VALUES
 ('4', 'constructor1', '$2a$12$1RQNWGNLObv2eqdT/gOgUeFxHjdJqFjEIa/rVIGnVNgamWE35Qko2', 'constructor1@koipond.com','0987654324', 'Charlie Constructor', '4', 1, GETDATE(), GETDATE()),
 ('5', 'customer1', '$2a$12$Sr8YsayviFSTLZNbSrhq3uVcXQg5eyq1Ned8V/m1IpHNc7Lz6moiK', 'customer1@example.com', '0123456780', 'Eva Customer', '5', 1, GETDATE(), GETDATE()),
 ('6', 'customer2', '$2a$12$Sr8YsayviFSTLZNbSrhq3uVcXQg5eyq1Ned8V/m1IpHNc7Lz6moiK', 'customer2@example.com', '0123456781', 'Frank Customer', '5', 1, GETDATE(), GETDATE());
--- Thêm dữ liệu vào bảng designs
-INSERT INTO designs (id, name, description, base_price, created_by, status)
-VALUES
-('D1', 'Classic Koi Pond', 'A traditional Japanese-style koi pond', 5000.00, '3', 'PENDING_APPROVAL'),
-('D2', 'Modern Minimalist Pond', 'A sleek, contemporary koi pond design', 6000.00, '3', 'PENDING_APPROVAL');
--- Thêm dữ liệu vào bảng promotions
-INSERT INTO promotions (id, name, description, discount_value, start_date, end_date)
-VALUES
-('P1', 'Summer Sale', '10% off on all pond designs', 10.00, '2024-06-01', '2024-08-31');
--- Thêm dữ liệu vào bảng projects
-INSERT INTO projects (id, customer_id, consultant_id, design_id, promotion_id, name, description, status_id, total_price, deposit_amount, start_date, end_date, address, progress_percentage, payment_status, estimated_completion_date)
-VALUES
-('PR1', '5', '2', 'D1', 'P1', 'Eva''s Backyard Oasis', 'A beautiful koi pond for Eva''s backyard', 'PS4', 4500.00, 1000.00, '2024-07-01', '2024-08-15', '123 Main St, Cityville', 30, 'DEPOSIT_PAID', '2024-08-15'),
-('PR2', '6', '2', 'D2', NULL, 'Frank''s Modern Pond', 'A minimalist koi pond for Frank''s garden', 'PS3', 6000.00, 1500.00, '2024-08-01', '2024-09-30', '456 Elm St, Townsville', 10, 'DEPOSIT_PAID', '2024-09-30');
-
--- Thêm dữ liệu vào bảng payments
-INSERT INTO payments (id, project_id, amount, payment_date, payment_method, status)
-VALUES
-('PAY1', 'PR1', 1000.00, '2024-07-01', 'BANK_TRANSFER', 'COMPLETED'),
-('PAY2', 'PR2', 1500.00, '2024-08-01', 'BANK_TRANSFER', 'COMPLETED');
--- Thêm dữ liệu vào bảng designs
-INSERT INTO designs (id, name, description, image_url, base_price, shape, dimensions, features, created_by, status, is_active)
-VALUES
-('D3', N'Hồ Cá Koi Hiện Đại', N'Thiết kế hồ cá Koi phong cách hiện đại', 'https://example.com/modern-koi-pond.jpg', 7500.00, N'Hình chữ nhật', '5m x 3m x 1.5m', N'Hệ thống lọc tự động, đèn LED, thác nước mini', '3', 'PENDING_APPROVAL', 1),
-('D4', N'Hồ Cá Koi Tự Nhiên', N'Thiết kế hồ cá Koi kiểu tự nhiên', 'https://example.com/natural-koi-pond.jpg', 6500.00, N'Hình tự do', '4m x 3m x 1.2m', N'Thác đá tự nhiên, cây thủy sinh', '3', 'PENDING_APPROVAL', 1),
-('D5', N'Hồ Cá Koi Mini', N'Thiết kế hồ cá Koi nhỏ gọn', 'https://example.com/mini-koi-pond.jpg', 4500.00, N'Hình tròn', '2m đường kính x 1m sâu', N'Hệ thống lọc compact, đèn LED', '3', 'PENDING_APPROVAL', 1);
-
 
 
 
