@@ -1,8 +1,92 @@
 import { Component } from "react";
-import projects from "../../Share/listImage";
 import newsItems from "../../Share/newsItems";
 import "./Content.css";
+import api from "../../config/axios";
+import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+
 export default class Content extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      featuredProjects: [],
+      blogPosts: [],
+    };
+  }
+
+  componentDidMount() {
+    this.fetchFeaturedProjects();
+    this.fetchBlogPosts();
+  }
+
+  fetchFeaturedProjects = async () => {
+    try {
+      const response = await api.get("/api/pond-designs/approved");
+      if (Array.isArray(response.data)) {
+        this.setState({ featuredProjects: response.data.slice(0, 6) });
+      } else {
+        toast.error("Không tải được các dự án nổi bật!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        this.setState({ featuredProjects: [] });
+      }
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Có lỗi khi tải dự án nổi bật!",
+        {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        }
+      );
+      this.setState({ featuredProjects: [] });
+    }
+  };
+
+  fetchBlogPosts = async () => {
+    try {
+      const response = await api.get("/api/blog/posts/approved");
+      if (Array.isArray(response.data)) {
+        this.setState({ blogPosts: response.data.slice(0, 6) });
+      } else {
+        toast.error("Không tải được các bài viết!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        this.setState({ blogPosts: [] });
+      }
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Có lỗi khi tải các bài viết!",
+        {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        }
+      );
+      this.setState({ blogPosts: [] });
+    }
+  };
+
   render() {
     return (
       <div>
@@ -59,27 +143,6 @@ export default class Content extends Component {
           </div>
         </div>
 
-        {/* <div className="container py-5">
-          <div className="row">
-            <div className="col-12 text-center">
-              <h2 className="mb-4">Trải nghiệm không gian thiên nhiên hoàn hảo</h2>
-              <p className="mb-5">
-                Bạn có muốn tạo ra một khu vườn tuyệt vời với hồ cá Koi ngay trong không gian sống của mình? Hãy để chúng tôi giúp bạn xây dựng một khu vực thư giãn hoàn mỹ, nơi bạn có thể tận hưởng sự tươi mới của nước, cây xanh và thiên nhiên. Với các dịch vụ chuyên nghiệp về thiết kế, thi công và bảo dưỡng hồ cá Koi, chúng tôi cam kết mang đến cho bạn một không gian sống ngoài trời đẳng cấp, phù hợp với phong cách và sở thích của bạn.
-              </p>
-            </div>
-          </div>
-        </div>    
-
-        <div className="container py-5 bg-light">
-          <div className="row">
-            <div className="col-12 text-center">
-              <h2 className="mb-4">Thiết kế và xây dựng tiểu cảnh hồ cá Koi</h2>
-              <p className="mb-5">
-                Tiểu cảnh hồ cá Koi không chỉ là một điểm nhấn trong khu vườn của bạn mà còn là biểu tượng của sự thịnh vượng và may mắn. Chúng tôi cung cấp dịch vụ thiết kế theo phong cách cá nhân, đảm bảo sự hòa hợp giữa hồ cá và các yếu tố thiên nhiên xung quanh. Đội ngũ của chúng tôi sẽ tạo ra một không gian sống đầy cảm hứng, nơi bạn có thể thư giãn và tận hưởng sự yên bình.
-              </p>
-            </div>
-          </div>
-        </div> */}
         <div className="container py-5">
           <div className="row">
             <div className="col-12">
@@ -149,35 +212,40 @@ export default class Content extends Component {
         </div>
 
         <div className="container py-5">
-          <h2 className="text-center mb-4">Dự án nổi bật</h2>
+          <h2 className="text-center mb-4">Dự án mới nhất</h2>
           <div className="row g-4">
-            {projects.map((project, index) => (
-              <div key={index} className="col-md-4 col-sm-6">
-                <div className="card card-duan h-100 position-relative overflow-hidden">
-                  <img
-                    src={project.image}
-                    className="card-img-top w-100 h-100"
-                    alt={project.title}
-                    style={{ objectFit: "cover" }}
-                  />
-                  <div className="card-img-overlay d-flex flex-column justify-content-end">
-                    <h5 className="card-title text-white mb-0">
-                      {project.title}
-                    </h5>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <p className="card-text text-white mb-0">
-                        {project.description}
-                      </p>
-                      <a href={project.link} className="btn btn-primary">
-                        Xem dự án
-                      </a>
+            {this.state.featuredProjects.map((project) => (
+              <div key={project.id} className="col-md-4 col-sm-6">
+                <Link
+                  to={
+                    localStorage.getItem("token")
+                      ? `/duan/${project.id}`
+                      : "/duan"
+                  }
+                  style={{ textDecoration: "none" }}
+                >
+                  <div
+                    className="card card-duan h-100 position-relative overflow-hidden"
+                    style={{ cursor: "pointer" }}
+                  >
+                    <img
+                      src={project.imageUrl}
+                      className="card-img-top w-100 h-100"
+                      alt={project.name}
+                      style={{ objectFit: "cover" }}
+                    />
+                    <div className="card-img-overlay d-flex flex-column justify-content-end">
+                      <h5 className="card-title text-white mb-0">
+                        {project.name}
+                      </h5>
                     </div>
                   </div>
-                </div>
+                </Link>
               </div>
             ))}
           </div>
         </div>
+
         <div className="container py-5">
           <h2 className="text-center mb-4">Quy trình thực hiện</h2>
           <p className="text-center mb-5">
@@ -245,28 +313,41 @@ export default class Content extends Component {
           </div>
         </div>
         <div className="container py-5">
-  <h2 className="text-center mb-4">Tin tức nổi bật</h2>
-  <div className="row g-4">
-    {newsItems.map((item, index) => (
-      <div key={index} className="col-md-4">
-        <div className="card card-tintuc h-100">
-          <div className="card-image-container">
-            <img src={item.img} className="card-img-top" alt={item.title} />
-            <div className="date-badge">
-              <span className="day">{item.day}</span>
-              <span className="month">Th{item.month}</span>
-            </div>
-          </div>
-          <div className="card-body">
-            <span className="category-label">{item.topic}</span>
-            <h5 className="card-title">{item.title}</h5>
-            <p className="card-text">{item.detail}</p>
+          <h2 className="text-center mb-4">Blog mới nhất</h2>
+          <div className="row g-4">
+            {this.state.blogPosts.map((post) => (
+              <div key={post.id} className="col-md-4">
+                <Link
+                  to={`/blog/${post.id}`}
+                  style={{ textDecoration: "none" }}
+                >
+                  <div className="card card-duan h-100">
+                    <div className="card-image-container">
+                      <img
+                        src={post.coverImageUrl}
+                        className="card-img-top"
+                        alt={post.title}
+                      />
+                    </div>
+                    <div className="card-img-overlay d-flex flex-column justify-content-end">
+                      <h5 className="card-title text-white mb-0">
+                        {post.title}
+                      </h5>
+                    </div>
+                    <div className="date-badge">
+                      <span className="day">
+                        {new Date(post.publishedAt).getDate()}
+                      </span>
+                      <span className="month">
+                        Th{new Date(post.publishedAt).getMonth() + 1}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
-    ))}
-  </div>
-</div>
       </div>
     );
   }
