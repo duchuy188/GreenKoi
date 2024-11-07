@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Table,
   Button,
@@ -26,6 +26,7 @@ import {
   FileTextOutlined,
   UserOutlined,
   StarOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import "./assignModal.css";
 import { toast } from "react-toastify";
@@ -49,19 +50,25 @@ const OrdersList = () => {
     useState(false);
   const [selectedDescription, setSelectedDescription] = useState("");
   const [initialLoading, setInitialLoading] = useState(true);
-  const [isPolling, setIsPolling] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState(null);
+  const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
+  const [selectedReview, setSelectedReview] = useState(null);
+  const [isPollingEnabled, setIsPollingEnabled] = useState(true);
+  const pollingIntervalRef = useRef(null);
 
   useEffect(() => {
     initialFetch();
-    
-    const pollingInterval = setInterval(() => {
-      pollOrders();
-    }, 10000); // Poll every 30 seconds
-    
-    return () => clearInterval(pollingInterval);
+    fetchConstructors();
   }, []);
+
+  useEffect(() => {
+    orders.forEach(order => {
+      if (order.statusId === "PS6") {
+        fetchProjectReview(order.id);
+      }
+    });
+  }, [orders]);
 
   const initialFetch = async () => {
     try {
@@ -72,32 +79,21 @@ const OrdersList = () => {
     }
   };
 
-  const pollOrders = async () => {
+  const fetchOrders = async (isBackgroundRefresh = false) => {
     try {
-      setIsPolling(true);
-      await fetchOrders(false);
-    } finally {
-      setIsPolling(false);
-    }
-  };
-
-  const fetchOrders = async (isInitialFetch) => {
-    try {
+      if (!isBackgroundRefresh) {
+        setLoading(true);
+      }
+      
       const response = await api.get("/api/projects");
+      
       if (response.data) {
+        const newOrders = response.data.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
         setOrders(prevOrders => {
-          const newOrders = response.data.sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-          );
-          
           if (JSON.stringify(prevOrders) !== JSON.stringify(newOrders)) {
-            if (!isInitialFetch) {
-              newOrders.forEach(order => {
-                if (!prevOrders.find(po => po.id === order.id)) {
-                  toast.info(`Có đơn hàng mới: ${order.name}`);
-                }
-              });
-            }
             return newOrders;
           }
           return prevOrders;
@@ -105,45 +101,65 @@ const OrdersList = () => {
       }
     } catch (error) {
       console.error("Error fetching orders:", error);
-      if (!isInitialFetch) {
-        toast.error(
-          error.response?.data?.message || 
-          "Không thể tải danh sách đơn hàng"
-        );
+      if (!isBackgroundRefresh) {
+        toast.error("Không thể tải danh sách đơn hàng");
+      }
+    } finally {
+      if (!isBackgroundRefresh) {
+        setLoading(false);
       }
     }
   };
 
-  const fetchProjectTasks = async (projectId, constructorId) => {
+  const fetchProjectTasks = async (projectId, constructorId, retryCount = 3) => {
     try {
       const response = await api.get(
         `/api/projects/${projectId}/project-tasks?constructorId=${constructorId}`
       );
-      //console.log(`Tasks for project ${projectId}:`, response.data); // Log để kiểm tra
-      setProjectTasks((prevTasks) => ({
-        ...prevTasks,
-        [projectId]: response.data,
-      }));
+      
+      if (response.data) {
+        setProjectTasks(prevTasks => {
+          const newTasks = response.data;
+          const currentTasks = prevTasks[projectId] || [];
+          
+          if (JSON.stringify(currentTasks) !== JSON.stringify(newTasks)) {
+            return {
+              ...prevTasks,
+              [projectId]: newTasks
+            };
+          }
+          return prevTasks;
+        });
+      }
     } catch (error) {
       console.error(`Error fetching tasks for project ${projectId}:`, error);
-      toast.error(`Không thể tải công việc cho dự án ${projectId}`);
+      if (retryCount > 0) {
+        setTimeout(() => {
+          fetchProjectTasks(projectId, constructorId, retryCount - 1);
+        }, 1000);
+      } else {
+        toast.error(`Không thể tải công việc cho dự án ${projectId}`);
+      }
     }
   };
 
   const fetchProjectReview = async (projectId) => {
     try {
-      const response = await api.get(`/api/projects/${projectId}/reviews`);
-      setProjectReviews((prevReviews) => ({
-        ...prevReviews,
-        [projectId]: response.data,
-      }));
-    } catch (error) {
-      if (error.response?.status === 404) {
-        setProjectReviews((prevReviews) => ({
-          ...prevReviews,
-          [projectId]: null,
+      const response = await api.get(`/api/projects/${projectId}/reviews`, {
+        params: { _t: new Date().getTime() },
+        validateStatus: (status) => {
+          return status === 200 || status === 404;
+        }
+      });
+
+      if (response.status === 200) {
+        setProjectReviews(prev => ({
+          ...prev,
+          [projectId]: response.data
         }));
-      } else {
+      }
+    } catch (error) {
+      if (error.response?.status !== 404) {
         console.error(`Error fetching review for project ${projectId}:`, error);
       }
     }
@@ -168,7 +184,6 @@ const OrdersList = () => {
 
       if (response.status === 200) {
         toast.success("Đã hủy dự án thành công");
-        // Cập nhật trạng thái dự án trong danh sách local nếu cần
         setOrders((prevOrders) =>
           prevOrders.map((order) =>
             order.id === id
@@ -229,7 +244,6 @@ const OrdersList = () => {
         toast.success("Đã phân công nhân viên xây dựng thành công");
         setIsAssignModalVisible(false);
 
-        // Cập nhật danh sách orders
         setOrders((prevOrders) =>
           prevOrders.map((order) =>
             order.id === selectedProjectId
@@ -238,11 +252,9 @@ const OrdersList = () => {
           )
         );
 
-        // Fetch tasks và refresh orders
         await fetchProjectTasks(selectedProjectId, selectedConstructorId);
         await fetchOrders();
 
-        // Reset các state liên quan
         setSelectedConstructor(null);
         setSelectedConstructorId(null);
         setSearchConstructor("");
@@ -271,7 +283,13 @@ const OrdersList = () => {
       const response = await api.patch(`/api/projects/${id}/complete`);
       if (response.status === 200) {
         toast.success("Đã hoàn thành dự án thành công");
+        
         await fetchOrders(false);
+        
+        const project = orders.find(order => order.id === id);
+        if (project?.constructorId) {
+          await fetchProjectTasks(id, project.constructorId);
+        }
       }
     } catch (error) {
       console.error("Error completing project:", error);
@@ -338,7 +356,6 @@ const OrdersList = () => {
       dataIndex: "description",
       key: "description",
       render: (text, record) => {
-        // Tạo một div tạm thời để parse HTML và lấy text
         const tempDiv = document.createElement("div");
         tempDiv.innerHTML = text;
         const plainText = tempDiv.textContent || tempDiv.innerText;
@@ -454,7 +471,16 @@ const OrdersList = () => {
       key: "tasksProgress",
       render: (_, record) => {
         const tasks = projectTasks[record.id] || [];
-        //console.log(`Tasks for project ${record.id}:`, tasks); // Log để kiểm tra
+        
+        if (!record.constructorId) {
+          return <Text type="secondary">Chưa phân công nhân viên</Text>;
+        }
+        
+        if (tasks.length === 0) {
+          fetchProjectTasks(record.id, record.constructorId);
+          return <Text type="secondary">Đang tải công việc...</Text>;
+        }
+
         const completedTasks = tasks.filter(
           (task) => task.completionPercentage === 100
         ).length;
@@ -463,6 +489,7 @@ const OrdersList = () => {
             (sum, task) => sum + (task.completionPercentage || 0),
             0
           ) / tasks.length;
+
         return (
           <Space direction="vertical">
             <Progress percent={Math.round(totalProgress)} size="small" />
@@ -490,13 +517,18 @@ const OrdersList = () => {
         }
         const review = projectReviews[record.id];
         return review ? (
-          <Space>
-            <StarOutlined style={{ color: "#fadb14" }} />
-            <span>{review.rating} / 5</span>
-            <Tooltip title={review.comment}>
-              <Button type="link">Xem bình luận</Button>
-            </Tooltip>
-          </Space>
+          <Button
+            type="link"
+            onClick={() => {
+              setSelectedReview(review);
+              setIsReviewModalVisible(true);
+            }}
+          >
+            <Space>
+              <StarOutlined style={{ color: "#fadb14" }} />
+              <span>{review.rating}/5</span>
+            </Space>
+          </Button>
         ) : (
           <span>Chưa có đánh giá</span>
         );
@@ -506,7 +538,6 @@ const OrdersList = () => {
       title: 'Trạng thái thanh toán',
       key: 'paymentStatus',
       render: (_, record) => {
-        // Kiểm tra trạng thái thanh toán từ record
         if (record.paymentStatus === 'FULLY_PAID') {
           return (
             <Space direction="vertical">
@@ -531,7 +562,6 @@ const OrdersList = () => {
           );
         }
 
-        // UNPAID or default case
         return (
           <Space direction="vertical">
             <Tag color="red">Chưa thanh toán</Tag>
@@ -542,23 +572,19 @@ const OrdersList = () => {
     },
   ];
 
-  // Lọc danh sách nhà thầu theo tìm kiếm
   const filteredConstructors = constructors.filter((constructor) => {
-    // Kiểm tra xem constructor có đang làm dự án nào chưa hoàn thành không
     const activeProject = orders.find(
       (order) =>
-        order.constructorId === constructor.id && order.statusId !== "PS6" // Chỉ kiểm tra các dự án chưa hoàn thành
+        order.constructorId === constructor.id && order.statusId !== "PS6"
     );
 
     const matchesSearch = constructor.name
       .toLowerCase()
       .includes(searchConstructor.toLowerCase());
 
-    // Constructor có thể được chọn nếu không có dự án đang hoạt động và phù hợp với tìm kiếm
     return !activeProject && matchesSearch;
   });
 
-  // Cập nhật Modal phân công
   const renderAssignModal = () => (
     <Modal
       title={<div className="assign-modal-title">Phân công nhân viên xây dựng</div>}
@@ -656,9 +682,99 @@ const OrdersList = () => {
     return order.statusName === statusFilter;
   });
 
+  const renderReviewModal = () => (
+    <Modal
+      title="Đánh giá của khách hàng"
+      open={isReviewModalVisible}
+      onCancel={() => setIsReviewModalVisible(false)}
+      footer={[
+        <Button key="close" onClick={() => setIsReviewModalVisible(false)}>
+          Đóng
+        </Button>
+      ]}
+    >
+      {selectedReview && (
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <div>
+            <Rate disabled value={selectedReview.rating} />
+            <Text style={{ marginLeft: 8 }}>
+              {selectedReview.rating}/5
+            </Text>
+          </div>
+          <div>
+            <Text strong>Nhận xét:</Text>
+            <p>{selectedReview.comment}</p>
+          </div>
+        </Space>
+      )}
+    </Modal>
+  );
+
+  useEffect(() => {
+    fetchOrders();
+    fetchConstructors();
+
+    if (isPollingEnabled) {
+      pollingIntervalRef.current = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          fetchOrders(true);
+        }
+      }, 30000);
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, [isPollingEnabled]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchOrders(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    orders.forEach(order => {
+      if (order.constructorId) {
+        fetchProjectTasks(order.id, order.constructorId);
+      }
+    });
+  }, [orders]);
+
+  useEffect(() => {
+    const pollReviews = async () => {
+      const completedOrders = orders.filter(order => order.statusId === "PS6");
+      for (const order of completedOrders) {
+        await fetchProjectReview(order.id);
+      }
+    };
+
+    const intervalId = setInterval(pollReviews, 30000);
+
+    pollReviews();
+
+    return () => clearInterval(intervalId);
+  }, [orders]);
+
+  const togglePolling = () => {
+    setIsPollingEnabled(prev => !prev);
+  };
+
   return (
     <div>
-      <h1>Danh sách đơn hàng</h1>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+        <h1>Danh sách đơn hàng</h1>
+      </div>
+      
       {renderFilters()}
       <Table
         columns={columns}
@@ -669,6 +785,7 @@ const OrdersList = () => {
       />
       {renderAssignModal()}
       {renderDescriptionModal()}
+      {renderReviewModal()}
     </div>
   );
 };

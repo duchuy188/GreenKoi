@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Table,
   Card,
@@ -8,10 +8,13 @@ import {
   Progress,
   Spin,
   Button,
+  Empty,
+  Switch,
 } from "antd";
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
 import moment from "moment";
+import { ReloadOutlined } from "@ant-design/icons";
 
 const { Text, Title } = Typography;
 
@@ -19,35 +22,85 @@ const ProjectTasks = () => {
   const [projectInfo, setProjectInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState([]);
+  const [isPollingEnabled, setIsPollingEnabled] = useState(true);
+  const pollingIntervalRef = useRef(null);
 
   useEffect(() => {
     fetchConstructorProject();
+
+    if (isPollingEnabled) {
+      pollingIntervalRef.current = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          fetchConstructorProject(true);
+        }
+      }, 30000);
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, [isPollingEnabled]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchConstructorProject(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
-  const fetchConstructorProject = async () => {
+  const togglePolling = () => {
+    setIsPollingEnabled(prev => !prev);
+  };
+
+  const fetchConstructorProject = async (isBackgroundRefresh = false) => {
     try {
-      setLoading(true);
+      if (!isBackgroundRefresh) {
+        setLoading(true);
+      }
       const response = await api.get("/api/projects/constructor");
       if (
         response.data &&
         Array.isArray(response.data) &&
         response.data.length > 0
       ) {
-        const project = response.data[0];
-        setProjectInfo(project);
-        if (project.id) {
-          await fetchProjectTasks(project.id);
+        const activeProject = response.data.find(project => 
+          project.statusName !== "COMPLETED" && 
+          project.status !== "PS6"
+        );
+        
+        if (activeProject) {
+          setProjectInfo(activeProject);
+          if (activeProject.id) {
+            await fetchProjectTasks(activeProject.id);
+          } else {
+            console.error("Project ID is missing");
+          }
         } else {
-          console.error("Project ID is missing");
+          setProjectInfo(null);
+          setTasks([]);
         }
       } else {
         console.error("Invalid project data received or no projects available");
+        setProjectInfo(null);
+        setTasks([]);
       }
     } catch (error) {
       console.error("Error fetching constructor project:", error);
-      toast.error("Không thể tải thông tin dự án");
+      if (!isBackgroundRefresh) {
+        toast.error("Không thể tải thông tin dự án");
+      }
     } finally {
-      setLoading(false);
+      if (!isBackgroundRefresh) {
+        setLoading(false);
+      }
     }
   };
 
@@ -266,72 +319,79 @@ const ProjectTasks = () => {
 
   return (
     <div>
-      <Title level={2}>Nhiệm vụ dự án</Title>
-      {projectInfo && (
-        <Card style={{ marginBottom: 16 }}>
-          <Title level={4}>{projectInfo.name || "N/A"}</Title>
-          <div>
-            Mô tả:{" "}
-            <span
-              dangerouslySetInnerHTML={{
-                __html: projectInfo.description || "N/A",
-              }}
-            />
-          </div>
-          <Space direction="vertical" style={{ width: "100%", marginTop: 16 }}>
-            <Text>Tiến độ chung:</Text>
-            <Progress percent={projectInfo.progressPercentage || 0} />
-          </Space>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Title level={2}>Nhiệm vụ dự án</Title>     
+      </div>
+      
+      {projectInfo ? (
+        <>
+          <Card style={{ marginBottom: 16 }}>
+            <Title level={4}>{projectInfo.name || "N/A"}</Title>
+            <div>
+              Mô tả:{" "}
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: projectInfo.description || "N/A",
+                }}
+              />
+            </div>
+            <Space direction="vertical" style={{ width: "100%", marginTop: 16 }}>
+              <Text>Tiến độ chung:</Text>
+              <Progress percent={projectInfo.progressPercentage || 0} />
+            </Space>
 
-          <Space direction="vertical" style={{ width: "100%", marginTop: 16 }}>
-            <Text>Trạng thái: {(() => {
-              switch (projectInfo.statusName?.toUpperCase()) {
-                case "COMPLETED":
-                  return "HOÀN THÀNH";
-                case "IN PROCESS":
-                  return "ĐANG XỬ LÝ";
-                case "PENDING":
-                  return "CHỜ XỬ LÝ";
-                case "TECHNICALLY_COMPLETED":
-                  return "HOÀN THÀNH KỸ THUẬT";
-                default:
-                  return projectInfo.statusName || "N/A";
-              }
-            })()}</Text>
+            <Space direction="vertical" style={{ width: "100%", marginTop: 16 }}>
+              <Text>Trạng thái: {(() => {
+                switch (projectInfo.statusName?.toUpperCase()) {
+                  case "COMPLETED":
+                    return "HOÀN THÀNH";
+                  case "IN PROCESS":
+                    return "ĐANG XỬ LÝ";
+                  case "PENDING":
+                    return "CHỜ XỬ LÝ";
+                  case "TECHNICALLY_COMPLETED":
+                    return "HOÀN THÀNH KỸ THUẬT";
+                  default:
+                    return projectInfo.statusName || "N/A";
+                }
+              })()}</Text>
 
-            <Text>
-              Ngày bắt đầu:{" "}
-              {projectInfo.startDate
-                ? moment(projectInfo.startDate).format("DD-MM-YYYY")
-                : "N/A"}
-            </Text>
+              <Text>
+                Ngày bắt đầu:{" "}
+                {projectInfo.startDate
+                  ? moment(projectInfo.startDate).format("DD-MM-YYYY")
+                  : "N/A"}
+              </Text>
 
-            <Text>
-              Ngày kết thúc:{" "}
-              {projectInfo.endDate
-                ? moment(projectInfo.endDate).format("DD-MM-YYYY")
-                : "N/A"}
-            </Text>
-          </Space>
+              <Text>
+                Ngày kết thúc:{" "}
+                {projectInfo.endDate
+                  ? moment(projectInfo.endDate).format("DD-MM-YYYY")
+                  : "N/A"}
+              </Text>
+            </Space>
 
-          {tasks.length > 0 &&
-            tasks.every((task) => task.completionPercentage === 100) && (
-              <Button
-                type="primary"
-                onClick={markTechnicallyCompleted}
-                style={{ marginTop: 16 }}
-              >
-                Đã hoàn thành về mặt kỹ thuật
-              </Button>
-            )}
-        </Card>
+            {tasks.length > 0 &&
+              tasks.every((task) => task.completionPercentage === 100) && (
+                <Button
+                  type="primary"
+                  onClick={markTechnicallyCompleted}
+                  style={{ marginTop: 16 }}
+                >
+                  Đã hoàn thành về mặt kỹ thuật
+                </Button>
+              )}
+          </Card>
+          <Table
+            columns={columns}
+            dataSource={tasks}
+            rowKey="id"
+            locale={{ emptyText: "No tasks available" }}
+          />
+        </>
+      ) : (
+        <Empty description="Không có dự án đang thực hiện" />
       )}
-      <Table
-        columns={columns}
-        dataSource={tasks}
-        rowKey="id"
-        locale={{ emptyText: "No tasks available" }}
-      />
     </div>
   );
 };

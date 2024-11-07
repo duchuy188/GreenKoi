@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Table,
   Modal,
@@ -14,6 +14,9 @@ import {
   Space,
   Tag,
   Select,
+  Row,
+  Col,
+  Switch,
 } from "antd";
 import api from "../../../config/axios";
 import moment from "moment";
@@ -21,6 +24,8 @@ import {
   EditOutlined,
   DownOutlined,
   EllipsisOutlined,
+  SearchOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import { toast } from "react-toastify";
 
@@ -36,6 +41,9 @@ const Orders = () => {
   const [descriptionModalVisible, setDescriptionModalVisible] = useState(false);
   const [statusFilter, setStatusFilter] = useState(null);
   const [paymentStatusFilter, setPaymentStatusFilter] = useState(null);
+  const [searchText, setSearchText] = useState('');
+  const [isPollingEnabled, setIsPollingEnabled] = useState(true);
+  const pollingIntervalRef = useRef(null);
 
   const createMarkup = (htmlContent) => {
     return { __html: htmlContent };
@@ -43,21 +51,64 @@ const Orders = () => {
 
   useEffect(() => {
     fetchOrders();
+
+    if (isPollingEnabled) {
+      pollingIntervalRef.current = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          fetchOrders(true);
+        }
+      }, 30000);
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, [isPollingEnabled]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchOrders(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (isBackgroundRefresh = false) => {
     try {
-      setLoading(true);
+      if (!isBackgroundRefresh) {
+        setLoading(true);
+      }
+      
       const response = await api.get("/api/projects/consultant");
-      const sortedOrders = response.data
-        .filter((order) => order.statusId !== "PS6")
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      setOrders(sortedOrders);
+      
+      if (response.data) {
+        const newOrders = response.data
+          .filter((order) => order.statusId !== "PS6")
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        setOrders(prevOrders => {
+          if (JSON.stringify(prevOrders) !== JSON.stringify(newOrders)) {
+            return newOrders;
+          }
+          return prevOrders;
+        });
+      }
     } catch (error) {
       console.error("Error fetching orders:", error);
-      toast.error("Không thể tải danh sách đơn hàng");
+      if (!isBackgroundRefresh) {
+        toast.error("Không thể tải danh sách đơn hàng");
+      }
     } finally {
-      setLoading(false);
+      if (!isBackgroundRefresh) {
+        setLoading(false);
+      }
     }
   };
 
@@ -357,36 +408,52 @@ const Orders = () => {
   const filteredOrders = orders.filter(order => {
     const matchesStatus = !statusFilter || statusFilter === "ALL" || order.statusName === statusFilter;
     const matchesPayment = !paymentStatusFilter || paymentStatusFilter === "ALL" || order.paymentStatus === paymentStatusFilter;
-    return matchesStatus && matchesPayment;
+    const matchesSearch = order.name?.toLowerCase().includes(searchText.toLowerCase());
+    return matchesStatus && matchesPayment && (searchText ? matchesSearch : true);
   });
 
   return (
     <div>
-      <h1>Đơn hàng của khách hàng</h1>
-      <div style={{ marginBottom: 16, display: 'flex', gap: 16 }}>
-        <Select
-          style={{ width: 200 }}
-          placeholder="Lọc theo trạng thái"
-          allowClear
-          onChange={setStatusFilter}
-          defaultValue="ALL"
-          options={statusOptionsWithAll.map(status => ({
-            value: status.value,
-            label: status.label
-          }))}
-        />
-        <Select
-          style={{ width: 200 }}
-          placeholder="Lọc theo thanh toán"
-          allowClear
-          onChange={setPaymentStatusFilter}
-          defaultValue="ALL"
-          options={paymentStatusOptionsWithAll.map(status => ({
-            value: status.value,
-            label: status.label
-          }))}
-        />
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>Đơn hàng của khách hàng</h1>
       </div>
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col>
+          <Select
+            style={{ width: 200 }}
+            placeholder="Lọc theo trạng thái"
+            allowClear
+            onChange={setStatusFilter}
+            defaultValue="ALL"
+            options={statusOptionsWithAll.map(status => ({
+              value: status.value,
+              label: status.label
+            }))}
+          />
+        </Col>
+        <Col>
+          <Select
+            style={{ width: 200 }}
+            placeholder="Lọc theo thanh toán"
+            allowClear
+            onChange={setPaymentStatusFilter}
+            defaultValue="ALL"
+            options={paymentStatusOptionsWithAll.map(status => ({
+              value: status.value,
+              label: status.label
+            }))}
+          />
+        </Col>
+        <Col>
+          <Input
+            placeholder="Tìm kiếm theo tên khách hàng"
+            prefix={<SearchOutlined />}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 250 }}
+          />
+        </Col>
+      </Row>
+      
       <Table
         columns={columns.filter((column) => !column.hidden)}
         dataSource={filteredOrders}

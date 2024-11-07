@@ -19,6 +19,8 @@ import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import moment from "moment";
 import { EllipsisOutlined } from "@ant-design/icons";
+import { SearchOutlined } from '@ant-design/icons';
+import { Row, Col } from 'antd';
 
 const { Text } = Typography;
 
@@ -490,23 +492,30 @@ const RequestConsulting = () => {
   return (
     <div>
       <h1>Yêu cầu của khách hàng</h1>
-      <Space style={{ marginBottom: 16 }}>
-        <Input.Search
-          placeholder="Tìm kiếm yêu cầu"
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ width: 200 }}
-        />
-        <Select
-          value={statusFilter}
-          style={{ width: 120 }}
-          onChange={handleStatusFilterChange}
-        >
-          <Select.Option value="ALL">Tất cả</Select.Option>
-          <Select.Option value="PENDING">Đang chờ</Select.Option>
-          <Select.Option value="IN_PROGRESS">Đang thực hiện</Select.Option>
-          <Select.Option value="COMPLETED">Đã hoàn thành</Select.Option>
-        </Select>
-      </Space>
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col>
+          <Select
+            style={{ width: 200 }}
+            value={statusFilter}
+            onChange={handleStatusFilterChange}
+            placeholder="Lọc theo trạng thái"
+          >
+            <Select.Option value="ALL">Tất cả</Select.Option>
+            <Select.Option value="PENDING">Đang chờ</Select.Option>
+            <Select.Option value="IN_PROGRESS">Đang thực hiện</Select.Option>
+            <Select.Option value="COMPLETED">Đã hoàn thành</Select.Option>
+          </Select>
+        </Col>
+        <Col>
+          <Input
+            placeholder="Tìm kiếm theo tên khách hàng"
+            prefix={<SearchOutlined />}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 250 }}
+          />
+        </Col>
+      </Row>
+
       <Table
         columns={responsiveColumns}
         dataSource={filteredRequests}
