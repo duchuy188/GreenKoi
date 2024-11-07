@@ -111,7 +111,7 @@ const MaintenanceRequest = () => {
     try {
       const response = await api.patch(`/api/maintenance-requests/${id}/review`);
       if (response.status === 200) {
-        message.success("Bắt đầu xem xét yêu cầu bảo trì thành công");
+        toast.success("Bắt đầu xem xét yêu cầu bảo trì thành công");
         fetchMaintenanceRequests(); 
       }
     } catch (error) {
@@ -128,7 +128,7 @@ const MaintenanceRequest = () => {
       });
 
       if (response.status === 200) {
-        message.success("Cập nhật giá thỏa thuận thành công");
+        toast.success("Cập nhật giá thỏa thuận thành công");
         setIsModalVisible(false);
         fetchMaintenanceRequests();
       }
@@ -146,7 +146,7 @@ const MaintenanceRequest = () => {
   const handleCancelModalOk = async () => {
     try {
       if (!cancellationReason.trim()) {
-        message.error("Vui lòng nhập lý do hủy yêu cầu");
+        toast.error("Vui lòng nhập lý do hủy yêu cầu");
         return;
       }
 
@@ -155,7 +155,7 @@ const MaintenanceRequest = () => {
       });
 
       if (response.status === 200) {
-        message.success("Yêu cầu bảo trì đã được hủy thành công");
+        toast.success("Yêu cầu bảo trì đã được hủy thành công");
         setIsCancelModalVisible(false);
         setCancellationReason('');
         setCancellingRequestId(null);
@@ -458,7 +458,7 @@ const MaintenanceRequest = () => {
           <Descriptions.Item label="Địa chỉ">{selectedRecord.customerAddress}</Descriptions.Item>
           
           <Descriptions.Item label="Mã dự án">{selectedRecord.projectId}</Descriptions.Item>
-          <Descriptions.Item label="Tên dự án">{selectedRecord.projectName}</Descriptions.Item>
+          <Descriptions.Item label="Tn dự án">{selectedRecord.projectName}</Descriptions.Item>
           
           <Descriptions.Item label="Mô tả" span={2}>{selectedRecord.description}</Descriptions.Item>
           
@@ -600,11 +600,18 @@ const MaintenanceRequest = () => {
               rules={[{ required: true, message: 'Vui lòng nhập giá đã thỏa thuận!' }]}
             >
               <Input
-                type="number"
-                min={0}
-                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-                addonAfter="VND"
+                type="text"
+                style={{ width: '100%' }}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^\d]/g, '');
+                  const formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                  form.setFieldsValue({ agreedPrice: formattedValue });
+                }}
+                onBlur={(e) => {
+                  const value = e.target.value.replace(/[^\d]/g, '');
+                  form.setFieldsValue({ agreedPrice: Number(value) });
+                }}
+                suffix="VNĐ"
               />
             </Form.Item>
             <Button type="primary" htmlType="submit">
