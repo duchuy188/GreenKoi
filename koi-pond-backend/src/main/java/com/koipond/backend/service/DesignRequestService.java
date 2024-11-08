@@ -45,6 +45,7 @@ public class DesignRequestService {
         if (consultationId == null || consultationId.trim().isEmpty()) {
             throw new RuntimeException("Consultation ID cannot be empty");
         }
+        
         ConsultationRequest consultation = consultationRepository.findById(consultationId)
                 .orElseThrow(() -> new RuntimeException("Consultation not found"));
 
@@ -56,9 +57,11 @@ public class DesignRequestService {
         DesignRequest designRequest = new DesignRequest();
         designRequest.setConsultation(consultation);
         designRequest.setStatus(DesignRequest.DesignRequestStatus.PENDING);
+        
+        // Copy một số thông tin cần thiết
         designRequest.setEstimatedCost(consultation.getEstimatedCost());
         designRequest.setDesignNotes(consultation.getConsultationNotes());
-
+        
         return convertToDTO(designRequestRepository.save(designRequest), "ROLE_2");
     }
 
@@ -123,8 +126,9 @@ public class DesignRequestService {
         dto.setCreatedAt(request.getCreatedAt());
         dto.setUpdatedAt(request.getUpdatedAt());
 
-        // Thông tin chi tiết - designer, consultant và customer đều thấy
-        if ("ROLE_2".equals(role) || "ROLE_3".equals(role) || "ROLE_5".equals(role)) {
+        // Thông tin chi tiết - manager, designer, consultant và customer đều thấy
+        if ("ROLE_1".equals(role) || "ROLE_2".equals(role) || 
+            "ROLE_3".equals(role) || "ROLE_5".equals(role)) {
             ConsultationRequest consultation = request.getConsultation();
             if (consultation != null) {
                 dto.setConsultationId(consultation.getId());
@@ -171,13 +175,22 @@ public class DesignRequestService {
 
         // Định nghĩa các chuyển đổi trạng thái hợp lệ
         boolean isValidTransition = switch (currentStatus) {
-            case PENDING -> newStatus == DesignRequest.DesignRequestStatus.IN_PROGRESS;
-            case IN_PROGRESS -> newStatus == DesignRequest.DesignRequestStatus.COMPLETED;
+            case PENDING -> newStatus == DesignRequest.DesignRequestStatus.IN_PROGRESS || 
+                           newStatus == DesignRequest.DesignRequestStatus.CANCELLED;
+                       
+            case IN_PROGRESS -> newStatus == DesignRequest.DesignRequestStatus.COMPLETED || 
+                               newStatus == DesignRequest.DesignRequestStatus.CANCELLED;
+                           
             case COMPLETED -> newStatus == DesignRequest.DesignRequestStatus.PENDING_CUSTOMER_APPROVAL || 
-                             newStatus == DesignRequest.DesignRequestStatus.IN_PROGRESS;
+                             newStatus == DesignRequest.DesignRequestStatus.IN_PROGRESS ||
+                             newStatus == DesignRequest.DesignRequestStatus.CANCELLED;
+                         
             case PENDING_CUSTOMER_APPROVAL -> newStatus == DesignRequest.DesignRequestStatus.APPROVED || 
-                                            newStatus == DesignRequest.DesignRequestStatus.IN_PROGRESS;
+                                            newStatus == DesignRequest.DesignRequestStatus.IN_PROGRESS ||
+                                            newStatus == DesignRequest.DesignRequestStatus.CANCELLED;
+                                        
             case REJECTED -> newStatus == DesignRequest.DesignRequestStatus.IN_PROGRESS;
+            
             default -> false;
         };
 
@@ -325,10 +338,15 @@ public class DesignRequestService {
                         yield Design.DesignStatus.APPROVED;
                     }
                     case REJECTED -> Design.DesignStatus.REJECTED;
-                    default -> Design.DesignStatus.PENDING_APPROVAL;
+                    case CANCELLED -> Design.DesignStatus.CANCELLED;
+                    case IN_PROGRESS -> Design.DesignStatus.PENDING_APPROVAL;
+                    default -> design.getStatus(); // Giữ nguyên status hiện tại
                 };
                 
                 design.setStatus(designStatus);
+                if (newStatus == DesignRequest.DesignRequestStatus.CANCELLED) {
+                    design.setRejectionReason(request.getRejectionReason());
+                }
                 designRepository.save(design);
             }
         }
@@ -350,5 +368,54 @@ public class DesignRequestService {
             .stream()
             .map(request -> convertToDTO(request, "ROLE_1"))
             .collect(Collectors.toList());
+    }
+
+    public DesignRequestDTO cancelRequest(String requestId, String rejectionReason) {
+        logger.info("Cancelling design request: {}", requestId);
+        DesignRequest request = findRequest(requestId);
+        
+        // Validate customer ownership
+        ConsultationRequest consultation = request.getConsultation();
+        if (consultation == null || consultation.getCustomer() == null) {
+            throw new RuntimeException("Invalid request data");
+        }
+
+        // Check valid states for cancellation
+        DesignRequest.DesignRequestStatus currentStatus = request.getStatus();
+        switch (currentStatus) {
+            case APPROVED:
+                throw new RuntimeException("Cannot cancel approved design request");
+            case CANCELLED:
+                throw new RuntimeException("Request is already cancelled");
+            case PENDING:        // Waiting for designer assignment
+            case IN_PROGRESS:    // Design in progress
+            case COMPLETED:      // Waiting for consultant review
+            case PENDING_CUSTOMER_APPROVAL:  // Waiting for customer approval
+                // Allow cancellation
+                break;
+            default:
+                throw new RuntimeException("Invalid request status");
+        }
+
+        // Require cancellation reason
+        if (rejectionReason == null || rejectionReason.trim().isEmpty()) {
+            throw new RuntimeException("Reason is required when cancelling request");
+        }
+
+        request.setStatus(DesignRequest.DesignRequestStatus.CANCELLED);
+        request.setRejectionReason(rejectionReason);
+        request.setUpdatedAt(LocalDateTime.now());
+        
+        // Sync design status if exists
+        if (request.getDesign() != null) {
+            Design design = request.getDesign();
+            if (design.isCustom()) {
+                design.setStatus(Design.DesignStatus.CANCELLED);
+                design.setRejectionReason(rejectionReason);
+                designRepository.save(design);
+            }
+        }
+
+        return convertToDTO(designRequestRepository.save(request), "ROLE_5");
     }
 }

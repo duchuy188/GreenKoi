@@ -102,43 +102,51 @@ public class ConsultationRequestService {
                 throw new RuntimeException("Cannot update COMPLETED requests");
             }
 
-            // Thêm validation cho PROCEED_DESIGN
+            // Thêm validation cho PENDING status
+            if (currentStatus.equals(ConsultationRequest.ConsultationStatus.PENDING.name())) {
+                if (!newStatus.equals(ConsultationRequest.ConsultationStatus.IN_PROGRESS.name())) {
+                    throw new RuntimeException("PENDING requests can only be changed to IN_PROGRESS");
+                }
+            }
+
+            // Check if request is in PROCEED_DESIGN status
             if (currentStatus.equals(ConsultationRequest.ConsultationStatus.PROCEED_DESIGN.name())) {
                 if (!newStatus.equals(ConsultationRequest.ConsultationStatus.COMPLETED.name())) {
                     throw new RuntimeException("PROCEED_DESIGN can only be changed to COMPLETED");
                 }
-                // Kiểm tra Design Request đã approved chưa
+
+                // Get associated design request
                 DesignRequest designRequest = designRequestRepository
                     .findByConsultationId(requestId)
                     .orElseThrow(() -> new RuntimeException("Design request not found"));
                 
-                if (!DesignRequest.DesignRequestStatus.APPROVED.equals(designRequest.getStatus())) {
-                    throw new RuntimeException("Cannot complete consultation. Design has not been approved yet");
+                // Allow completion if design is either approved or cancelled
+                if (designRequest.getStatus() == DesignRequest.DesignRequestStatus.APPROVED) {
+                    request.setConsultationNotes("Consultation completed - Design has been approved");
+                } else if (designRequest.getStatus() == DesignRequest.DesignRequestStatus.CANCELLED) {
+                    request.setConsultationNotes("Consultation completed - Design request was cancelled");
+                } else {
+                    throw new RuntimeException("Cannot complete consultation. Design must be either approved or cancelled");
                 }
+
+                request.setConsultant(user);
+                request.setConsultationDate(LocalDateTime.now());
             }
-            
-            // PENDING chỉ có thể chuyển sang IN_PROGRESS
-            if (currentStatus.equals(ConsultationRequest.ConsultationStatus.PENDING.name()) && 
-                !newStatus.equals(ConsultationRequest.ConsultationStatus.IN_PROGRESS.name())) {
-                throw new RuntimeException("PENDING requests can only be changed to IN_PROGRESS");
-            }
-            
-            // Kiểm tra luồng xử lý dựa trên loại thiết kế
+
+            // For custom design, must go through design phase
             if (currentStatus.equals(ConsultationRequest.ConsultationStatus.IN_PROGRESS.name())) {
                 if (request.isCustomDesign()) {
-                    // Thiết kế theo yêu cầu phải qua PROCEED_DESIGN
                     if (!newStatus.equals(ConsultationRequest.ConsultationStatus.PROCEED_DESIGN.name())) {
                         throw new RuntimeException("Custom design requests must proceed to design phase");
                     }
                 } else {
-                    // Thiết kế mẫu có thể chuyển thẳng sang COMPLETED
+                    // For standard design, can complete directly
                     if (!newStatus.equals(ConsultationRequest.ConsultationStatus.COMPLETED.name())) {
-                        throw new RuntimeException("Standard requests can only be completed");
+                        throw new RuntimeException("Standard design requests can only be completed");
                     }
-                    // Tự động cập nhật thông tin khi complete thiết kế mẫu
                     request.setConsultant(user);
                     request.setConsultationDate(LocalDateTime.now());
-                    request.setConsultationNotes("Tư vấn hoàn tất - Thiết kế mẫu");
+                    request.setConsultationNotes("Consultation completed - Standard design selected");
                 }
             }
 

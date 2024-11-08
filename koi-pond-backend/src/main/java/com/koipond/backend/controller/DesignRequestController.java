@@ -196,4 +196,20 @@ public class DesignRequestController {
     public ResponseEntity<List<DesignRequestDTO>> getPendingAssignmentRequests() {
         return ResponseEntity.ok(designRequestService.getPendingAssignmentRequests());
     }
+
+    @Operation(
+        summary = "Cancel design request",
+        description = "Customer cancels the design request. Can cancel in states: PENDING, IN_PROGRESS, " +
+                "COMPLETED, PENDING_CUSTOMER_APPROVAL. Cannot cancel APPROVED requests."
+    )
+    @PostMapping("/{requestId}/cancel")
+    @PreAuthorize("hasAuthority('ROLE_5')")  // Customer only
+    public ResponseEntity<DesignRequestDTO> cancelRequest(
+        @Parameter(description = "ID of the design request") 
+        @PathVariable String requestId,
+        @Parameter(description = "Reason for cancellation") 
+        @RequestParam(required = true) String rejectionReason
+    ) {
+        return ResponseEntity.ok(designRequestService.cancelRequest(requestId, rejectionReason));
+    }
 }

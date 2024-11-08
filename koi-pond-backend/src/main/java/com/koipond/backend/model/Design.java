@@ -67,7 +67,7 @@ public class Design {
     }
 
     public enum DesignStatus {
-        PENDING_APPROVAL, APPROVED, REJECTED, ARCHIVED
+        PENDING_APPROVAL, APPROVED, REJECTED, ARCHIVED, CANCELLED
     }
 
     @Column(columnDefinition = "TEXT")
