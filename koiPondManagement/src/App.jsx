@@ -49,6 +49,7 @@ import ConstrucMain from "./components/page/admin/construction/construc-main";
 import ConstrucReviewComplete from "./components/page/admin/construction/construc-reviewcomplete";
 import Statistics from "./components/page/admin/manage-dashboard/statistics/Statistics";
 import Cusmaintenance from "./components/page/maintenance/Cusmaintenance";
+import ManageCustomerRequest from "./components/page/admin/manage-customer-request";
 
 function App() {
   const router = createBrowserRouter([
@@ -217,6 +218,10 @@ function App() {
             {
               path: "profile",
               element: <InfoProfile />,
+            },
+            {
+              path: "customer-requests",
+              element: <ManageCustomerRequest />,
             },
             // {
             //   path: "sevice",

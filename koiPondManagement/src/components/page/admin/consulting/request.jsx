@@ -61,7 +61,7 @@ const RequestConsulting = () => {
     }, 10000);
     
     return () => clearInterval(pollingInterval);
-  }, []);
+  }, [requestType]);
 
   const initialFetch = async () => {
     try {
@@ -85,55 +85,56 @@ const RequestConsulting = () => {
     try {
       const response = await api.get("/api/ConsultationRequests");
       
+      const processRequests = (rawRequests) => {
+        const requests = rawRequests
+          .filter((request) => request.status !== "CANCELLED")
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        const filteredRequests = requests.filter(request => 
+          requestType === 'standard' 
+            ? !request.customDesign 
+            : request.customDesign
+        );
+
+        setConsultationRequests(prevRequests => {
+          // Lọc các request cũ theo loại hiện tại
+          const prevFilteredRequests = prevRequests.filter(request =>
+            requestType === 'standard'
+              ? !request.customDesign
+              : request.customDesign
+          );
+
+          // Kiểm tra xem có request mới không bằng cách so sánh ID và thời gian tạo
+          if (!isInitialFetch) {
+            const newRequests = filteredRequests.filter(newReq => {
+              const existingReq = prevFilteredRequests.find(prevReq => prevReq.id === newReq.id);
+              if (!existingReq) return true;
+              return new Date(newReq.createdAt) > new Date(existingReq.createdAt);
+            });
+
+            if (newRequests.length > 0) {
+              // Chỉ hiện thông báo nếu request mới thuộc loại đang xem
+              const isCurrentType = newRequests.some(req => 
+                requestType === 'standard' ? !req.customDesign : req.customDesign
+              );
+              if (isCurrentType) {
+                toast.info(`Có yêu cầu tư vấn mới từ: ${newRequests[0].customerName}`);
+              }
+            }
+          }
+
+          // Chỉ cập nhật state nếu có sự thay đổi
+          if (JSON.stringify(prevFilteredRequests) !== JSON.stringify(filteredRequests)) {
+            return filteredRequests;
+          }
+          return prevRequests;
+        });
+      };
+
       if (Array.isArray(response.data)) {
-        const requests = response.data
-          .filter((request) => request.status !== "CANCELLED")
-          .map((request) => request)
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-        const filteredRequests = requests.filter(request => 
-          requestType === 'standard' 
-            ? !request.isCustomDesign 
-            : request.isCustomDesign
-        );
-
-        setConsultationRequests(prevRequests => {
-          if (JSON.stringify(prevRequests) !== JSON.stringify(filteredRequests)) {
-            if (!isInitialFetch) {
-              filteredRequests.forEach(request => {
-                if (!prevRequests.find(pr => pr.id === request.id)) {
-                  toast.info(`Có yêu cầu tư vấn mới từ: ${request.customerName}`);
-                }
-              });
-            }
-            return filteredRequests;
-          }
-          return prevRequests;
-        });
+        processRequests(response.data);
       } else if (response.data.consultationRequests) {
-        const requests = response.data.consultationRequests
-          .filter((request) => request.status !== "CANCELLED")
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          
-        const filteredRequests = requests.filter(request => 
-          requestType === 'standard' 
-            ? !request.isCustomDesign 
-            : request.isCustomDesign
-        );
-        
-        setConsultationRequests(prevRequests => {
-          if (JSON.stringify(prevRequests) !== JSON.stringify(filteredRequests)) {
-            if (!isInitialFetch) {
-              filteredRequests.forEach(request => {
-                if (!prevRequests.find(pr => pr.id === request.id)) {
-                  toast.info(`Có yêu cầu tư vấn mới từ: ${request.customerName}`);
-                }
-              });
-            }
-            return filteredRequests;
-          }
-          return prevRequests;
-        });
+        processRequests(response.data.consultationRequests);
       }
     } catch (error) {
       console.error("Error fetching consultation requests:", error);

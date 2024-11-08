@@ -39,7 +39,6 @@ const items = [
     getItem(<Link to="/dashboard/statistics">Thống kê</Link>, "statistics"),
   ]),
   getItem("Quản lý", "management", <UserOutlined />, [
-    
     getItem(
       <Link to="/dashboard/usermanagement">Quản lý tài khoản</Link>,
       "usermanagement"
@@ -51,6 +50,10 @@ const items = [
     getItem(
       <Link to="/dashboard/orderlist">Quản lý đơn hàng</Link>,
       "orderlist"
+    ),
+    getItem(
+      <Link to="/dashboard/customer-requests">Quản lý yêu cầu khách hàng</Link>,
+      "customer-requests"
     ),
     getItem(<Link to="/dashboard/browsepond">Quản lý Blog</Link>, "browsepond"),
     getItem(
@@ -142,7 +145,8 @@ const Dashboard = () => {
         path.includes("orderlist") || 
         path.includes("ponddesigncolumns") || 
         path.includes("browsepond") || 
-        path.includes("maintenance-manager")) {
+        path.includes("maintenance-manager") ||
+        path.includes("customer-requests")) {
       console.log("Checking manager access:", roleId === 1);
       return roleId === 1; // Manager
     }

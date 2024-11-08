@@ -19,6 +19,7 @@ import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import moment from "moment";
 import UpdateStatusModal from './update-status-modal';
+import CreateDesignRequestModal from './create-design-request-modal';
 
 const { Text } = Typography;
 
@@ -31,6 +32,7 @@ const CustomDesignRequest = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [isStatusModalVisible, setIsStatusModalVisible] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [isCreateDesignModalVisible, setIsCreateDesignModalVisible] = useState(false);
 
   useEffect(() => {
     initialFetch();
@@ -99,18 +101,9 @@ const CustomDesignRequest = () => {
     console.log("Current filtered requests:", filteredRequests);
   }, [requests, filteredRequests]);
 
-  const handleSendRequest = async (record) => {
-    try {
-      await api.post(`/api/ConsultationRequests/${record.id}/send`);
-      toast.success("Đã gửi yêu cầu thành công");
-      fetchRequests();
-    } catch (error) {
-      toast.error(
-        error.response
-          ? `Lỗi: ${error.response.status} - ${error.response.data.message}`
-          : "Không thể gửi yêu cầu"
-      );
-    }
+  const handleSendRequest = (record) => {
+    setSelectedRecord(record);
+    setIsCreateDesignModalVisible(true);
   };
 
   const columns = [
@@ -298,6 +291,13 @@ const CustomDesignRequest = () => {
         visible={isStatusModalVisible}
         onCancel={() => setIsStatusModalVisible(false)}
         onSuccess={handleStatusUpdateSuccess}
+        record={selectedRecord}
+      />
+
+      <CreateDesignRequestModal
+        visible={isCreateDesignModalVisible}
+        onCancel={() => setIsCreateDesignModalVisible(false)}
+        onSuccess={fetchRequests}
         record={selectedRecord}
       />
     </div>
