@@ -13,7 +13,7 @@ import {
   Tooltip,
   Form,
 } from "antd";
-import { FaEdit } from "react-icons/fa";
+import { FaEdit, FaPaperPlane } from "react-icons/fa";
 import { SearchOutlined, EllipsisOutlined } from "@ant-design/icons";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
@@ -39,13 +39,13 @@ const CustomDesignRequest = () => {
   const initialFetch = async () => {
     try {
       setInitialLoading(true);
-      await fetchRequests(true);
+      await fetchRequests();
     } finally {
       setInitialLoading(false);
     }
   };
 
-  const fetchRequests = async (isInitialFetch) => {
+  const fetchRequests = async () => {
     try {
       setLoading(true);
       const response = await api.get("/api/ConsultationRequests");
@@ -55,19 +55,7 @@ const CustomDesignRequest = () => {
           .filter(request => request.status !== "CANCELLED" && request.customDesign === true)
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-        setRequests(prevRequests => {
-          if (JSON.stringify(prevRequests) !== JSON.stringify(customRequests)) {
-            if (!isInitialFetch) {
-              customRequests.forEach(request => {
-                if (!prevRequests.find(pr => pr.id === request.id)) {
-                  toast.info(`Có yêu cầu thiết kế tùy chỉnh mới từ: ${request.customerName}`);
-                }
-              });
-            }
-            return customRequests;
-          }
-          return prevRequests;
-        });
+        setRequests(customRequests);
       }
     } catch (error) {
       toast.error(
@@ -103,13 +91,27 @@ const CustomDesignRequest = () => {
   };
 
   const handleStatusUpdateSuccess = () => {
-    fetchRequests(false);
+    fetchRequests();
   };
 
   useEffect(() => {
     console.log("Current requests:", requests);
     console.log("Current filtered requests:", filteredRequests);
   }, [requests, filteredRequests]);
+
+  const handleSendRequest = async (record) => {
+    try {
+      await api.post(`/api/ConsultationRequests/${record.id}/send`);
+      toast.success("Đã gửi yêu cầu thành công");
+      fetchRequests();
+    } catch (error) {
+      toast.error(
+        error.response
+          ? `Lỗi: ${error.response.status} - ${error.response.data.message}`
+          : "Không thể gửi yêu cầu"
+      );
+    }
+  };
 
   const columns = [
     {
@@ -219,12 +221,22 @@ const CustomDesignRequest = () => {
       render: (_, record) => (
         <Space size="middle">
           {record.status !== "COMPLETED" && (
-            <Tooltip title="Cập nhật trạng thái">
-              <FaEdit
-                onClick={() => handleEditStatus(record)}
-                style={{ cursor: "pointer", fontSize: "18px" }}
-              />
-            </Tooltip>
+            <>
+              <Tooltip title="Cập nhật trạng thái">
+                <FaEdit
+                  onClick={() => handleEditStatus(record)}
+                  style={{ cursor: "pointer", fontSize: "18px" }}
+                />
+              </Tooltip>
+              {record.status === "PROCEED_DESIGN" && (
+                <Tooltip title="Gửi yêu cầu cho quản lý">
+                  <FaPaperPlane
+                    onClick={() => handleSendRequest(record)}
+                    style={{ cursor: "pointer", fontSize: "16px", color: '#1890ff' }}
+                  />
+                </Tooltip>
+              )}
+            </>
           )}
         </Space>
       ),
