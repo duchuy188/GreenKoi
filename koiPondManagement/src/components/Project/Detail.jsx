@@ -24,6 +24,7 @@ const ProjectDetails = () => {
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
@@ -40,6 +41,38 @@ const ProjectDetails = () => {
 
     fetchProjectDetails();
   }, [id]);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const response = await api.get('/api/profile', {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          setUserProfile(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  useEffect(() => {
+    if (isModalVisible && project && userProfile) {
+      form.setFieldsValue({
+        customerName: userProfile.fullName || '',
+        customerPhone: userProfile.phone || '',
+        customerAddress: userProfile.address || '',
+        designName: project.name || '',
+        notes: ''
+      });
+    }
+  }, [isModalVisible, project, userProfile, form]);
 
   const showModal = () => {
     const token = localStorage.getItem("token");
@@ -119,17 +152,7 @@ const ProjectDetails = () => {
         onOk: () => navigate("/login"),
       });
     } else {
-      navigate("/lapthietketheoyeucau", {
-        state: {
-          projectId: id,
-          name: project.name,
-          description: project.description,
-          shape: project.shape,
-          dimensions: project.dimensions,
-          features: project.features,
-          basePrice: project.basePrice,
-        },
-      });
+      setIsModalVisible(true);
     }
   };
 
@@ -226,6 +249,34 @@ const ProjectDetails = () => {
           footer={null}
         >
           <Form form={form} onFinish={onFinish} layout="vertical">
+            <Form.Item
+              name="customerName"
+              label="Tên khách hàng"
+              rules={[{ required: true, message: 'Vui lòng nhập tên khách hàng' }]}
+            >
+              <Input disabled />
+            </Form.Item>
+            <Form.Item
+              name="customerPhone"
+              label="Số điện thoại"
+              rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}
+            >
+              <Input disabled />
+            </Form.Item>
+            <Form.Item
+              name="customerAddress"
+              label="Địa chỉ"
+              rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
+            >
+              <Input disabled />
+            </Form.Item>
+            <Form.Item
+              name="designName"
+              label="Tên dự án"
+              rules={[{ required: true, message: 'Vui lòng nhập tên dự án' }]}
+            >
+              <Input disabled />
+            </Form.Item>
             <Form.Item name="notes" label="Ghi chú">
               <Input.TextArea />
             </Form.Item>
