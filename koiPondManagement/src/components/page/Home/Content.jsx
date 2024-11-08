@@ -21,7 +21,7 @@ export default class Content extends Component {
 
   fetchFeaturedProjects = async () => {
     try {
-      const response = await api.get("/api/pond-designs/approved");
+      const response = await api.get("/api/pond-designs/public");
       if (Array.isArray(response.data)) {
         this.setState({ featuredProjects: response.data.slice(0, 6) });
       } else {

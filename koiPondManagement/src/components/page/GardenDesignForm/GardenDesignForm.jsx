@@ -86,6 +86,7 @@ const GardenDesignForm = () => {
         designName: formData.designName,
         designDescription: formData.designDescription,
         notes: formData.notes || "",
+        customDesign: false,
       };
 
       console.log("Sending request:", consultationRequest);

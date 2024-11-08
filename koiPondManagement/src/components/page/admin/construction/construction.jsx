@@ -30,7 +30,7 @@ const ProjectTasks = () => {
 
     if (isPollingEnabled) {
       pollingIntervalRef.current = setInterval(() => {
-        if (document.visibilityState === 'visible') {
+        if (document.visibilityState === "visible") {
           fetchConstructorProject(true);
         }
       }, 30000);
@@ -45,19 +45,19 @@ const ProjectTasks = () => {
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         fetchConstructorProject(true);
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
   const togglePolling = () => {
-    setIsPollingEnabled(prev => !prev);
+    setIsPollingEnabled((prev) => !prev);
   };
 
   const fetchConstructorProject = async (isBackgroundRefresh = false) => {
@@ -71,11 +71,11 @@ const ProjectTasks = () => {
         Array.isArray(response.data) &&
         response.data.length > 0
       ) {
-        const activeProject = response.data.find(project => 
-          project.statusName !== "COMPLETED" && 
-          project.status !== "PS6"
+        const activeProject = response.data.find(
+          (project) =>
+            project.statusName !== "COMPLETED" && project.status !== "PS6"
         );
-        
+
         if (activeProject) {
           setProjectInfo(activeProject);
           if (activeProject.id) {
@@ -156,18 +156,21 @@ const ProjectTasks = () => {
         `/api/tasks/${taskId}/status?newStatus=${newStatus}&completionPercentage=${newPercentage}`
       );
 
-      const updatedTasks = tasks.map(task => 
-        task.id === taskId 
+      const updatedTasks = tasks.map((task) =>
+        task.id === taskId
           ? { ...task, status: newStatus, completionPercentage: newPercentage }
           : task
       );
       setTasks(updatedTasks);
 
-      const totalProgress = updatedTasks.reduce((sum, task) => sum + (task.completionPercentage || 0), 0);
+      const totalProgress = updatedTasks.reduce(
+        (sum, task) => sum + (task.completionPercentage || 0),
+        0
+      );
       const averageProgress = totalProgress / updatedTasks.length;
-      setProjectInfo(prev => ({
+      setProjectInfo((prev) => ({
         ...prev,
-        progressPercentage: Math.round(averageProgress)
+        progressPercentage: Math.round(averageProgress),
       }));
 
       toast.success("Cập nhật nhiệm vụ thành công");
@@ -319,10 +322,16 @@ const ProjectTasks = () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Title level={2}>Nhiệm vụ dự án</Title>     
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Title level={2}>Nhiệm vụ dự án</Title>
       </div>
-      
+
       {projectInfo ? (
         <>
           <Card style={{ marginBottom: 16 }}>
@@ -335,26 +344,37 @@ const ProjectTasks = () => {
                 }}
               />
             </div>
-            <Space direction="vertical" style={{ width: "100%", marginTop: 16 }}>
+            <Space
+              direction="vertical"
+              style={{ width: "100%", marginTop: 16 }}
+            >
               <Text>Tiến độ chung:</Text>
               <Progress percent={projectInfo.progressPercentage || 0} />
             </Space>
 
-            <Space direction="vertical" style={{ width: "100%", marginTop: 16 }}>
-              <Text>Trạng thái: {(() => {
-                switch (projectInfo.statusName?.toUpperCase()) {
-                  case "COMPLETED":
-                    return "HOÀN THÀNH";
-                  case "IN PROCESS":
-                    return "ĐANG XỬ LÝ";
-                  case "PENDING":
-                    return "CHỜ XỬ LÝ";
-                  case "TECHNICALLY_COMPLETED":
-                    return "HOÀN THÀNH KỸ THUẬT";
-                  default:
-                    return projectInfo.statusName || "N/A";
-                }
-              })()}</Text>
+            <Space
+              direction="vertical"
+              style={{ width: "100%", marginTop: 16 }}
+            >
+              <Text>
+                Trạng thái:{" "}
+                {(() => {
+                  switch (projectInfo.statusName?.toUpperCase()) {
+                    case "COMPLETED":
+                      return "HOÀN THÀNH";
+                    case "IN_PROGRESS":
+                      return "ĐANG XỬ LÝ";
+                    case "PENDING":
+                      return "CHỜ XỬ LÝ";
+                    case "CANCELLED":
+                      return "Dự án bị hủy";
+                    case "TECHNICALLY_COMPLETED":
+                      return "HOÀN THÀNH KỸ THUẬT";
+                    default:
+                      return projectInfo.statusName || "N/A";
+                  }
+                })()}
+              </Text>
 
               <Text>
                 Ngày bắt đầu:{" "}

@@ -43,12 +43,12 @@ const OrdersCustomer = () => {
   useEffect(() => {
     // Initial fetch
     initialFetch();
-    
+
     // Setup polling
     const pollingInterval = setInterval(() => {
       pollOrders();
     }, 10000); // Poll every 10 seconds
-    
+
     return () => clearInterval(pollingInterval);
   }, []);
 
@@ -76,46 +76,70 @@ const OrdersCustomer = () => {
       if (Array.isArray(response.data)) {
         const sortedOrders = response.data.sort((a, b) => {
           // Sort by startDate first
-          const startDateDiff = moment(b.startDate).valueOf() - moment(a.startDate).valueOf();
+          const startDateDiff =
+            moment(b.startDate).valueOf() - moment(a.startDate).valueOf();
           if (startDateDiff !== 0) return startDateDiff;
-          
+
           // If startDate is same, sort by createdAt
           return moment(b.createdAt).valueOf() - moment(a.createdAt).valueOf();
         });
 
-        setOrders(prevOrders => {
+        setOrders((prevOrders) => {
           // Compare new orders with previous orders
           if (JSON.stringify(prevOrders) !== JSON.stringify(sortedOrders)) {
             // Only show notifications if this is not the initial fetch
             if (!isInitialFetch) {
               // Check for new orders
-              sortedOrders.forEach(newOrder => {
-                const prevOrder = prevOrders.find(po => po.id === newOrder.id);
-                
+              sortedOrders.forEach((newOrder) => {
+                const prevOrder = prevOrders.find(
+                  (po) => po.id === newOrder.id
+                );
+
                 // If this is a new order
                 if (!prevOrder) {
                   toast.info(`Có đơn hàng mới: "${newOrder.name}"`);
                 }
                 // Check for status changes
                 else if (prevOrder.statusName !== newOrder.statusName) {
-                  toast.info(`Dự án "${newOrder.name}" đã được cập nhật trạng thái thành ${
-                    newOrder.statusName === "IN_PROGRESS" ? "ĐANG THỰC HIỆN" :
-                    newOrder.statusName === "APPROVED" ? "ĐÃ DUYỆT" :
-                    newOrder.statusName === "PENDING" ? "CHỜ DUYỆT" :
-                    newOrder.statusName === "PLANNING" ? "ĐANG LÊN KẾ HOẠCH" :
-                    newOrder.statusName === "ON_HOLD" ? "TẠM DỪNG" :
-                    newOrder.statusName === "CANCELLED" ? "ĐÃ HỦY" :
-                    newOrder.statusName === "MAINTENANCE" ? "BẢO TRÌ" :
-                    newOrder.statusName === "TECHNICALLY_COMPLETED" ? "ĐÃ HOÀN THÀNH KỸ THUẬT" :
-                    newOrder.statusName === "COMPLETED" ? "HOÀN THÀNH" :
-                    newOrder.statusName
-                  }`);
+                  toast.info(
+                    `Dự án "${
+                      newOrder.name
+                    }" đã được cập nhật trạng thái thành ${
+                      newOrder.statusName === "IN_PROGRESS"
+                        ? "ĐANG THỰC HIỆN"
+                        : newOrder.statusName === "APPROVED"
+                        ? "ĐÃ DUYỆT"
+                        : newOrder.statusName === "PENDING"
+                        ? "CHỜ DUYỆT"
+                        : newOrder.statusName === "PLANNING"
+                        ? "ĐANG LÊN KẾ HOẠCH"
+                        : newOrder.statusName === "ON_HOLD"
+                        ? "TẠM DỪNG"
+                        : newOrder.statusName === "CANCELLED"
+                        ? "ĐÃ HỦY"
+                        : newOrder.statusName === "MAINTENANCE"
+                        ? "BẢO TRÌ"
+                        : newOrder.statusName === "TECHNICALLY_COMPLETED"
+                        ? "ĐÃ HOÀN THÀNH KỸ THUẬT"
+                        : newOrder.statusName === "COMPLETED"
+                        ? "HOÀN THÀNH"
+                        : newOrder.statusName
+                    }`
+                  );
                 }
 
                 // Check for payment status changes
-                if (prevOrder && prevOrder.paymentStatus !== newOrder.paymentStatus) {
-                  const newPaymentStatus = paymentStatusOptions.find(opt => opt.value === newOrder.paymentStatus)?.label || "Chưa thanh toán";
-                  toast.info(`Trạng thái thanh toán của dự án "${newOrder.name}" đã được cập nhật thành ${newPaymentStatus}`);
+                if (
+                  prevOrder &&
+                  prevOrder.paymentStatus !== newOrder.paymentStatus
+                ) {
+                  const newPaymentStatus =
+                    paymentStatusOptions.find(
+                      (opt) => opt.value === newOrder.paymentStatus
+                    )?.label || "Chưa thanh toán";
+                  toast.info(
+                    `Trạng thái thanh toán của dự án "${newOrder.name}" đã được cập nhật thành ${newPaymentStatus}`
+                  );
                 }
               });
             }
@@ -168,7 +192,10 @@ const OrdersCustomer = () => {
       fetchOrders();
     } catch (error) {
       console.error("Error submitting review:", error);
-      if (error.response?.data?.message === "A review already exists for this project") {
+      if (
+        error.response?.data?.message ===
+        "A review already exists for this project"
+      ) {
         toast.error("Dự án này đã được đánh giá trước đó");
       } else {
         toast.error(`Không thể gửi đánh giá: ${error.message}`);
@@ -315,14 +342,18 @@ const OrdersCustomer = () => {
                   <p className="card-text mb-1">
                     <i className="fas fa-money-bill-wave me-2 text-warning"></i>
                     <strong>Trạng Thái Thanh Toán:</strong>{" "}
-                    <span className={`badge ${
-                      order.paymentStatus === "FULLY_PAID" 
-                        ? "bg-success" 
-                        : order.paymentStatus === "DEPOSIT_PAID"
-                        ? "bg-info"
-                        : "bg-danger"
-                    }`}>
-                      {paymentStatusOptions.find(opt => opt.value === order.paymentStatus)?.label || "Chưa thanh toán"}
+                    <span
+                      className={`badge ${
+                        order.paymentStatus === "FULLY_PAID"
+                          ? "bg-success"
+                          : order.paymentStatus === "DEPOSIT_PAID"
+                          ? "bg-info"
+                          : "bg-danger"
+                      }`}
+                    >
+                      {paymentStatusOptions.find(
+                        (opt) => opt.value === order.paymentStatus
+                      )?.label || "Chưa thanh toán"}
                     </span>
                   </p>
                 </div>
@@ -468,14 +499,18 @@ const OrdersCustomer = () => {
                 <p>
                   <i className="fas fa-money-bill-wave text-warning me-2"></i>
                   <strong>Trạng Thái Thanh Toán:</strong>{" "}
-                  <span className={`badge ${
-                    selectedOrder.paymentStatus === "FULLY_PAID" 
-                      ? "bg-success" 
-                      : selectedOrder.paymentStatus === "DEPOSIT_PAID"
-                      ? "bg-info"
-                      : "bg-danger"
-                  }`}>
-                    {paymentStatusOptions.find(opt => opt.value === selectedOrder.paymentStatus)?.label || "Chưa thanh toán"}
+                  <span
+                    className={`badge ${
+                      selectedOrder.paymentStatus === "FULLY_PAID"
+                        ? "bg-success"
+                        : selectedOrder.paymentStatus === "DEPOSIT_PAID"
+                        ? "bg-info"
+                        : "bg-danger"
+                    }`}
+                  >
+                    {paymentStatusOptions.find(
+                      (opt) => opt.value === selectedOrder.paymentStatus
+                    )?.label || "Chưa thanh toán"}
                   </span>
                 </p>
               </div>
@@ -512,6 +547,10 @@ const OrdersCustomer = () => {
                           ? "ĐANG CHỜ"
                           : task.status === "IN_PROGRESS"
                           ? "ĐANG THỰC HIỆN"
+                          : task.status === "in process"
+                          ? "ĐANG XỬ LÝ"
+                          : task.status === "ĐANG CHỜ"
+                          ? "ĐANG CHỜ"
                           : task.status}
                       </td>
                       <td>
