@@ -145,26 +145,26 @@ const OrdersList = () => {
 
   const fetchProjectReview = async (projectId) => {
     try {
-      const response = await api.get(`/api/projects/${projectId}/reviews`, {
-        params: { _t: new Date().getTime() },
-        validateStatus: (status) => {
-          return status === 200 || status === 404;
-        }
-      });
-
-      if (response.status === 200) {
-        setProjectReviews(prev => ({
-          ...prev,
-          [projectId]: response.data
+      const response = await api.get(`/api/projects/${projectId}/reviews`);
+      if (response.data) {
+        setProjectReviews((prevReviews) => ({
+          ...prevReviews,
+          [projectId]: response.data,
         }));
       }
     } catch (error) {
-      if (error.response?.status !== 404) {
+      if (error.response?.status === 404) {
+        setProjectReviews((prevReviews) => ({
+          ...prevReviews,
+          [projectId]: null,
+        }));
+      } else {
         console.error(`Error fetching review for project ${projectId}:`, error);
       }
     }
   };
   const statusOptions = [
+    { value: "ALL", label: "Tất cả", color: "default" },
     { value: "PENDING", label: "Chờ duyệt", color: "orange" },
     { value: "APPROVED", label: "Đã duyệt", color: "green" },
     { value: "PLANNING", label: "Đang lên kế hoạch", color: "blue" },
@@ -295,7 +295,7 @@ const OrdersList = () => {
       console.error("Error completing project:", error);
       if (error.response?.status === 400) {
         toast.error(
-          "Dự án phải được thanh toán đầy đủ trước khi đánh dấu hoàn thành"
+          "Dự án phải được hoàn thành kỹ thuật trước khi đánh dấu là đã thanh toán đầy đủ"
         );
       } else {
         toast.error("Không thể hoàn thành dự án");
@@ -678,7 +678,7 @@ const OrdersList = () => {
   );
 
   const filteredOrders = orders.filter(order => {
-    if (!statusFilter) return true;
+    if (!statusFilter || statusFilter === "ALL") return true;
     return order.statusName === statusFilter;
   });
 
@@ -773,6 +773,7 @@ const OrdersList = () => {
     <div>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
         <h1>Danh sách đơn hàng</h1>
+        
       </div>
       
       {renderFilters()}

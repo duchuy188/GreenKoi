@@ -9,6 +9,9 @@ import {
   Form,
   DatePicker,
   InputNumber,
+  Typography,
+  Empty,
+  Tag,
 } from "antd";
 import { EyeOutlined, StarFilled } from "@ant-design/icons";
 import api from "../../../config/axios";
@@ -36,6 +39,8 @@ const ManageMaintenance = () => {
   const [currentReview, setCurrentReview] = useState(null);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [searchStaff, setSearchStaff] = useState("");
+  const [assignedStaffIds, setAssignedStaffIds] = useState([]);
 
   const paymentStatusOptions = [
     { value: 'UNPAID', label: 'Chưa thanh toán' },
@@ -47,6 +52,13 @@ const ManageMaintenance = () => {
     fetchMaintenanceRequests();
     fetchStaffList();
   }, [requestStatus]);
+
+  useEffect(() => {
+    const assignedIds = maintenanceRequests
+      .filter(request => request.requestStatus === "CONFIRMED" && request.assignedTo)
+      .map(request => request.assignedTo);
+    setAssignedStaffIds([...new Set(assignedIds)]);
+  }, [maintenanceRequests]);
 
   const fetchMaintenanceRequests = async () => {
     try {
@@ -173,31 +185,18 @@ const ManageMaintenance = () => {
     setDetailsModalVisible(true);
   };
 
-  const handleViewDescription = (record) => {
-    Modal.info({
-      title: "Chi tiết mô tả",
-      content: <p>{record.description || "Không có mô tả"}</p>,
-      okText: "Đồng ý",
+  const getAvailableStaff = () => {
+    return staffList.filter(staff => {
+      const matchesSearch = staff.name.toLowerCase().includes(searchStaff.toLowerCase());
+      const isAvailable = !assignedStaffIds.includes(staff.id);
+      return matchesSearch && isAvailable;
     });
   };
 
   const columns = [
     { title: "Dự án", dataIndex: "projectName", key: "projectName", render: (text) => text || "N/A" },
     { title: "Nhân viên tư vấn", dataIndex: "consultantName", key: "consultantName", render: (text) => text || "N/A" },
-    {
-      title: "Mô tả",
-      dataIndex: "description",
-      key: "description",
-      render: (text, record) => (
-        <>
-          <Button
-            icon={<EyeOutlined />}
-            onClick={() => handleViewDescription(record)}
-            style={{ marginLeft: 8 }}
-          />
-        </>
-      ),
-    },
+    { title: "Mô tả", dataIndex: "description", key: "description" },
     {
       title: "Trạng thái yêu cầu",
       dataIndex: "requestStatus",
@@ -213,11 +212,7 @@ const ManageMaintenance = () => {
         return (
           <span style={{ 
             color: statusConfig[status]?.color || '#000000',
-            fontWeight: 'bold',
-            border: `1px solid ${statusConfig[status]?.color || '#000000'}`,
-            borderRadius: '4px',
-            padding: '2px 8px',
-            display: 'inline-block'
+            fontWeight: 'bold'
           }}>
             {statusConfig[status]?.text || status}
           </span>
@@ -238,11 +233,7 @@ const ManageMaintenance = () => {
         return (
           <span style={{ 
             color: statusConfig[status]?.color || '#000000',
-            fontWeight: 'bold',
-            border: `1px solid ${statusConfig[status]?.color || '#000000'}`,
-            borderRadius: '4px',
-            padding: '2px 8px',
-            display: 'inline-block'
+            fontWeight: 'bold'
           }}>
             {statusConfig[status]?.text || status}
           </span>
@@ -374,7 +365,6 @@ const ManageMaintenance = () => {
         open={viewCancelReasonModalVisible}
         onOk={() => setViewCancelReasonModalVisible(false)}
         onCancel={() => setViewCancelReasonModalVisible(false)}
-        okText="Đồng ý"
       >
         <p>{currentCancelReason}</p>
       </Modal>
@@ -385,7 +375,6 @@ const ManageMaintenance = () => {
         open={cancelModalVisible}
         onOk={submitCancel}
         onCancel={() => setCancelModalVisible(false)}
-        okText="Đồng ý"
       >
         <TextArea
           rows={4}
@@ -397,24 +386,76 @@ const ManageMaintenance = () => {
 
       {/* Assign Staff Modal */}
       <Modal
-        title="Phân công nhân viên"
+        title={<div className="assign-modal-title">Phân công nhân viên</div>}
         open={isAssignModalVisible}
+        onCancel={() => {
+          setIsAssignModalVisible(false);
+          setSelectedStaffId(null);
+          setSearchStaff("");
+        }}
         onOk={handleAssignSubmit}
-        onCancel={() => setIsAssignModalVisible(false)}
-        okText="Đồng ý"
-        cancelText="Huỷ"
+        okText="Xác nhận phân công"
+        cancelText="Hủy"
+        width={500}
       >
-        <Select
-          style={{ width: "100%" }}
-          placeholder="Chọn nhân viên"
-          onChange={(value) => setSelectedStaffId(value)}
-        >
-          {staffList.map((staff) => (
-            <Option key={staff.id} value={staff.id}>
-              {staff.name}
-            </Option>
-          ))}
-        </Select>
+        <Input.Search
+          placeholder="Tìm kiếm nhân viên..."
+          value={searchStaff}
+          onChange={(e) => setSearchStaff(e.target.value)}
+          allowClear
+          style={{ marginBottom: 16 }}
+        />
+
+        <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+          {getAvailableStaff().length > 0 ? (
+            getAvailableStaff().map((staff) => (
+              <div
+                key={staff.id}
+                className={`constructor-item ${
+                  selectedStaffId === staff.id ? "selected" : ""
+                }`}
+                onClick={() => setSelectedStaffId(staff.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '8px',
+                  cursor: 'pointer',
+                  backgroundColor: selectedStaffId === staff.id ? "#e6f7ff" : "transparent",
+                  borderRadius: '4px',
+                  marginBottom: '8px',
+                }}
+              >
+                <div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    backgroundColor: '#1890ff',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: '8px',
+                  }}
+                >
+                  {staff.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <Typography.Text strong>{staff.name}</Typography.Text>
+                  <br />
+                  <Typography.Text type="secondary">
+                    Chưa có dự án nào
+                  </Typography.Text>
+                </div>
+                {selectedStaffId === staff.id && (
+                  <Tag color="blue" style={{ marginLeft: 'auto' }}>Đã chọn</Tag>
+                )}
+              </div>
+            ))
+          ) : (
+            <Empty description="Không tìm thấy nhân viên phù hợp" />
+          )}
+        </div>
       </Modal>
 
       {/* Review Modal */}

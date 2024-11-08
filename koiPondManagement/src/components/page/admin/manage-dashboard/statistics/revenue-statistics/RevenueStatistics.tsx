@@ -63,7 +63,8 @@ const RevenueStatistics: React.FC<RevenueStatisticsProps> = ({ revenueData }) =>
     autoFit: false,
     tooltip: {
       formatter: (datum: any) => {
-        return { name: 'Revenue', value: `$${datum.revenue}` };
+        const revenue = datum.revenue !== undefined && datum.revenue !== null ? datum.revenue.toLocaleString('vi-VN') : '0';
+        return { name: 'Revenue', value: `$${revenue}` };
       },
     },
   };
@@ -82,7 +83,7 @@ const RevenueStatistics: React.FC<RevenueStatisticsProps> = ({ revenueData }) =>
             fontWeight: 'bold',
             color: '#00B96B'
           }}>
-            {revenueData.totalRevenue} VNĐ
+            {revenueData.totalRevenue.toLocaleString('vi-VN')} VNĐ
           </span>   
           <span style={{ 
             color: '#00B96B',
