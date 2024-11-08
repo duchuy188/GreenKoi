@@ -67,4 +67,13 @@ public interface ProjectRepository extends JpaRepository<Project, String> {
            "GROUP BY FORMAT(p.endDate, 'yyyy-MM') " +
            "ORDER BY FORMAT(p.endDate, 'yyyy-MM')")
     List<Object[]> getRevenueByMonth(@Param("startDate") LocalDate startDate);
+
+    // Thêm method này vào interface ProjectRepository
+    @Query("SELECT COUNT(p) > 0 FROM Project p " +
+           "WHERE p.constructor.id = :constructorId " +
+           "AND p.status.name NOT IN :statusNames")
+    boolean existsByConstructorIdAndStatusNameNotIn(
+        @Param("constructorId") String constructorId, 
+        @Param("statusNames") List<String> statusNames
+    );
 }

@@ -153,6 +153,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/ConsultationRequests/**").hasAnyAuthority("ROLE_2", "ROLE_5")
 
                         // Blog endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/blog/drafts").hasAnyAuthority("ROLE_3", "ROLE_1")
+                        .requestMatchers(HttpMethod.GET, "/api/blog/drafts/{id}").hasAnyAuthority("ROLE_3", "ROLE_1")
+                        .requestMatchers(HttpMethod.GET, "/api/blog/posts/pending").hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.GET, "/api/blog/posts/my").hasAnyAuthority("ROLE_3", "ROLE_1")
+                        .requestMatchers(HttpMethod.GET, "/api/blog/posts/approved/all").hasAuthority("ROLE_1")
+                        .requestMatchers(HttpMethod.POST, "/api/blog/posts/*/restore").hasAuthority("ROLE_1")
                         .requestMatchers(HttpMethod.POST, "/api/blog/drafts").hasAnyAuthority("ROLE_3", "ROLE_1")
                         .requestMatchers(HttpMethod.PUT, "/api/blog/drafts/**").hasAnyAuthority("ROLE_3", "ROLE_1")
                         .requestMatchers(HttpMethod.POST, "/api/blog/drafts/*/submit").hasAnyAuthority("ROLE_3", "ROLE_1")

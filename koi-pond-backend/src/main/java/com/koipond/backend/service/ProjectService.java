@@ -201,6 +201,7 @@ public class ProjectService {
             project.setUpdatedAt(LocalDateTime.now());
 
             updateProjectFieldsBasedOnStatus(project, status);
+            updateConstructorActiveStatus(project);
 
             Project updatedProject = projectRepository.save(project);
             log.info("Project status updated successfully: {}", updatedProject.getId());
@@ -221,6 +222,7 @@ public class ProjectService {
         ProjectStatus cancelledStatus = getProjectStatusByName("CANCELLED");
         project.setStatus(cancelledStatus);
         updateProjectFieldsBasedOnStatus(project, cancelledStatus);
+        updateConstructorActiveStatus(project);
         project.setUpdatedAt(LocalDateTime.now());
 
         Project updatedProject = projectRepository.save(project);
@@ -433,8 +435,10 @@ public class ProjectService {
             throw new IllegalStateException("Can only assign users with constructor role");
         }
 
-        // Kiểm tra constructor có đang bận không - Sửa lại kiểu boolean
-        if (constructor.isHasActiveProject()) {  // Thay vì dùng getHasActiveProject()
+        // Kiểm tra constructor có project đang active không
+        if (projectRepository.existsByConstructorIdAndStatusNameNotIn(
+                constructor.getId(), 
+                Arrays.asList("COMPLETED", "CANCELLED"))) {
             throw new IllegalStateException("Constructor is currently busy with another project");
         }
 
@@ -462,6 +466,7 @@ public class ProjectService {
         ProjectStatus completedStatus = getProjectStatusByName("COMPLETED");
         project.setStatus(completedStatus);
         updateProjectFieldsBasedOnStatus(project, completedStatus);
+        updateConstructorActiveStatus(project);
         project.setUpdatedAt(LocalDateTime.now());
 
         Project updatedProject = projectRepository.save(project);
@@ -858,6 +863,17 @@ public class ProjectService {
                 break;
             case FULLY_PAID:
                 throw new IllegalStateException("Cannot change payment status once fully paid");
+        }
+    }
+
+    // Thêm method để cập nhật trạng thái active của constructor
+    private void updateConstructorActiveStatus(Project project) {
+        if (project.getConstructor() != null) {
+            User constructor = project.getConstructor();
+            boolean hasActiveProject = project.getStatus().getName() != null && 
+                !Arrays.asList("COMPLETED", "CANCELLED").contains(project.getStatus().getName());
+            constructor.setHasActiveProject(hasActiveProject);
+            userRepository.save(constructor);
         }
     }
 }

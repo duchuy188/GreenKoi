@@ -33,7 +33,7 @@ public class BlogController {
 
     @Operation(summary = "Create a new draft", description = "Creates a new blog post draft")
     @PostMapping("/drafts")
-    @PreAuthorize("hasAnyRole('MANAGER', 'CONSULTING_STAFF', 'DESIGN_STAFF', 'CONSTRUCTION_STAFF')")
+    @PreAuthorize("hasAnyAuthority('ROLE_1', 'ROLE_2', 'ROLE_3', 'ROLE_4')")
     public ResponseEntity<BlogPostDTO> createDraft(
             @RequestBody BlogPostDTO blogPostDTO,
             Authentication authentication) {
@@ -44,7 +44,7 @@ public class BlogController {
 
     @Operation(summary = "Update a draft", description = "Updates an existing blog post draft")
     @PutMapping("/drafts/{id}")
-    @PreAuthorize("hasAnyRole('MANAGER', 'CONSULTING_STAFF', 'DESIGN_STAFF', 'CONSTRUCTION_STAFF')")
+    @PreAuthorize("hasAnyAuthority('ROLE_1', 'ROLE_2', 'ROLE_3', 'ROLE_4')")
     public ResponseEntity<BlogPostDTO> updateDraft(
             @Parameter(description = "ID of the draft to update") @PathVariable String id,
             @RequestBody BlogPostDTO blogPostDTO) {
@@ -54,7 +54,7 @@ public class BlogController {
 
     @Operation(summary = "Submit a draft for approval", description = "Submits a draft blog post for approval")
     @PostMapping("/drafts/{id}/submit")
-    @PreAuthorize("hasAnyRole('MANAGER', 'CONSULTING_STAFF', 'DESIGN_STAFF', 'CONSTRUCTION_STAFF')")
+    @PreAuthorize("hasAnyAuthority('ROLE_1', 'ROLE_2', 'ROLE_3', 'ROLE_4')")
     public ResponseEntity<BlogPostDTO> submitForApproval(
             @Parameter(description = "ID of the draft to submit") @PathVariable String id) {
         return ResponseEntity.ok(blogService.submitForApproval(id));
@@ -62,7 +62,7 @@ public class BlogController {
 
     @Operation(summary = "Approve a blog post", description = "Approves a submitted blog post")
     @PostMapping("/posts/{id}/approve")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_1')")
     public ResponseEntity<BlogPostDTO> approveBlogPost(
             @Parameter(description = "ID of the blog post to approve") @PathVariable String id) {
         return ResponseEntity.ok(blogService.approveBlogPost(id));
@@ -70,7 +70,7 @@ public class BlogController {
 
     @Operation(summary = "Reject a blog post", description = "Rejects a submitted blog post")
     @PostMapping("/posts/{id}/reject")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_1')")
     public ResponseEntity<BlogPostDTO> rejectBlogPost(
             @PathVariable String id,
             @RequestBody Map<String, String> payload) {
@@ -80,14 +80,14 @@ public class BlogController {
 
     @Operation(summary = "Get all pending posts", description = "Retrieves all blog posts pending approval")
     @GetMapping("/posts/pending")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_1')")
     public ResponseEntity<List<BlogPostDTO>> getAllPendingPosts() {
         return ResponseEntity.ok(blogService.getAllPendingPosts());
     }
 
     @Operation(summary = "Get all posts by current user", description = "Retrieves all blog posts created by the current user")
     @GetMapping("/posts/my")
-    @PreAuthorize("hasAnyRole('MANAGER', 'CONSULTING_STAFF', 'DESIGN_STAFF', 'CONSTRUCTION_STAFF')")
+    @PreAuthorize("hasAnyAuthority('ROLE_1', 'ROLE_2', 'ROLE_3', 'ROLE_4')")
     public ResponseEntity<List<BlogPostDTO>> getMyPosts(Authentication authentication) {
         String username = authentication.getName();
         User user = userRepository.findByUsername(username)
@@ -110,7 +110,7 @@ public class BlogController {
 
     @Operation(summary = "Soft delete a draft", description = "Marks a draft blog post as deleted (only for the author)")
     @DeleteMapping("/drafts/{id}")
-    @PreAuthorize("hasRole('DESIGN_STAFF')")
+    @PreAuthorize("hasAuthority('ROLE_3')")
     public ResponseEntity<Void> softDeleteDraft(
             @Parameter(description = "ID of the draft to delete") @PathVariable String id,
             Authentication authentication) {
@@ -121,7 +121,7 @@ public class BlogController {
 
     @Operation(summary = "Soft delete an approved post", description = "Marks an approved blog post as deleted")
     @DeleteMapping("/posts/{id}")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_1')")
     public ResponseEntity<Void> softDeleteApprovedPost(
             @Parameter(description = "ID of the approved post to delete") @PathVariable String id,
             Authentication authentication) {
@@ -133,14 +133,14 @@ public class BlogController {
     @Operation(summary = "Get all approved posts for manager", 
                description = "Retrieves all approved blog posts, including both active and inactive (soft-deleted) ones, for manager viewing")
     @GetMapping("/posts/approved/all")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_1')")
     public ResponseEntity<List<BlogPostDTO>> getAllApprovedPostsForManager() {
         return ResponseEntity.ok(blogService.getAllApprovedPostsForManager());
     }
 
     @Operation(summary = "Restore a soft-deleted approved post", description = "Restores a soft-deleted approved blog post")
     @PostMapping("/posts/{id}/restore")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_1')")
     public ResponseEntity<Void> restoreApprovedPost(
             @Parameter(description = "ID of the approved post to restore") @PathVariable String id) {
         blogService.restoreApprovedPost(id);
