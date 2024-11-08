@@ -13,6 +13,7 @@ import {
   Tag,
   Typography,
   Tooltip,
+  Radio,
 } from "antd";
 import { FaEdit, FaShoppingCart } from "react-icons/fa";
 import api from "../../../config/axios";
@@ -21,6 +22,7 @@ import moment from "moment";
 import { EllipsisOutlined } from "@ant-design/icons";
 import { SearchOutlined } from '@ant-design/icons';
 import { Row, Col } from 'antd';
+import CustomDesignRequest from './custom-design-request';
 
 const { Text } = Typography;
 
@@ -47,6 +49,7 @@ const RequestConsulting = () => {
   const [isPolling, setIsPolling] = useState(false);
   const [createOrderLoading, setCreateOrderLoading] = useState(false);
   const [updateStatusLoading, setUpdateStatusLoading] = useState(false);
+  const [requestType, setRequestType] = useState('standard');
 
   useEffect(() => {
     // Initial fetch
@@ -88,26 +91,36 @@ const RequestConsulting = () => {
           .map((request) => request)
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+        const filteredRequests = requests.filter(request => 
+          requestType === 'standard' 
+            ? !request.isCustomDesign 
+            : request.isCustomDesign
+        );
+
         setConsultationRequests(prevRequests => {
-          if (JSON.stringify(prevRequests) !== JSON.stringify(requests)) {
-            // Kiểm tra và thông báo yêu cầu mới (chỉ khi đang polling)
+          if (JSON.stringify(prevRequests) !== JSON.stringify(filteredRequests)) {
             if (!isInitialFetch) {
-              requests.forEach(request => {
+              filteredRequests.forEach(request => {
                 if (!prevRequests.find(pr => pr.id === request.id)) {
                   toast.info(`Có yêu cầu tư vấn mới từ: ${request.customerName}`);
                 }
               });
             }
-            return requests;
+            return filteredRequests;
           }
           return prevRequests;
         });
       } else if (response.data.consultationRequests) {
-        // Tương tự như trên
-        const filteredRequests = response.data.consultationRequests
+        const requests = response.data.consultationRequests
           .filter((request) => request.status !== "CANCELLED")
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           
+        const filteredRequests = requests.filter(request => 
+          requestType === 'standard' 
+            ? !request.isCustomDesign 
+            : request.isCustomDesign
+        );
+        
         setConsultationRequests(prevRequests => {
           if (JSON.stringify(prevRequests) !== JSON.stringify(filteredRequests)) {
             if (!isInitialFetch) {
@@ -489,42 +502,76 @@ const RequestConsulting = () => {
     return { __html: htmlContent };
   };
 
+  const renderRequestTypeSwitch = () => {
+    return (
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col>
+          <Radio.Group 
+            value={requestType} 
+            onChange={(e) => setRequestType(e.target.value)}
+            buttonStyle="solid"
+            style={{ marginBottom: 16 }}
+          >
+            <Radio.Button value="standard">Thiết kế có sẵn</Radio.Button>
+            <Radio.Button value="custom">Thiết kế tùy chỉnh</Radio.Button>
+          </Radio.Group>
+        </Col>
+      </Row>
+    );
+  };
+
+  useEffect(() => {
+    fetchConsultationRequests(true);
+  }, [requestType]);
+
   return (
     <div>
       <h1>Yêu cầu của khách hàng</h1>
-      <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col>
-          <Select
-            style={{ width: 200 }}
-            value={statusFilter}
-            onChange={handleStatusFilterChange}
-            placeholder="Lọc theo trạng thái"
-          >
-            <Select.Option value="ALL">Tất cả</Select.Option>
-            <Select.Option value="PENDING">Đang chờ</Select.Option>
-            <Select.Option value="IN_PROGRESS">Đang thực hiện</Select.Option>
-            <Select.Option value="COMPLETED">Đã hoàn thành</Select.Option>
-          </Select>
-        </Col>
-        <Col>
-          <Input
-            placeholder="Tìm kiếm theo tên khách hàng"
-            prefix={<SearchOutlined />}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 250 }}
-          />
-        </Col>
-      </Row>
+      
+      {renderRequestTypeSwitch()}
 
-      <Table
-        columns={responsiveColumns}
-        dataSource={filteredRequests}
-        loading={initialLoading}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-        size="small"
-        style={{ overflowX: "hidden" }}
-      />
+      {requestType === 'standard' ? (
+        // Hiển thị bảng thiết kế có sẵn
+        <>
+          <Row gutter={16} style={{ marginBottom: 16 }}>
+            <Col>
+              <Select
+                style={{ width: 200 }}
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
+                placeholder="Lọc theo trạng thái"
+              >
+                <Select.Option value="ALL">Tất cả</Select.Option>
+                <Select.Option value="PENDING">Đang chờ</Select.Option>
+                <Select.Option value="IN_PROGRESS">Đang thực hiện</Select.Option>
+                <Select.Option value="COMPLETED">Đã hoàn thành</Select.Option>
+              </Select>
+            </Col>
+            <Col>
+              <Input
+                placeholder="Tìm kiếm theo tên khách hàng"
+                prefix={<SearchOutlined />}
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{ width: 250 }}
+              />
+            </Col>
+          </Row>
+
+          <Table
+            columns={responsiveColumns}
+            dataSource={filteredRequests}
+            loading={initialLoading}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+            size="small"
+            style={{ overflowX: "hidden" }}
+          />
+        </>
+      ) : (
+        // Hiển thị component thiết kế tùy chỉnh
+        <CustomDesignRequest />
+      )}
+
       <Modal
         title="Cập nhật trạng thái"
         open={editModalVisible}
