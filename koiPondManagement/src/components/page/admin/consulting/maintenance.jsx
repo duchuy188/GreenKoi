@@ -24,7 +24,7 @@ const formatCurrency = (amount) => {
   return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND'
-  }).format(amount);
+  }).format(amount).replace('₫', 'VNĐ');
 };
 
 const MaintenanceRequest = () => {
@@ -116,7 +116,7 @@ const MaintenanceRequest = () => {
       }
     } catch (error) {
       console.error("Error starting review:", error);
-      toast.error("Không thể bắt đầu xem xét yêu cầu bảo trì");
+      toast.error("Không thể bt đầu xem xét yêu cầu bảo trì");
     }
   };
 
@@ -276,8 +276,8 @@ const MaintenanceRequest = () => {
         return <Tag color={color}>{text}</Tag>;
       }
     },
-    { title: "Ngày tạo", dataIndex: "createdAt", key: "createdAt", render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss') },
-    { title: "Ngày cập nhật", dataIndex: "updatedAt", key: "updatedAt", render: (date) => moment(date).format('YYYY-MM-DD HH:mm:ss') },
+    { title: "Ngày tạo", dataIndex: "createdAt", key: "createdAt", render: (date) => moment(date).format('DD/MM/YYYY HH:mm:ss') },
+    { title: "Ngày cập nhật", dataIndex: "updatedAt", key: "updatedAt", render: (date) => moment(date).format('DD/MM/YYYY HH:mm:ss') },
     { 
       title: "Trạng thái thanh toán", 
       dataIndex: "paymentStatus", 
@@ -422,7 +422,7 @@ const MaintenanceRequest = () => {
           <Descriptions.Item label="Số tiền còn lại">{formatCurrency(selectedRecord.remainingAmount)}</Descriptions.Item>
           
           <Descriptions.Item label="Ngày hoàn thành">
-            {moment(selectedRecord.completionDate).format('YYYY-MM-DD')}
+            {moment(selectedRecord.completionDate).format('DD/MM/YYYY')}
           </Descriptions.Item>
           
           <Descriptions.Item label="Trạng thái thanh toán">
@@ -476,13 +476,13 @@ const MaintenanceRequest = () => {
           <Descriptions.Item label="Số tiền còn lại">{formatCurrency(selectedRecord.remainingAmount)}</Descriptions.Item>
           
           <Descriptions.Item label="Ngày lên lịch">
-            {moment(selectedRecord.scheduledDate).format('YYYY-MM-DD')}
+            {selectedRecord.scheduledDate ? moment(selectedRecord.scheduledDate).format('DD/MM/YYYY') : 'Chưa có ngày'}
           </Descriptions.Item>
           <Descriptions.Item label="Ngày bắt đầu">
-            {moment(selectedRecord.startDate).format('YYYY-MM-DD')}
+            {selectedRecord.startDate ? moment(selectedRecord.startDate).format('DD/MM/YYYY') : 'Chưa có ngày'}
           </Descriptions.Item>
           <Descriptions.Item label="Ngày hoàn thành">
-            {moment(selectedRecord.completionDate).format('YYYY-MM-DD')}
+            {selectedRecord.completionDate ? moment(selectedRecord.completionDate).format('DD/MM/YYYY') : 'Chưa có ngày'}
           </Descriptions.Item>
           
           <Descriptions.Item label="Tư vấn viên">{selectedRecord.consultantName}</Descriptions.Item>
@@ -521,10 +521,10 @@ const MaintenanceRequest = () => {
           )}
           
           <Descriptions.Item label="Ngày tạo">
-            {moment(selectedRecord.createdAt).format('YYYY-MM-DD HH:mm:ss')}
+            {moment(selectedRecord.createdAt).format('DD/MM/YYYY HH:mm:ss')}
           </Descriptions.Item>
           <Descriptions.Item label="Ngày cập nhật">
-            {moment(selectedRecord.updatedAt).format('YYYY-MM-DD HH:mm:ss')}
+            {moment(selectedRecord.updatedAt).format('DD/MM/YYYY HH:mm:ss')}
           </Descriptions.Item>
         </Descriptions>
       );
@@ -597,7 +597,18 @@ const MaintenanceRequest = () => {
             <Form.Item 
               name="agreedPrice" 
               label="Giá đã thỏa thuận"
-              rules={[{ required: true, message: 'Vui lòng nhập giá đã thỏa thuận!' }]}
+              rules={[
+                { required: true, message: 'Vui lòng nhập giá đã thỏa thuận!' },
+                {//nhập giá thoả thuận 
+                  validator: (_, value) => {
+                    const numValue = Number(value?.toString().replace(/\D/g, ''));
+                    if (numValue <= 100000) {
+                      return Promise.reject('Nhập số tiền đã thoả thuận.');
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
             >
               <Input
                 type="text"
