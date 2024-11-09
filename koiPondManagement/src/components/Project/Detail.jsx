@@ -9,10 +9,10 @@ import {
   Modal,
   Form,
   Input,
-  message,
 } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../config/axios";
+import { toast } from "react-toastify";
 
 const { Title, Paragraph } = Typography;
 const { Content } = Layout;
@@ -33,7 +33,7 @@ const ProjectDetails = () => {
         setProject(response.data);
       } catch (error) {
         console.error("Error fetching project details:", error);
-        message.error("Không thể tải thông tin dự án. Vui lòng thử lại.");
+        toast.error("Không thể tải thông tin dự án. Vui lòng thử lại.");
       } finally {
         setLoading(false);
       }
@@ -47,10 +47,10 @@ const ProjectDetails = () => {
       try {
         const token = localStorage.getItem("token");
         if (token) {
-          const response = await api.get('/api/profile', {
+          const response = await api.get("/api/profile", {
             headers: {
-              Authorization: `Bearer ${token}`
-            }
+              Authorization: `Bearer ${token}`,
+            },
           });
           setUserProfile(response.data);
         }
@@ -65,11 +65,11 @@ const ProjectDetails = () => {
   useEffect(() => {
     if (isModalVisible && project && userProfile) {
       form.setFieldsValue({
-        customerName: userProfile.fullName || '',
-        customerPhone: userProfile.phone || '',
-        customerAddress: userProfile.address || '',
-        designName: project.name || '',
-        notes: ''
+        customerName: userProfile.fullName || "",
+        customerPhone: userProfile.phone || "",
+        customerAddress: userProfile.address || "",
+        designName: project.name || "",
+        notes: "",
       });
     }
   }, [isModalVisible, project, userProfile, form]);
@@ -98,7 +98,7 @@ const ProjectDetails = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        message.error("Bạn cần đăng nhập để gửi yêu cầu tư vấn.");
+        toast.error("Bạn cần đăng nhập để gửi yêu cầu tư vấn.");
         navigate("/login");
         return;
       }
@@ -124,7 +124,7 @@ const ProjectDetails = () => {
       );
 
       if (response.status === 201 || response.status === 200) {
-        message.success("Yêu cầu tư vấn đã được gửi thành công!");
+        toast.success("Yêu cầu tư vấn đã được gửi thành công!");
         setIsModalVisible(false);
         form.resetFields();
       } else {
@@ -133,10 +133,10 @@ const ProjectDetails = () => {
     } catch (error) {
       console.error("Error submitting consultation request:", error);
       if (error.response && error.response.status === 401) {
-        message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
         navigate("/login");
       } else {
-        message.error("Không thể gửi yêu cầu tư vấn. Vui lòng thử lại.");
+        toast.error("Không thể gửi yêu cầu tư vấn. Vui lòng thử lại.");
       }
     }
   };
@@ -252,28 +252,32 @@ const ProjectDetails = () => {
             <Form.Item
               name="customerName"
               label="Tên khách hàng"
-              rules={[{ required: true, message: 'Vui lòng nhập tên khách hàng' }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập tên khách hàng" },
+              ]}
             >
               <Input disabled />
             </Form.Item>
             <Form.Item
               name="customerPhone"
               label="Số điện thoại"
-              rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập số điện thoại" },
+              ]}
             >
               <Input disabled />
             </Form.Item>
             <Form.Item
               name="customerAddress"
               label="Địa chỉ"
-              rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
+              rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
             >
               <Input disabled />
             </Form.Item>
             <Form.Item
               name="designName"
               label="Tên dự án"
-              rules={[{ required: true, message: 'Vui lòng nhập tên dự án' }]}
+              rules={[{ required: true, message: "Vui lòng nhập tên dự án" }]}
             >
               <Input disabled />
             </Form.Item>

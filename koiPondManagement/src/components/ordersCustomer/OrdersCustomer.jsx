@@ -32,6 +32,7 @@ const OrdersCustomer = () => {
   const [paymentStatus, setPaymentStatus] = useState("pending");
   const [initialLoading, setInitialLoading] = useState(true);
   const [isPolling, setIsPolling] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   // Add payment status options
   const paymentStatusOptions = [
@@ -186,19 +187,29 @@ const OrdersCustomer = () => {
         reviewData
       );
       console.log("Review submission response:", response);
-      toast.success("Đánh giá đã được gửi thành công");
+      toast.success("Đánh giá đã được gửi thành công", {
+        toastId: "review-success",
+      });
       setIsReviewModalVisible(false);
       form.resetFields();
       fetchOrders();
     } catch (error) {
       console.error("Error submitting review:", error);
-      if (
+      if (error.response?.status === 400) {
+        toast.error("Không thể gửi đánh giá: Vui lòng kiểm tra lại thông tin", {
+          toastId: "review-error-400",
+        });
+      } else if (
         error.response?.data?.message ===
         "A review already exists for this project"
       ) {
-        toast.error("Dự án này đã được đánh giá trước đó");
+        toast.error("Dự án này đã được đánh giá trước đó", {
+          toastId: "review-error-exists",
+        });
       } else {
-        toast.error(`Không thể gửi đánh giá: ${error.message}`);
+        toast.error("Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại sau", {
+          toastId: "review-error-general",
+        });
       }
     }
   };
@@ -225,13 +236,17 @@ const OrdersCustomer = () => {
         maintenanceData
       );
       console.log("Maintenance request submission response:", response);
-      toast.success("Yêu cầu bảo trì đã được gửi thành công");
+      toast.success("Yêu cầu bảo trì đã được gửi thành công", {
+        toastId: "maintenance-success",
+      });
       setIsMaintenanceModalVisible(false);
       maintenanceForm.resetFields();
       fetchOrders();
     } catch (error) {
       console.error("Error submitting maintenance request:", error);
-      toast.error(`Không thể gửi yêu cầu bảo trì: Đơn hàng chưa hoàn thành`);
+      toast.error(`Không thể gửi yêu cầu bảo trì: Đơn hàng chưa hoàn thành`, {
+        toastId: "maintenance-error",
+      });
     } finally {
       setMaintenanceLoading(false);
     }
@@ -245,11 +260,15 @@ const OrdersCustomer = () => {
       if (response.data && response.data.paymentUrl) {
         window.open(response.data.paymentUrl, "_blank");
       } else {
-        toast.error("Không thể tạo liên kết thanh toán");
+        toast.error("Không thể tạo liên kết thanh toán", {
+          toastId: "payment-error",
+        });
       }
     } catch (error) {
       console.error("Error creating payment:", error);
-      toast.error("Không thể khởi tạo thanh toán VNPAY");
+      toast.error("Không thể khởi tạo thanh toán VNPAY", {
+        toastId: "vnpay-error",
+      });
     }
   };
 
@@ -412,11 +431,27 @@ const OrdersCustomer = () => {
                 <p>
                   <i className="fas fa-align-left text-orange me-2"></i>
                   <strong>Mô Tả:</strong>{" "}
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: selectedOrder.description || "N/A",
-                    }}
-                  />
+                  {selectedOrder.description ? (
+                    <>
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html: showFullDescription
+                            ? selectedOrder.description
+                            : selectedOrder.description.slice(0, 100) + "...",
+                        }}
+                      />
+                      <button
+                        className="btn btn-link btn-sm p-0 ms-2"
+                        onClick={() =>
+                          setShowFullDescription(!showFullDescription)
+                        }
+                      >
+                        {showFullDescription ? "Thu gọn" : "Xem thêm"}
+                      </button>
+                    </>
+                  ) : (
+                    "N/A"
+                  )}
                 </p>
                 <p>
                   <i className="fas fa-dollar-sign text-warning me-2"></i>

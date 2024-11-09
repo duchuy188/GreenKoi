@@ -9,10 +9,10 @@ import {
   Modal,
   Form,
   Input,
-  message,
 } from "antd";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../../config/axios";
+import { toast } from "react-toastify";
 
 const { Title, Paragraph } = Typography;
 const { Content } = Layout;
@@ -33,7 +33,7 @@ const Blog = () => {
         setPost(response.data);
       } catch (error) {
         console.error("Error fetching post details:", error);
-        message.error("Không thể tải chi tiết bài viết. Vui lòng thử lại.");
+        toast.error("Không thể tải chi tiết bài viết. Vui lòng thử lại.");
       } finally {
         setLoading(false);
       }
@@ -48,7 +48,7 @@ const Blog = () => {
         setLatestPosts(sortedPosts);
       } catch (error) {
         console.error("Error fetching latest posts:", error);
-        message.error("Không thể tải bài viết mới nhất. Vui lòng thử lại.");
+        toast.error("Không thể tải bài viết mới nhất. Vui lòng thử lại.");
       }
     };
 

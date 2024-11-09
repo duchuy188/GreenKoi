@@ -48,7 +48,8 @@ const GardenDesignForm = () => {
     fetchUserProfile();
 
     if (location.state) {
-      const { projectId, name, description, dimensions, pondType } = location.state;
+      const { projectId, name, description, dimensions, pondType } =
+        location.state;
       setFormData((prevData) => ({
         ...prevData,
         designId: projectId,
@@ -115,9 +116,7 @@ const GardenDesignForm = () => {
       }
     } catch (error) {
       console.error("Error submitting request:", error);
-      toast.error(
-        "Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại sau."
-      );
+      toast.error("Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại sau.");
     }
   };
 
@@ -129,7 +128,9 @@ const GardenDesignForm = () => {
       </div>
       <form onSubmit={handleSubmit} className="formrequestpond">
         <div className="formrequestpond-group">
-          <label htmlFor="customerName">Tên khách hàng:</label>
+          <label htmlFor="customerName">
+            <span className="required">*</span> Tên khách hàng:
+          </label>
           <input
             type="text"
             id="customerName"
@@ -137,11 +138,15 @@ const GardenDesignForm = () => {
             value={formData.customerName}
             onChange={handleChange}
             required
+            oninvalid="this.setCustomValidity('Vui lòng nhập họ và tên')"
+            oninput="this.setCustomValidity('')"
           />
         </div>
 
         <div className="formrequestpond-group">
-          <label htmlFor="customerPhone">Số điện thoại:</label>
+          <label htmlFor="customerPhone">
+            <span className="required">*</span> Số điện thoại:
+          </label>
           <input
             type="tel"
             id="customerPhone"
@@ -149,11 +154,21 @@ const GardenDesignForm = () => {
             value={formData.customerPhone}
             onChange={handleChange}
             required
+            pattern="[0-9]{10}"
+            title="Vui lòng nhập đúng 10 chữ số"
+            maxLength="10"
+            onKeyPress={(e) => {
+              if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+              }
+            }}
           />
         </div>
 
         <div className="formrequestpond-group">
-          <label htmlFor="customerAddress">Địa chỉ:</label>
+          <label htmlFor="customerAddress">
+            <span className="required">*</span> Địa chỉ:
+          </label>
           <input
             type="text"
             id="customerAddress"
@@ -165,45 +180,57 @@ const GardenDesignForm = () => {
         </div>
 
         <div className="formrequestpond-group">
-          <label htmlFor="preferredStyle">Loại hồ:</label>
+          <label htmlFor="preferredStyle">
+            <span className="required">*</span> Loại hồ:
+          </label>
           <input
             type="text"
             id="preferredStyle"
             name="preferredStyle"
             value={formData.preferredStyle}
             onChange={handleChange}
+            required
           />
         </div>
-        
+
         <div className="formrequestpond-group">
-          <label htmlFor="dimensions">Kích thước:</label>
+          <label htmlFor="dimensions">
+            <span className="required">*</span> Kích thước:
+          </label>
           <input
             type="text"
             id="dimensions"
             name="dimensions"
             value={formData.dimensions}
             onChange={handleChange}
+            required
           />
         </div>
 
         <div className="formrequestpond-group">
-          <label htmlFor="requirements">Yêu cầu thiết kế:</label>
+          <label htmlFor="requirements">
+            <span className="required">*</span> Yêu cầu thiết kế:
+          </label>
           <textarea
             id="requirements"
             name="requirements"
             value={formData.requirements}
             onChange={handleChange}
+            required
           />
         </div>
 
         <div className="formrequestpond-group">
-          <label htmlFor="budget">Ngân sách dự kiến:</label>
+          <label htmlFor="budget">
+            <span className="required">*</span> Ngân sách dự kiến:
+          </label>
           <input
             type="text"
             id="budget"
             name="budget"
             value={formData.budget}
             onChange={handleChange}
+            required
           />
         </div>
 

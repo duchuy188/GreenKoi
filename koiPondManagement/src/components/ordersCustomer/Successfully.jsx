@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useGetParams from "../hooks/useGetParam";
 import api from "../config/axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function SuccessPage() {
   const params = useGetParams();
@@ -48,13 +50,13 @@ function SuccessPage() {
 
       if (response.data.success) {
         setVerified(true);
-        message.success("Thanh toán đã được xác nhận thành công!");
+        toast.success("Thanh toán đã được xác nhận thành công!");
       } else {
         throw new Error(response.data.message || "Verification failed");
       }
     } catch (error) {
       console.error("Error verifying payment:", error);
-      message.error("Có lỗi xảy ra khi xác nhận thanh toán");
+      toast.error("Có lỗi xảy ra khi xác nhận thanh toán");
       setTimeout(() => nav("/error"), 1500);
     } finally {
       setLoading(false);
@@ -63,7 +65,7 @@ function SuccessPage() {
 
   useEffect(() => {
     if (!vnp_ResponseCode || !vnp_TxnRef) {
-      message.error("Thiếu thông tin thanh toán");
+      toast.error("Thiếu thông tin thanh toán");
       nav("/error");
       return;
     }
@@ -71,13 +73,13 @@ function SuccessPage() {
     if (vnp_ResponseCode === "00") {
       verifyPayment();
     } else {
-      message.error("Thanh toán thất bại");
+      toast.error("Thanh toán thất bại");
       nav("/error");
     }
   }, [vnp_ResponseCode, vnp_TxnRef]);
 
   const handleViewOrders = () => {
-    message.loading("Đang chuyển hướng...", 0.5);
+    toast.info("Đang chuyển hướng...");
     setTimeout(() => {
       nav("/orders", {
         state: {
