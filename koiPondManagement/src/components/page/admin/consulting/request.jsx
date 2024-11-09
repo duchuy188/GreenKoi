@@ -20,9 +20,9 @@ import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import moment from "moment";
 import { EllipsisOutlined } from "@ant-design/icons";
-import { SearchOutlined } from '@ant-design/icons';
-import { Row, Col } from 'antd';
-import CustomDesignRequest from './custom-design-request';
+import { SearchOutlined } from "@ant-design/icons";
+import { Row, Col } from "antd";
+import CustomDesignRequest from "./custom-design-request";
 
 const { Text } = Typography;
 
@@ -49,17 +49,17 @@ const RequestConsulting = () => {
   const [isPolling, setIsPolling] = useState(false);
   const [createOrderLoading, setCreateOrderLoading] = useState(false);
   const [updateStatusLoading, setUpdateStatusLoading] = useState(false);
-  const [requestType, setRequestType] = useState('standard');
+  const [requestType, setRequestType] = useState("standard");
 
   useEffect(() => {
     // Initial fetch
     initialFetch();
-    
+
     // Setup polling
     const pollingInterval = setInterval(() => {
       pollRequests();
     }, 10000);
-    
+
     return () => clearInterval(pollingInterval);
   }, [requestType]);
 
@@ -84,47 +84,58 @@ const RequestConsulting = () => {
   const fetchConsultationRequests = async (isInitialFetch) => {
     try {
       const response = await api.get("/api/ConsultationRequests");
-      
+
       const processRequests = (rawRequests) => {
         const requests = rawRequests
           .filter((request) => request.status !== "CANCELLED")
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-        const filteredRequests = requests.filter(request => 
-          requestType === 'standard' 
-            ? !request.customDesign 
+        const filteredRequests = requests.filter((request) =>
+          requestType === "standard"
+            ? !request.customDesign
             : request.customDesign
         );
 
-        setConsultationRequests(prevRequests => {
+        setConsultationRequests((prevRequests) => {
           // Lọc các request cũ theo loại hiện tại
-          const prevFilteredRequests = prevRequests.filter(request =>
-            requestType === 'standard'
+          const prevFilteredRequests = prevRequests.filter((request) =>
+            requestType === "standard"
               ? !request.customDesign
               : request.customDesign
           );
 
           // Kiểm tra xem có request mới không bằng cách so sánh ID và thời gian tạo
           if (!isInitialFetch) {
-            const newRequests = filteredRequests.filter(newReq => {
-              const existingReq = prevFilteredRequests.find(prevReq => prevReq.id === newReq.id);
+            const newRequests = filteredRequests.filter((newReq) => {
+              const existingReq = prevFilteredRequests.find(
+                (prevReq) => prevReq.id === newReq.id
+              );
               if (!existingReq) return true;
-              return new Date(newReq.createdAt) > new Date(existingReq.createdAt);
+              return (
+                new Date(newReq.createdAt) > new Date(existingReq.createdAt)
+              );
             });
 
             if (newRequests.length > 0) {
               // Chỉ hiện thông báo nếu request mới thuộc loại đang xem
-              const isCurrentType = newRequests.some(req => 
-                requestType === 'standard' ? !req.customDesign : req.customDesign
+              const isCurrentType = newRequests.some((req) =>
+                requestType === "standard"
+                  ? !req.customDesign
+                  : req.customDesign
               );
               if (isCurrentType) {
-                toast.info(`Có yêu cầu tư vấn mới từ: ${newRequests[0].customerName}`);
+                toast.info(
+                  `Có yêu cầu tư vấn mới từ: ${newRequests[0].customerName}`
+                );
               }
             }
           }
 
           // Chỉ cập nhật state nếu có sự thay đổi
-          if (JSON.stringify(prevFilteredRequests) !== JSON.stringify(filteredRequests)) {
+          if (
+            JSON.stringify(prevFilteredRequests) !==
+            JSON.stringify(filteredRequests)
+          ) {
             return filteredRequests;
           }
           return prevRequests;
@@ -172,39 +183,52 @@ const RequestConsulting = () => {
   const handleUpdateStatus = async (values) => {
     try {
       setUpdateStatusLoading(true);
-      
+
       // Check if trying to move from IN_PROGRESS to PENDING
-      if (selectedRequest.status === "IN_PROGRESS" && values.status === "PENDING") {
-        toast.error("Không thể chuyển từ trạng thái 'Đang thực hiện' về 'Đang chờ'");
+      if (
+        selectedRequest.status === "IN_PROGRESS" &&
+        values.status === "PENDING"
+      ) {
+        toast.error(
+          "Không thể chuyển từ trạng thái 'Đang thực hiện' về 'Đang chờ'"
+        );
         return;
       }
-      if (selectedRequest.status === "COMPLETED" && 
-        (values.status === "IN_PROGRESS" || values.status === "PENDING")) {
-       toast.error("Không thể chuyển từ trạng thái 'Hoàn thành' về trạng thái trước đó");
-       return;
-     }
-      
+      if (
+        selectedRequest.status === "COMPLETED" &&
+        (values.status === "IN_PROGRESS" || values.status === "PENDING")
+      ) {
+        toast.error(
+          "Không thể chuyển từ trạng thái 'Hoàn thành' về trạng thái trước đó"
+        );
+        return;
+      }
+
       await api.put(
         `/api/ConsultationRequests/${selectedRequest.id}/status?newStatus=${values.status}`
       );
-      
+
       toast.success("Cập nhật trạng thái thành công");
       setEditModalVisible(false);
       await fetchConsultationRequests();
     } catch (error) {
       console.error("Error updating status:", error);
-      
+
       // Handle specific error cases
       if (error.response?.status === 500) {
         if (values.status === "IN_PROGRESS") {
-          toast.error("Không thể cập nhật trạng thái. Yêu cầu này có thể đã bị hủy.");
+          toast.error(
+            "Không thể cập nhật trạng thái. Yêu cầu này có thể đã bị hủy."
+          );
         } else {
-          toast.error("Có lỗi xảy ra khi cập nhật trạng thái. Vui lòng thử lại sau.");
+          toast.error(
+            "Có lỗi xảy ra khi cập nhật trạng thái. Vui lòng thử lại sau."
+          );
         }
       } else {
         toast.error(
-          error.response?.data?.message || 
-          "Không thể cập nhật trạng thái. Vui lòng thử lại sau."
+          error.response?.data?.message ||
+            "Không thể cập nhật trạng thái. Vui lòng thử lại sau."
         );
       }
     } finally {
@@ -413,14 +437,14 @@ const RequestConsulting = () => {
       key: "actions",
       render: (_, record) => (
         <Space size="middle">
-           {record.status !== "COMPLETED" && (
-        <Tooltip title="Cập nhật trạng thái">
-          <FaEdit
-            onClick={() => handleEditStatus(record)}
-            style={{ cursor: "pointer", fontSize: "18px" }}
-          />
-        </Tooltip>
-      )}
+          {record.status !== "COMPLETED" && (
+            <Tooltip title="Cập nhật trạng thái">
+              <FaEdit
+                onClick={() => handleEditStatus(record)}
+                style={{ cursor: "pointer", fontSize: "18px" }}
+              />
+            </Tooltip>
+          )}
           {record.status === "IN_PROGRESS" && (
             <Tooltip title="Tạo đơn hàng">
               <FaShoppingCart
@@ -507,8 +531,8 @@ const RequestConsulting = () => {
     return (
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col>
-          <Radio.Group 
-            value={requestType} 
+          <Radio.Group
+            value={requestType}
             onChange={(e) => setRequestType(e.target.value)}
             buttonStyle="solid"
             style={{ marginBottom: 16 }}
@@ -528,10 +552,10 @@ const RequestConsulting = () => {
   return (
     <div>
       <h1>Yêu cầu của khách hàng</h1>
-      
+
       {renderRequestTypeSwitch()}
 
-      {requestType === 'standard' ? (
+      {requestType === "standard" ? (
         // Hiển thị bảng thiết kế có sẵn
         <>
           <Row gutter={16} style={{ marginBottom: 16 }}>
@@ -544,7 +568,9 @@ const RequestConsulting = () => {
               >
                 <Select.Option value="ALL">Tất cả</Select.Option>
                 <Select.Option value="PENDING">Đang chờ</Select.Option>
-                <Select.Option value="IN_PROGRESS">Đang thực hiện</Select.Option>
+                <Select.Option value="IN_PROGRESS">
+                  Đang thực hiện
+                </Select.Option>
                 <Select.Option value="COMPLETED">Đã hoàn thành</Select.Option>
               </Select>
             </Col>
@@ -591,7 +617,11 @@ const RequestConsulting = () => {
             </Select>
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" loading={updateStatusLoading}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={updateStatusLoading}
+            >
               Cập nhật trạng thái
             </Button>
           </Form.Item>
@@ -656,7 +686,7 @@ const RequestConsulting = () => {
             label="Tổng giá tiền"
             rules={[
               { required: true, message: "Vui lòng nhập tổng giá tiền" },
-              { type: "number", min: 0, message: "Giá tiền không được âm" },
+              { type: "number", min: 5000, message: "Giá tiền không được dưới 5 nghìn" },
             ]}
           >
             <InputNumber
@@ -671,13 +701,23 @@ const RequestConsulting = () => {
           <Form.Item
             name="depositAmount"
             label="Số tiền đặt cọc"
+            dependencies={['totalPrice']}
             rules={[
               { required: true, message: "Vui lòng nhập số tiền đặt cọc" },
               {
                 type: "number",
-                min: 0,
-                message: "Số tiền đặt cọc không được âm",
+                min: 5000,
+                message: "Số tiền đặt cọc không được dưới 5 nghìn",
               },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  const totalPrice = getFieldValue('totalPrice');
+                  if (!value || !totalPrice || value <= totalPrice) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('Số tiền đặt cọc không được vượt quá tổng giá tiền'));
+                },
+              }),
             ]}
           >
             <InputNumber
@@ -733,7 +773,11 @@ const RequestConsulting = () => {
             <Input disabled />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" loading={createOrderLoading}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={createOrderLoading}
+            >
               Tạo đơn hàng
             </Button>
           </Form.Item>
