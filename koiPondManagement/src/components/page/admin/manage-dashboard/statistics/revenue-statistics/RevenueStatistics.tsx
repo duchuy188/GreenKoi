@@ -36,6 +36,10 @@ const RevenueStatistics: React.FC<RevenueStatisticsProps> = ({ revenueData }) =>
     point: {
       size: 2,
       shape: 'circle',
+      style: {
+        stroke: '#00B96B',
+        fill: '#fff',
+      }
     },
     color: '#00B96B',
     area: {
@@ -61,12 +65,7 @@ const RevenueStatistics: React.FC<RevenueStatisticsProps> = ({ revenueData }) =>
     width: 680,
     padding: [10, 10, 10, 30],
     autoFit: false,
-    tooltip: {
-      formatter: (datum: any) => {
-        const revenue = datum.revenue !== undefined && datum.revenue !== null ? datum.revenue.toLocaleString('vi-VN') : '0';
-        return { name: 'Revenue', value: `$${revenue}` };
-      },
-    },
+    tooltip: false,
   };
 
   return (
@@ -85,11 +84,6 @@ const RevenueStatistics: React.FC<RevenueStatisticsProps> = ({ revenueData }) =>
           }}>
             {revenueData.totalRevenue.toLocaleString('vi-VN')} VNĐ
           </span>   
-          <span style={{ 
-            color: '#00B96B',
-            marginLeft: 8,
-            fontSize: '12px'
-          }}>+14</span>
         </div>
         <Line {...config} />
       </Card>
