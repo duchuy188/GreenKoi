@@ -63,7 +63,7 @@ const OrdersList = () => {
   }, []);
 
   useEffect(() => {
-    orders.forEach(order => {
+    orders.forEach((order) => {
       if (order.statusId === "PS6") {
         fetchProjectReview(order.id);
       }
@@ -84,15 +84,15 @@ const OrdersList = () => {
       if (!isBackgroundRefresh) {
         setLoading(true);
       }
-      
+
       const response = await api.get("/api/projects");
-      
+
       if (response.data) {
         const newOrders = response.data.sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
 
-        setOrders(prevOrders => {
+        setOrders((prevOrders) => {
           if (JSON.stringify(prevOrders) !== JSON.stringify(newOrders)) {
             return newOrders;
           }
@@ -111,21 +111,25 @@ const OrdersList = () => {
     }
   };
 
-  const fetchProjectTasks = async (projectId, constructorId, retryCount = 3) => {
+  const fetchProjectTasks = async (
+    projectId,
+    constructorId,
+    retryCount = 3
+  ) => {
     try {
       const response = await api.get(
         `/api/projects/${projectId}/project-tasks?constructorId=${constructorId}`
       );
-      
+
       if (response.data) {
-        setProjectTasks(prevTasks => {
+        setProjectTasks((prevTasks) => {
           const newTasks = response.data;
           const currentTasks = prevTasks[projectId] || [];
-          
+
           if (JSON.stringify(currentTasks) !== JSON.stringify(newTasks)) {
             return {
               ...prevTasks,
-              [projectId]: newTasks
+              [projectId]: newTasks,
             };
           }
           return prevTasks;
@@ -173,7 +177,11 @@ const OrdersList = () => {
     { value: "CANCELLED", label: "Đã hủy", color: "red" },
     { value: "MAINTENANCE", label: "Bảo trì", color: "cyan" },
     { value: "COMPLETED", label: "Hoàn thành", color: "success" },
-    { value: "TECHNICALLY_COMPLETED", label: "Đã hoàn thành kỹ thuật", color: "lime" },
+    {
+      value: "TECHNICALLY_COMPLETED",
+      label: "Đã hoàn thành kỹ thuật",
+      color: "lime",
+    },
   ];
   const cancelProject = async (id) => {
     try {
@@ -283,10 +291,10 @@ const OrdersList = () => {
       const response = await api.patch(`/api/projects/${id}/complete`);
       if (response.status === 200) {
         toast.success("Đã hoàn thành dự án thành công");
-        
+
         await fetchOrders(false);
-        
-        const project = orders.find(order => order.id === id);
+
+        const project = orders.find((order) => order.id === id);
         if (project?.constructorId) {
           await fetchProjectTasks(id, project.constructorId);
         }
@@ -381,23 +389,25 @@ const OrdersList = () => {
       title: "Tổng giá",
       dataIndex: "totalPrice",
       key: "totalPrice",
-      render: (price) => price?.toLocaleString('vi-VN') + ' VND'
+      render: (price) => price?.toLocaleString("vi-VN") + " VNĐ",
     },
     {
       title: "Số tiền đặt cọc",
       dataIndex: "depositAmount",
       key: "depositAmount",
-      render: (price) => price?.toLocaleString('vi-VN') + ' VND'
+      render: (price) => price?.toLocaleString("vi-VN") + " VNĐ",
     },
     {
-      title: "Ngày bắt đầu",
+      title: "NGÀY BẮT ĐẦU",
       dataIndex: "startDate",
       key: "startDate",
+      render: (date) => moment(date).format("DD-MM-YYYY"),
     },
     {
-      title: "Ngày kết thúc",
+      title: "NGÀY KẾT THÚC",
       dataIndex: "endDate",
       key: "endDate",
+      render: (date) => moment(date).format("DD-MM-YYYY"),
     },
     {
       title: "Mã khách hàng",
@@ -444,9 +454,15 @@ const OrdersList = () => {
           >
             <Button danger>Hủy dự án</Button>
           </Popconfirm>
-          <Button onClick={() => showAssignModal(record.id)}>
-            Phân công nhân viên xây dựng
-          </Button>
+
+          {record.statusId !== "PS6" &&
+            record.statusId !== "PS7" &&
+            !record.constructorId && (
+              <Button onClick={() => showAssignModal(record.id)}>
+                Phân công nhân viên xây dựng
+              </Button>
+            )}
+
           {record.statusId !== "PS6" && (
             <Popconfirm
               title="Bạn có chắc chắn rằng tất cả công việc đã hoàn thành và muốn đánh dấu dự án này là hoàn thành không?"
@@ -454,7 +470,7 @@ const OrdersList = () => {
               okText="Có"
               cancelText="Không"
             >
-              <Button 
+              <Button
                 onClick={() => completeProject(record.id)}
                 loading={actionLoading}
                 type="primary"
@@ -471,11 +487,11 @@ const OrdersList = () => {
       key: "tasksProgress",
       render: (_, record) => {
         const tasks = projectTasks[record.id] || [];
-        
+
         if (!record.constructorId) {
           return <Text type="secondary">Chưa phân công nhân viên</Text>;
         }
-        
+
         if (tasks.length === 0) {
           fetchProjectTasks(record.id, record.constructorId);
           return <Text type="secondary">Đang tải công việc...</Text>;
@@ -535,20 +551,20 @@ const OrdersList = () => {
       },
     },
     {
-      title: 'Trạng thái thanh toán',
-      key: 'paymentStatus',
+      title: "Trạng thái thanh toán",
+      key: "paymentStatus",
       render: (_, record) => {
-        if (record.paymentStatus === 'FULLY_PAID') {
+        if (record.paymentStatus === "FULLY_PAID") {
           return (
             <Space direction="vertical">
               <Tag color="green">Đã thanh toán</Tag>
-            
+
               <Text>{`${record.totalPrice.toLocaleString()} VND`}</Text>
             </Space>
           );
         }
 
-        if (record.paymentStatus === 'DEPOSIT_PAID') {
+        if (record.paymentStatus === "DEPOSIT_PAID") {
           const paidAmount = record.depositAmount || 0;
           const totalAmount = record.totalPrice || 0;
           const paymentPercentage = (paidAmount / totalAmount) * 100;
@@ -556,7 +572,7 @@ const OrdersList = () => {
           return (
             <Space direction="vertical">
               <Tag color="orange">Đã đặt cọc</Tag>
-              
+
               <Text>{`${paidAmount.toLocaleString()} / ${totalAmount.toLocaleString()} VND`}</Text>
             </Space>
           );
@@ -587,7 +603,9 @@ const OrdersList = () => {
 
   const renderAssignModal = () => (
     <Modal
-      title={<div className="assign-modal-title">Phân công nhân viên xây dựng</div>}
+      title={
+        <div className="assign-modal-title">Phân công nhân viên xây dựng</div>
+      }
       open={isAssignModalVisible}
       onCancel={() => {
         setIsAssignModalVisible(false);
@@ -657,7 +675,14 @@ const OrdersList = () => {
   );
 
   const renderFilters = () => (
-    <div style={{ marginBottom: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
+    <div
+      style={{
+        marginBottom: 16,
+        display: "flex",
+        gap: 16,
+        alignItems: "center",
+      }}
+    >
       <div>
         <span style={{ marginRight: 8 }}>Lọc theo trạng thái:</span>
         <Select
@@ -667,7 +692,7 @@ const OrdersList = () => {
           value={statusFilter}
           onChange={(value) => setStatusFilter(value)}
         >
-          {statusOptions.map(option => (
+          {statusOptions.map((option) => (
             <Option key={option.value} value={option.value}>
               {option.label}
             </Option>
@@ -677,7 +702,7 @@ const OrdersList = () => {
     </div>
   );
 
-  const filteredOrders = orders.filter(order => {
+  const filteredOrders = orders.filter((order) => {
     if (!statusFilter || statusFilter === "ALL") return true;
     return order.statusName === statusFilter;
   });
@@ -690,16 +715,14 @@ const OrdersList = () => {
       footer={[
         <Button key="close" onClick={() => setIsReviewModalVisible(false)}>
           Đóng
-        </Button>
+        </Button>,
       ]}
     >
       {selectedReview && (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space direction="vertical" size="large" style={{ width: "100%" }}>
           <div>
             <Rate disabled value={selectedReview.rating} />
-            <Text style={{ marginLeft: 8 }}>
-              {selectedReview.rating}/5
-            </Text>
+            <Text style={{ marginLeft: 8 }}>{selectedReview.rating}/5</Text>
           </div>
           <div>
             <Text strong>Nhận xét:</Text>
@@ -716,7 +739,7 @@ const OrdersList = () => {
 
     if (isPollingEnabled) {
       pollingIntervalRef.current = setInterval(() => {
-        if (document.visibilityState === 'visible') {
+        if (document.visibilityState === "visible") {
           fetchOrders(true);
         }
       }, 30000);
@@ -731,19 +754,19 @@ const OrdersList = () => {
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         fetchOrders(true);
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
   useEffect(() => {
-    orders.forEach(order => {
+    orders.forEach((order) => {
       if (order.constructorId) {
         fetchProjectTasks(order.id, order.constructorId);
       }
@@ -752,7 +775,9 @@ const OrdersList = () => {
 
   useEffect(() => {
     const pollReviews = async () => {
-      const completedOrders = orders.filter(order => order.statusId === "PS6");
+      const completedOrders = orders.filter(
+        (order) => order.statusId === "PS6"
+      );
       for (const order of completedOrders) {
         await fetchProjectReview(order.id);
       }
@@ -766,16 +791,21 @@ const OrdersList = () => {
   }, [orders]);
 
   const togglePolling = () => {
-    setIsPollingEnabled(prev => !prev);
+    setIsPollingEnabled((prev) => !prev);
   };
 
   return (
     <div>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+      <div
+        style={{
+          marginBottom: 16,
+          display: "flex",
+          justifyContent: "space-between",
+        }}
+      >
         <h1>Danh sách đơn hàng</h1>
-        
       </div>
-      
+
       {renderFilters()}
       <Table
         columns={columns}
@@ -783,6 +813,7 @@ const OrdersList = () => {
         loading={initialLoading}
         rowKey="id"
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 1500 }}
       />
       {renderAssignModal()}
       {renderDescriptionModal()}

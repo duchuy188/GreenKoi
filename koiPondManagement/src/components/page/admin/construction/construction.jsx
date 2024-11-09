@@ -10,6 +10,7 @@ import {
   Button,
   Empty,
   Switch,
+  Modal,
 } from "antd";
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
@@ -24,6 +25,8 @@ const ProjectTasks = () => {
   const [tasks, setTasks] = useState([]);
   const [isPollingEnabled, setIsPollingEnabled] = useState(true);
   const pollingIntervalRef = useRef(null);
+  const [isDescriptionModalVisible, setIsDescriptionModalVisible] =
+    useState(false);
 
   useEffect(() => {
     fetchConstructorProject();
@@ -316,6 +319,64 @@ const ProjectTasks = () => {
     },
   ];
 
+  const renderDescriptionModal = () => (
+    <Modal
+      title={
+        <div
+          style={{
+            fontSize: "20px",
+            fontWeight: "bold",
+            color: "#1890ff",
+            borderBottom: "2px solid #1890ff",
+            paddingBottom: "8px",
+            marginBottom: "16px",
+          }}
+        >
+          Chi tiết mô tả
+        </div>
+      }
+      open={isDescriptionModalVisible}
+      onCancel={() => setIsDescriptionModalVisible(false)}
+      footer={[
+        <Button
+          key="close"
+          onClick={() => setIsDescriptionModalVisible(false)}
+          style={{
+            borderRadius: "6px",
+            fontWeight: "500",
+          }}
+        >
+          Đóng
+        </Button>,
+      ]}
+      width={500}
+      style={{
+        top: "20%",
+      }}
+    >
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+        }}
+      >
+        <div
+          dangerouslySetInnerHTML={{
+            __html: projectInfo?.description || "N/A",
+          }}
+          style={{
+            padding: "16px",
+            maxHeight: "60vh",
+            overflowY: "auto",
+            lineHeight: "1.6",
+            fontSize: "14px",
+          }}
+        />
+      </div>
+    </Modal>
+  );
+
   if (loading) {
     return <Spin size="large" />;
   }
@@ -338,12 +399,16 @@ const ProjectTasks = () => {
             <Title level={4}>{projectInfo.name || "N/A"}</Title>
             <div>
               Mô tả:{" "}
-              <span
-                dangerouslySetInnerHTML={{
-                  __html: projectInfo.description || "N/A",
-                }}
-              />
+              <Button
+                type="link"
+                onClick={() => setIsDescriptionModalVisible(true)}
+              >
+                Xem chi tiết
+              </Button>
             </div>
+
+            {renderDescriptionModal()}
+
             <Space
               direction="vertical"
               style={{ width: "100%", marginTop: 16 }}
