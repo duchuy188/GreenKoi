@@ -72,6 +72,7 @@ const items = [
     ),
     getItem(<Link to="/dashboard/designblog">Tạo Blog</Link>, "designblog"),
     getItem(<Link to="/dashboard/blogproject">Bảng Blog</Link>, "blogproject"),
+    getItem(<Link to="/dashboard/requestdesign">Bảng Nhiệm Vụ</Link>, "requestdesign"),
   ]),
   getItem("Nhân viên tư vấn", "nhanvientuvan", <CommentOutlined />, [
     getItem(
@@ -154,7 +155,10 @@ const Dashboard = () => {
       path.includes("ponddesign") ||
       path.includes("designproject") ||
       path.includes("designblog") ||
-      path.includes("blogproject")
+      path.includes("blogproject") ||
+      path.includes("requestdesign") 
+      
+
     ) {
       return roleId === 3; // Designer
     }

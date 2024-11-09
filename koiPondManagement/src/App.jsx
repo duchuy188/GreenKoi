@@ -50,6 +50,8 @@ import ConstrucReviewComplete from "./components/page/admin/construction/constru
 import Statistics from "./components/page/admin/manage-dashboard/statistics/Statistics";
 import Cusmaintenance from "./components/page/maintenance/Cusmaintenance";
 import ManageCustomerRequest from "./components/page/admin/manage-customer-request";
+import RequestDesign from "./components/page/admin/RequestDesign/RequestDesign";
+
 
 function App() {
   const router = createBrowserRouter([
@@ -159,6 +161,11 @@ function App() {
               path: "blogproject",
               element: <BlogProject />,
             },
+            {
+              path: "requestdesign",
+              element: <RequestDesign/>,
+            },
+
             {
               path: "ponddesigncolumns",
               element: <PondDesignColumns />,
