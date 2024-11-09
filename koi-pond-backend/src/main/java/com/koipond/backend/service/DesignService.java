@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.security.access.AccessDeniedException;
 
 
 @Service
@@ -314,5 +315,26 @@ public class DesignService {
             Design updatedDesign = designRepository.save(design);
             return convertToDTO(updatedDesign);
         }
+    }
+
+    public DesignDTO getCurrentDesign(String requestId, String designerUsername) {
+        // Kiểm tra quyền
+        DesignRequest request = designRequestRepository.findById(requestId)
+            .orElseThrow(() -> new ResourceNotFoundException("Design request not found"));
+        
+        if (!request.getDesigner().getUsername().equals(designerUsername)) {
+            throw new AccessDeniedException("Not assigned to this request");
+        }
+
+        // Lấy design của request này
+        if (request.getDesign() != null) {
+            // Nếu request đã có design được link
+            return convertToDTO(request.getDesign());
+        }
+
+        // Nếu chưa có design được link, lấy design mới nhất của designer
+        return designRepository.findFirstByCreatedBy_UsernameAndIsCustomTrueOrderByCreatedAtDesc(designerUsername)
+            .map(this::convertToDTO)
+            .orElseThrow(() -> new ResourceNotFoundException("No design found for this request"));
     }
 }

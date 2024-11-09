@@ -43,4 +43,9 @@ public interface DesignRepository extends JpaRepository<Design, String> {
 
     // Sửa lại method lấy thiết kế public
     List<Design> findByIsPublicTrueAndActiveTrue();  // Bỏ tham số status
+
+    // Thêm method để lấy design mới nhất của designer
+    Optional<Design> findFirstByCreatedBy_UsernameAndIsCustomTrueOrderByCreatedAtDesc(
+        String username
+    );
 }

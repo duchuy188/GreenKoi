@@ -212,4 +212,16 @@ public class DesignRequestController {
     ) {
         return ResponseEntity.ok(designRequestService.cancelRequest(requestId, rejectionReason));
     }
+
+    @Operation(
+        summary = "Get current design for request",
+        description = "Get the current design created for this request"
+    )
+    @GetMapping("/{requestId}/current-design") 
+    @PreAuthorize("hasAuthority('ROLE_3')")  // Designer only
+    public ResponseEntity<DesignDTO> getCurrentDesign(
+        @PathVariable String requestId,
+        @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(designService.getCurrentDesign(requestId, userDetails.getUsername()));
+    }
 }

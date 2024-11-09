@@ -214,6 +214,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/design-requests/*/design")
                             .hasAuthority("ROLE_3")  // Chỉ Designer được tạo design mới
                         
+                        .requestMatchers(HttpMethod.GET, "/api/design-requests/*/current-design")
+                            .hasAuthority("ROLE_3")  // Chỉ Designer được xem current design
+
                         .requestMatchers(HttpMethod.GET, "/api/design-requests/designer")
                             .hasAuthority("ROLE_3")  // Chỉ Designer xem danh sách của mình
                         
