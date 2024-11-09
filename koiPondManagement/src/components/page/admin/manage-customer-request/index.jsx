@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, message, Space, Tag, Typography } from 'antd';
 import axios from '../../../config/axios';
 import moment from 'moment';
+import AssignDesignerAction from './AssignDesignerAction';
 
 const { Text } = Typography;
 
@@ -75,15 +76,19 @@ const ManageCustomerRequest = () => {
       },
     },
     {
-      title: 'Trạng thái',
+      title: 'TRẠNG THÁI',
       dataIndex: 'status',
       key: 'status',
-      width: 150,
-      render: (status) => (
-        <Tag color={status === 'PENDING' ? 'gold' : 'green'}>
-          {status === 'PENDING' ? 'Chờ xử lý' : status}
-        </Tag>
-      ),
+      render: (status) => {
+        const statusMap = {
+          'PENDING': 'Chờ xử lý',
+          'IN_PROGRESS': 'Đang xử lý',
+          // ... other statuses
+        };
+        return <Tag color={status === 'IN_PROGRESS' ? 'processing' : 'warning'}>
+          {statusMap[status] || status}
+        </Tag>;
+      }
     },
     {
       title: 'Ngày tạo',
@@ -91,6 +96,17 @@ const ManageCustomerRequest = () => {
       key: 'createdAt',
       width: 150,
       render: (date) => moment(date).format('DD/MM/YYYY'),
+    },
+    {
+      title: 'Hành động',
+      key: 'action',
+      width: 120,
+      render: (_, record) => (
+        <AssignDesignerAction 
+          requestId={record.id} 
+          onAssignSuccess={fetchDesignRequests}
+        />
+      ),
     }
   ];
 
