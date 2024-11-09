@@ -56,12 +56,7 @@ function RequestDesign() {
       render: (_, record) => (
         <Button 
           type="primary"
-          onClick={() => navigate('/dashboard/ponddesign', {
-            state: { 
-              requestId: record.id,
-              activeTab: '2'
-            }
-          })}
+          onClick={() => navigate(`/dashboard/requestdesign/${record.id}`)}
         >
           Tạo thiết kế
         </Button>

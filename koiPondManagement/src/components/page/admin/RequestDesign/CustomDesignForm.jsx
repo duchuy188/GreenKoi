@@ -13,10 +13,11 @@ import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "../../../config/firebase";
 import api from "../../../config/axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 function CustomDesignForm() {
+  const { requestId } = useParams();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [descriptionData, setDescriptionData] = useState("");
@@ -67,9 +68,10 @@ function CustomDesignForm() {
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      const requestId = "YOUR_REQUEST_ID"; // Cần lấy requestId từ URL hoặc props
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user'));
+      
       const designValues = {
-        id: crypto.randomUUID(),
         name: values.name,
         description: descriptionData,
         imageUrl: values.imageUrl,
@@ -77,31 +79,25 @@ function CustomDesignForm() {
         shape: values.shape,
         dimensions: values.dimensions,
         features: values.features,
-        // Các giá trị mặc định theo API schema
-        createdById: "string",
-        createdByName: "string",
-        status: "IN_PROGRESS", // Thay đổi status thành IN_PROGRESS
-        rejectionReason: "string",
-        customerApprovedPublic: true,
-        referenceDesignId: "string",
-        referenceDesignName: "string",
-        referenceDesignDescription: "string",
-        designRequestId: requestId, // Thêm requestId vào đây
-        projectId: "string",
-        customerApprovalDate: "2024-11-09T11:20:50.035Z",
-        createdAt: "2024-11-09T11:20:50.035Z",
-        updatedAt: "2024-11-09T11:20:50.035Z",
-        public: true,
-        active: true,
-        custom: true
       };
 
-      // Cập nhật endpoint API
-      await api.post(`/api/design-requests/${requestId}/design`, designValues);
+      console.log('Request body:', designValues);
+      console.log('RequestId:', requestId);
+
+      const response = await api.post(`/api/design-requests/${requestId}/design`, designValues, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Response:', response);
+      
       toast.success("Tạo thiết kế theo yêu cầu thành công");
       navigate("/dashboard/designproject");
       form.resetFields();
     } catch (err) {
+      console.error('Error details:', err.response);
       toast.error("Không thể tạo thiết kế theo yêu cầu: " + (err.response?.data?.message || "Đã xảy ra lỗi"));
     } finally {
       setLoading(false);

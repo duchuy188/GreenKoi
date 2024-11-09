@@ -8,7 +8,6 @@ import {
   Card,
   Row,
   Col,
-  Tabs,
 } from "antd";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
@@ -17,14 +16,12 @@ import { storage } from "../../../config/firebase"; // Đường dẫn đến fi
 import api from "../../../config/axios";
 import { useLocation, useNavigate } from "react-router-dom"; // Thêm useNavigate
 import { toast } from "react-toastify";
-import CustomDesignForm from "./CustomDesignForm";
 
 function PondDesign() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [pondData, setPondData] = useState(null);
   const [descriptionData, setDescriptionData] = useState(""); // State cho CKEditor
-  const [activeTab, setActiveTab] = useState('1');
 
   const location = useLocation(); // Khai báo useLocation
   const navigate = useNavigate(); // Khai báo useNavigate
@@ -95,7 +92,7 @@ function PondDesign() {
       };
 
       if (pondData) {
-        await api.put(`/api/pond-designs/${pondData.id}`, pondValues);
+await api.put(`/api/pond-designs/${pondData.id}`, pondValues);
         toast.success("Cập nhật thiết kế hồ thành công");
         navigate("/dashboard/designproject");
       } else {
@@ -121,152 +118,136 @@ function PondDesign() {
     <div
       style={{ maxWidth: 800, margin: "0 auto", padding: 24, marginLeft: "8%" }}
     >
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        items={[
-          {
-            key: '1',
-            label: 'Tạo thiết kế hồ',
-            children: (
-              <Card>
-                <Form form={form} layout="vertical" onFinish={handleSubmit}>
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item
-                        name="name"
-                        label="Tên hồ"
-                        rules={[{ required: true, message: "Vui lòng nhập tên hồ!" }]}
-                      >
-                        <Input placeholder="Nhập tên hồ" />
-                      </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item
-                        name="shape"
-                        label="Hình dạng"
-                        rules={[
-                          { required: true, message: "Vui lòng nhập hình dạng!" },
-                        ]}
-                      >
-                        <Input placeholder="Nhập hình dạng" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
+      <h1>{pondData ? "Chỉnh sửa dự án hồ" : "Tạo dự án hồ"}</h1>
+      <Card>
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="name"
+                label="Tên hồ"
+                rules={[{ required: true, message: "Vui lòng nhập tên hồ!" }]}
+              >
+                <Input placeholder="Nhập tên hồ" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="shape"
+                label="Hình dạng"
+                rules={[
+                  { required: true, message: "Vui lòng nhập hình dạng!" },
+                ]}
+              >
+                <Input placeholder="Nhập hình dạng" />
+              </Form.Item>
+            </Col>
+          </Row>
 
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item
-                        name="basePrice"
-                        label="Giá cả"
-                        rules={[{ required: true, message: "Vui lòng nhập giá cả!" }]}
-                      >
-                        <InputNumber
-                          min={0}
-                          formatter={(value) =>
-                            `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                          }
-                          parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
-                          style={{ width: "100%" }}
-                          placeholder="Nhập giá cả (VNĐ)"
-                          step={1000}
-                          addonAfter="VNĐ"
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item
-                        name="dimensions"
-                        label="Kích thước"
-                        rules={[
-                          { required: true, message: "Vui lòng nhập kích thước!" },
-                        ]}
-                      >
-                        <Input placeholder="Nhập kích thước" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="basePrice"
+                label="Giá cả"
+                rules={[{ required: true, message: "Vui lòng nhập giá cả!" }]}
+              >
+                <InputNumber
+                  min={0}
+                  formatter={(value) =>
+                    `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                  }
+                  parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
+                  style={{ width: "100%" }}
+                  placeholder="Nhập giá cả (VNĐ)"
+                  step={1000}
+                  addonAfter="VNĐ"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="dimensions"
+                label="Kích thước"
+                rules={[
+                  { required: true, message: "Vui lòng nhập kích thước!" },
+                ]}
+              >
+                <Input placeholder="Nhập kích thước" />
+              </Form.Item>
+            </Col>
+          </Row>
 
-                  {/* CKEditor cho mô tả */}
-                  <Form.Item
-                    name="description"
-                    label="Mô tả"
-                    rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}
-                  >
-                    <CKEditor
-                      editor={ClassicEditor}
-                      data={descriptionData}
-                      onChange={(event, editor) => {
-                        const data = editor.getData();
-                        setDescriptionData(data);
-                      }}
-                      config={{
-                        extraPlugins: [MyCustomUploadAdapterPlugin], // Thêm plugin upload adapter
-                        toolbar: [
-                          "heading",
-                          "|",
-                          "bold",
-                          "italic",
-                          "link",
-                          "|",
-                          "imageUpload",
-                          "|",
-                          "bulletedList",
-                          "numberedList",
-                          "|",
-                          "blockQuote",
-                          "undo",
-                          "redo",
-                        ],
-                      }}
-                    />
-                  </Form.Item>
+          {/* CKEditor cho mô tả */}
+          <Form.Item
+            name="description"
+            label="Mô tả"
+rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}
+          >
+            <CKEditor
+              editor={ClassicEditor}
+              data={descriptionData}
+              onChange={(event, editor) => {
+                const data = editor.getData();
+                setDescriptionData(data);
+              }}
+              config={{
+                extraPlugins: [MyCustomUploadAdapterPlugin], // Thêm plugin upload adapter
+                toolbar: [
+                  "heading",
+                  "|",
+                  "bold",
+                  "italic",
+                  "link",
+                  "|",
+                  "imageUpload",
+                  "|",
+                  "bulletedList",
+                  "numberedList",
+                  "|",
+                  "blockQuote",
+                  "undo",
+                  "redo",
+                ],
+              }}
+            />
+          </Form.Item>
 
-                  <Form.Item
-                    name="imageUrl"
-                    label="Link ảnh bìa"
-                    rules={[
-                      { required: true, message: "Vui lòng nhập link hình ảnh!" },
-                      { type: "url", message: "Vui lòng nhập một URL hợp lệ!" }, // Thêm điều kiện kiểm tra URL
-                    ]}
-                  >
-                    <Input.TextArea placeholder="Nhập link hình ảnh" />
-                  </Form.Item>
+          <Form.Item
+            name="imageUrl"
+            label="Link ảnh bìa"
+            rules={[
+              { required: true, message: "Vui lòng nhập link hình ảnh!" },
+              { type: "url", message: "Vui lòng nhập một URL hợp lệ!" }, // Thêm điều kiện kiểm tra URL
+            ]}
+          >
+            <Input.TextArea placeholder="Nhập link hình ảnh" />
+          </Form.Item>
 
-                  <Form.Item
-                    name="features"
-                    label="Đặc trưng"
-                    rules={[{ required: true, message: "Vui lòng nhập đặc trưng!" }]}
-                  >
-                    <Input.TextArea placeholder="Nhập đặc trưng" />
-                  </Form.Item>
+          <Form.Item
+            name="features"
+            label="Đặc trưng"
+            rules={[{ required: true, message: "Vui lòng nhập đặc trưng!" }]}
+          >
+            <Input.TextArea placeholder="Nhập đặc trưng" />
+          </Form.Item>
 
-                  <Form.Item>
-                    <Button type="primary" htmlType="submit" loading={loading}>
-                      {pondData ? "Cập nhật thiết kế hồ" : "Tạo thiết kế hồ"}
-                    </Button>
-                    {pondData && ( // Chỉ hiển thị nút Hủy khi đang cập nhật (có pondData)
-                      <Button
-                        style={{ marginLeft: 8 }}
-                        onClick={() => {
-                          navigate("/dashboard/designproject");
-                        }}
-                      >
-                        Hủy
-                      </Button>
-                    )}
-                  </Form.Item>
-                </Form>
-              </Card>
-            ),
-          },
-          {
-            key: '2',
-            label: 'Tạo thiết kế theo yêu cầu',
-            children: <CustomDesignForm />
-          },
-        ]}
-      />
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading}>
+              {pondData ? "Cập nhật thiết kế hồ" : "Tạo thiết kế hồ"}
+            </Button>
+            {pondData && ( // Chỉ hiển thị nút Hủy khi đang cập nhật (có pondData)
+              <Button
+                style={{ marginLeft: 8 }}
+                onClick={() => {
+                  navigate("/dashboard/designproject");
+                }}
+              >
+                Hủy
+              </Button>
+            )}
+          </Form.Item>
+        </Form>
+      </Card>
     </div>
   );
 }

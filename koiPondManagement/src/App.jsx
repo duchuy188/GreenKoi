@@ -51,6 +51,7 @@ import Statistics from "./components/page/admin/manage-dashboard/statistics/Stat
 import Cusmaintenance from "./components/page/maintenance/Cusmaintenance";
 import ManageCustomerRequest from "./components/page/admin/manage-customer-request";
 import RequestDesign from "./components/page/admin/RequestDesign/RequestDesign";
+import CustomDesignForm from "./components/page/admin/RequestDesign/CustomDesignForm";
 
 
 function App() {
@@ -165,7 +166,10 @@ function App() {
               path: "requestdesign",
               element: <RequestDesign/>,
             },
-
+            {
+              path: "requestdesign/:requestId",
+              element: <CustomDesignForm />,
+            },
             {
               path: "ponddesigncolumns",
               element: <PondDesignColumns />,
