@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal, Select, Form } from 'antd';
 import api from '../../../config/axios';
 import { toast } from 'react-toastify';
 
 const UpdateStatusModal = ({ visible, onCancel, onSuccess, record }) => {
   const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
 
   const getNextStatus = (currentStatus) => {
     switch (currentStatus) {
@@ -29,6 +30,7 @@ const UpdateStatusModal = ({ visible, onCancel, onSuccess, record }) => {
 
   const handleSubmit = async () => {
     try {
+      setLoading(true);
       const values = await form.validateFields();
       
       await api.put(`/api/ConsultationRequests/${record.id}/status`, null, {
@@ -36,6 +38,20 @@ const UpdateStatusModal = ({ visible, onCancel, onSuccess, record }) => {
           newStatus: values.status
         }
       });
+
+      if (values.status === "COMPLETED" && record.status === "PROCEED_DESIGN") {
+        try {
+          await api.post(`/api/design-requests/${record.id}/consultant-review`, {
+            requestId: record.id,
+            reviewNotes: "Design approved",
+            approved: true
+          });
+        } catch (reviewError) {
+          console.error('Error in consultant review:', reviewError);
+          toast.error('Không thể gửi đánh giá thiết kế');
+          return;
+        }
+      }
 
       toast.success('Cập nhật trạng thái thành công');
       onSuccess();
@@ -46,6 +62,8 @@ const UpdateStatusModal = ({ visible, onCancel, onSuccess, record }) => {
           ? `Lỗi: ${error.response.status} - ${error.response.data.message}`
           : 'Không thể cập nhật trạng thái'
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -57,6 +75,7 @@ const UpdateStatusModal = ({ visible, onCancel, onSuccess, record }) => {
       onOk={handleSubmit}
       okText="Cập nhật"
       cancelText="Hủy"
+      confirmLoading={loading}
     >
       <Form form={form} layout="vertical">
         <Form.Item

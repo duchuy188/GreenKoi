@@ -11,13 +11,24 @@
 }
 
 .emp-profile {
-    width: 100%;
-    max-width: 1200px;
     padding: 3%;
-    margin-top: 20px;
+    margin-top: 3%;
+    margin-bottom: 3%;
     border-radius: 0.5rem;
     background: #fff;
-    box-shadow: 0 12px 20px 1px rgba(64, 64, 64, .09);
+    max-width: 100%;
+}
+
+.col-lg-8 {
+    overflow-x: auto;
+}
+
+.ant-tabs-content-holder {
+    overflow-x: auto;
+}
+
+.ant-tabs-tabpane {
+    padding: 0;
 }
 
 .author-card {

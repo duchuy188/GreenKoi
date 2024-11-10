@@ -25,6 +25,7 @@ import moment from "moment";
 import ProfileInfo from "./ProfileInfo";
 import ConsultationRequests from "./ConsultationRequests";
 import MaintenanceRequests from "./MaintenanceRequests";
+import DesignList from './DesignList';
 
 function Profile() {
   const [profileData, setProfileData] = useState(null);
@@ -173,6 +174,11 @@ function Profile() {
                       label: "Yêu cầu bảo trì",
                       children: <MaintenanceRequests />,
                     },
+                    {
+                      key: "designs",
+                      label: "Danh sách thiết kế",
+                      children: <DesignList />,
+                    }
                   ]}
                 />
               </div>

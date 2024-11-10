@@ -13,13 +13,14 @@ import {
   Tooltip,
   Form,
 } from "antd";
-import { FaEdit, FaPaperPlane } from "react-icons/fa";
+import { FaEdit, FaPaperPlane, FaImages } from "react-icons/fa";
 import { SearchOutlined, EllipsisOutlined } from "@ant-design/icons";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import moment from "moment";
 import UpdateStatusModal from './update-status-modal';
 import CreateDesignRequestModal from './create-design-request-modal';
+import ViewDesignDetailsModal from './view-design-details-modal';
 
 const { Text } = Typography;
 
@@ -33,9 +34,13 @@ const CustomDesignRequest = () => {
   const [isStatusModalVisible, setIsStatusModalVisible] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [isCreateDesignModalVisible, setIsCreateDesignModalVisible] = useState(false);
+  const [completedDesigns, setCompletedDesigns] = useState({});
+  const [isDesignDetailsModalVisible, setIsDesignDetailsModalVisible] = useState(false);
+  const [selectedDesignDetails, setSelectedDesignDetails] = useState(null);
 
   useEffect(() => {
     initialFetch();
+    fetchCompletedDesigns();
   }, []);
 
   const initialFetch = async () => {
@@ -67,6 +72,21 @@ const CustomDesignRequest = () => {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCompletedDesigns = async (requestId) => {
+    try {
+      const response = await api.get(`/api/design-requests/pending-review`);
+      if (Array.isArray(response.data)) {
+        const designMap = {};
+        response.data.forEach(design => {
+          designMap[design.consultationId] = true;
+        });
+        setCompletedDesigns(designMap);
+      }
+    } catch (error) {
+      console.error("Error fetching completed designs:", error);
     }
   };
 
@@ -104,6 +124,21 @@ const CustomDesignRequest = () => {
   const handleSendRequest = (record) => {
     setSelectedRecord(record);
     setIsCreateDesignModalVisible(true);
+  };
+
+  const handleViewDesignDetails = async (consultationId) => {
+    try {
+      const response = await api.get(`/api/design-requests/pending-review`);
+      const designDetails = response.data.find(design => design.consultationId === consultationId);
+      
+      if (designDetails) {
+        setSelectedDesignDetails(designDetails);
+        setIsDesignDetailsModalVisible(true);
+      }
+    } catch (error) {
+      console.error("Error fetching design details:", error);
+      toast.error("Không thể tải thông tin thiết kế");
+    }
   };
 
   const columns = [
@@ -231,6 +266,14 @@ const CustomDesignRequest = () => {
               )}
             </>
           )}
+          {completedDesigns[record.id] && (
+            <Tooltip title="Xem thiết kế hoàn thành">
+              <FaImages
+                onClick={() => handleViewDesignDetails(record.id)}
+                style={{ color: '#52c41a', fontSize: '16px', cursor: 'pointer' }}
+              />
+            </Tooltip>
+          )}
         </Space>
       ),
     },
@@ -299,6 +342,12 @@ const CustomDesignRequest = () => {
         onCancel={() => setIsCreateDesignModalVisible(false)}
         onSuccess={fetchRequests}
         record={selectedRecord}
+      />
+
+      <ViewDesignDetailsModal
+        visible={isDesignDetailsModalVisible}
+        onCancel={() => setIsDesignDetailsModalVisible(false)}
+        designDetails={selectedDesignDetails}
       />
     </div>
   );

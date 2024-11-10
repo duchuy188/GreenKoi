@@ -40,6 +40,14 @@ function RequestDesign() {
       key: 'status',
     },
     {
+      title: 'Lý do từ chối',
+      dataIndex: 'rejectionReason',
+      key: 'rejectionReason',
+      render: (text, record) => (
+        record.status === 'IN_PROGRESS' && text ? text : '-'
+      ),
+    },
+    {
       title: 'Ghi chú',
       dataIndex: 'designNotes',
       key: 'designNotes',
@@ -54,12 +62,14 @@ function RequestDesign() {
       title: 'Action',
       key: 'action',
       render: (_, record) => (
-        <Button 
-          type="primary"
-          onClick={() => navigate(`/dashboard/requestdesign/${record.id}`)}
-        >
-          Tạo thiết kế
-        </Button>
+        record.status === 'IN_PROGRESS' && (
+          <Button 
+            type="primary"
+            onClick={() => navigate(`/dashboard/requestdesign/${record.id}`)}
+          >
+            Tạo thiết kế
+          </Button>
+        )
       ),
     },
   ];
@@ -79,6 +89,7 @@ function RequestDesign() {
         console.log('Request config:', config);
 
         const response = await axios.get('/api/design-requests/designer', config);
+        console.log('Design Requests Data:', response.data);
         setDesignRequests(response.data);
       } catch (error) {
         console.error('Error details:', error.response);
