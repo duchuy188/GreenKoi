@@ -94,22 +94,24 @@ public class DesignRequestController {
     @Operation(
         summary = "Consultant review design",
         description = "Consultant reviews the design and approves/rejects it. " +
-                "If approved: COMPLETED -> PENDING_CUSTOMER_APPROVAL. " +
-                "If rejected: COMPLETED -> IN_PROGRESS"
+                "If approved: COMPLETED -> PENDING_CUSTOMER_APPROVAL (requires reviewNotes). " +
+                "If rejected: COMPLETED -> IN_PROGRESS (requires rejectionReason)"
     )
     @PostMapping("/{requestId}/consultant-review")
     @PreAuthorize("hasAuthority('ROLE_2')")  // Consultant only
     public ResponseEntity<DesignRequestDTO> consultantReview(
             @PathVariable String requestId,
-            @RequestParam String reviewNotes,
+            @RequestParam(required = false) String reviewNotes,  // Optional when rejecting
             @RequestParam boolean approved,
+            @RequestParam(required = false) String rejectionReason,  // Required when rejecting
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(
             designRequestService.consultantReview(
                 requestId, 
-                userDetails.getUsername(),  // Truyền username của consultant
+                userDetails.getUsername(),
                 reviewNotes, 
-                approved
+                approved,
+                rejectionReason
             )
         );
     }

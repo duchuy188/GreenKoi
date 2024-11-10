@@ -295,7 +295,7 @@ public class DesignRequestService {
     }
 
     public DesignRequestDTO consultantReview(String requestId, String consultantUsername, 
-                                           String reviewNotes, boolean approved) {
+                                           String reviewNotes, boolean approved, String rejectionReason) {
         logger.info("Consultant reviewing design: {}", requestId);
         DesignRequest request = findRequest(requestId);
 
@@ -314,15 +314,27 @@ public class DesignRequestService {
             validateStatusTransition(request.getStatus(), 
                 DesignRequest.DesignRequestStatus.PENDING_CUSTOMER_APPROVAL);
             request.setStatus(DesignRequest.DesignRequestStatus.PENDING_CUSTOMER_APPROVAL);
+            request.setReviewNotes(reviewNotes);
             syncDesignStatus(request, DesignRequest.DesignRequestStatus.PENDING_CUSTOMER_APPROVAL);
         } else {
+            // Kiểm tra rejection reason khi reject
+            if (rejectionReason == null || rejectionReason.trim().isEmpty()) {
+                throw new RuntimeException("Rejection reason is required when rejecting a design");
+            }
+            
             validateStatusTransition(request.getStatus(), DesignRequest.DesignRequestStatus.IN_PROGRESS);
             request.setStatus(DesignRequest.DesignRequestStatus.IN_PROGRESS);
+            request.setRejectionReason(rejectionReason); // Thêm rejection reason
+            
+            // Cập nhật rejection reason cho design
+            if (request.getDesign() != null) {
+                request.getDesign().setRejectionReason(rejectionReason);
+            }
+            
             syncDesignStatus(request, DesignRequest.DesignRequestStatus.REJECTED);
         }
 
         request.setReviewer(consultant);
-        request.setReviewNotes(reviewNotes);
         request.setReviewDate(LocalDateTime.now());
 
         return convertToDTO(designRequestRepository.save(request), "ROLE_2");

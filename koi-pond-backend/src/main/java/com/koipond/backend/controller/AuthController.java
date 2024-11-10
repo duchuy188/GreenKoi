@@ -87,6 +87,37 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during logout");
         }
     }
+
+    @PostMapping("/google")
+    @Operation(summary = "Login with Google", description = "Authenticate user with Google Firebase token")
+    public ResponseEntity<?> googleLogin(@RequestHeader("Authorization") String firebaseToken) {
+        try {
+            if (!firebaseToken.startsWith("Bearer ")) {
+                return ResponseEntity.badRequest().body("Invalid token format");
+            }
+            
+            String token = firebaseToken.substring(7);
+            
+            AuthResponse authResponse = userService.authenticateWithGoogle(token);
+            return ResponseEntity.ok(authResponse);
+            
+        } catch (AuthenticationException e) {
+            log.warn("Google authentication failed: {}", e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            
+            if (e.getMessage().contains("User account is blocked")) {
+                errorResponse.put("message", "Account is blocked. Please contact the administrator.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+            } else {
+                errorResponse.put("message", "Authentication failed: " + e.getMessage());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+            }
+        } catch (Exception e) {
+            log.error("Unexpected error during Google authentication", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("An unexpected error occurred during authentication");
+        }
+    }
 }
 
     // Các phương thức khác đã được comment out

@@ -19,6 +19,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
+
 @Service
 public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
@@ -26,6 +30,9 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private FirebaseAuth firebaseAuth;
 
     public enum UserRole {
         MANAGER("1"),
@@ -283,5 +290,52 @@ public class UserService {
         return users.stream()
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());
+    }
+
+    public AuthResponse authenticateWithGoogle(String firebaseToken) {
+        log.info("Attempting to authenticate user with Google token");
+        try {
+            FirebaseToken decodedToken = firebaseAuth.verifyIdToken(firebaseToken);
+            String email = decodedToken.getEmail();
+            
+            // Kiểm tra email đã tồn tại chưa
+            return userRepository.findByEmail(email)
+                .map(existingUser -> {
+                    // Nếu email đã tồn tại
+                    if (!existingUser.isActive()) {
+                        log.warn("Login failed: Google user account is blocked: {}", email);
+                        throw new AuthenticationException("User account is blocked");
+                    }
+                    
+                    String token = jwtTokenProvider.createToken(existingUser.getUsername(), existingUser.getRoleId());
+                    log.info("Google user logged in successfully: {}", email);
+                    return new AuthResponse(token, existingUser.getId(), existingUser.getUsername(), existingUser.getRoleId());
+                })
+                .orElseGet(() -> {
+                    // Tạo user mới nếu chưa tồn tại
+                    User newUser = new User();
+                    newUser.setId(UUID.randomUUID().toString());
+                    newUser.setEmail(email);
+                    String username = email.substring(0, email.indexOf("@")) + "_" + System.currentTimeMillis();
+                    newUser.setUsername(username);
+                    newUser.setFullName(decodedToken.getName());
+                    newUser.setRoleId(UserRole.CUSTOMER.getId());
+                    newUser.setActive(true);
+                    
+                    try {
+                        User savedUser = userRepository.save(newUser);
+                        String token = jwtTokenProvider.createToken(savedUser.getUsername(), savedUser.getRoleId());
+                        log.info("New Google user registered successfully: {}", email);
+                        return new AuthResponse(token, savedUser.getId(), savedUser.getUsername(), savedUser.getRoleId());
+                    } catch (Exception e) {
+                        log.error("Error registering Google user: {}", e.getMessage());
+                        throw new RuntimeException("Failed to register Google user", e);
+                    }
+                });
+                
+        } catch (FirebaseAuthException e) {
+            log.error("Firebase authentication failed", e);
+            throw new AuthenticationException("Invalid Google token");
+        }
     }
 }

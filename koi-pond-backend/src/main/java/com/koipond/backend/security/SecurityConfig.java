@@ -97,7 +97,13 @@ public class SecurityConfig {
                     authorize
                         // Public endpoints
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/logout", "/api/test/**").permitAll()
+                        .requestMatchers(
+                            "/api/auth/register", 
+                            "/api/auth/login", 
+                            "/api/auth/logout",
+                            "/api/auth/google",  // Thêm endpoint Google login
+                            "/api/test/**"
+                        ).permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/blog/posts/approved").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/blog/posts/{id}").permitAll()
@@ -224,7 +230,7 @@ public class SecurityConfig {
                             .hasAuthority("ROLE_5")  // Chỉ Customer xem danh sách của mình
                         
                         .requestMatchers(HttpMethod.PUT, "/api/design-requests/*/link-design/**")
-                            .hasAuthority("ROLE_3")  // Chỉ Designer được liên kết design
+                            .hasAuthority("ROLE_3")  // Chỉ Designer đư���c liên kết design
                         
                         .requestMatchers(HttpMethod.PUT, "/api/design-requests/**")
                             .hasAnyAuthority("ROLE_3", "ROLE_2", "ROLE_1")  // Designer, Staff và Admin có thể cập nhật
