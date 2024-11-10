@@ -34,6 +34,15 @@ function Error() {
           >
             Thanh toán lại
           </Button>,
+          <Button
+            type="primary"
+            key="back"
+            onClick={() => {
+              nav("/maintenanceProfile");
+            }}
+          >
+            Xem hồ sơ bảo trì
+          </Button>,
         ]}
       />
     </div>

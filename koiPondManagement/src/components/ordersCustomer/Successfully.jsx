@@ -78,6 +78,11 @@ function SuccessPage() {
     }
   }, [vnp_ResponseCode, vnp_TxnRef]);
 
+  useEffect(() => {
+    console.log("vnp_OrderInfo:", vnp_OrderInfo);
+    console.log("includes maintenance:", vnp_OrderInfo?.includes("maintenance"));
+  }, [vnp_OrderInfo]);
+
   const handleViewOrders = () => {
     toast.info("Đang chuyển hướng...");
     setTimeout(() => {
@@ -87,6 +92,18 @@ function SuccessPage() {
           paymentType: vnp_OrderInfo?.includes("project")
             ? "PROJECT"
             : "MAINTENANCE",
+        },
+      });
+    }, 800);
+  };
+
+  const handleViewMaintenanceProfile = () => {
+    toast.info("Đang chuyển hướng đến hồ sơ bảo trì...");
+    setTimeout(() => {
+      nav("/maintenanceProfile", {
+        state: {
+          paymentSuccess: true,
+          orderId: vnp_OrderInfo?.split(": ")[1] || vnp_TxnRef
         },
       });
     }, 800);
@@ -166,6 +183,14 @@ function SuccessPage() {
           >
             Xem đơn hàng
           </Button>,
+          <Button 
+            type="default" 
+            key="maintenance"
+            onClick={handleViewMaintenanceProfile}
+            disabled={!verified}
+          >
+            Xem hồ sơ bảo trì
+          </Button>
         ]}
       />
     </div>
