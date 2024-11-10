@@ -51,6 +51,22 @@ public class DesignService {
 
     public DesignDTO createFromDesignRequest(DesignDTO designDTO, String designerUsername, String requestId) {
         synchronized (designerUsername.intern()) {
+            DesignRequest request = designRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Design request not found"));
+            
+            // Kiểm tra quyền
+            if (!request.getDesigner().getUsername().equals(designerUsername)) {
+                throw new AccessDeniedException("Not assigned to this request");
+            }
+
+            // Kiểm tra request đã có design chưa (2 cách)
+            if (request.getDesign() != null) {
+                throw new IllegalStateException("This request already has a design. Please update the existing design.");
+            }
+            if (designRepository.existsByDesignRequest(request)) {
+                throw new IllegalStateException("You already have a design for this request. Please update the existing design.");
+            }
+
             User designer = userRepository.findByUsername(designerUsername)
                     .orElseThrow(() -> new ResourceNotFoundException("Designer not found"));
 
@@ -60,6 +76,7 @@ public class DesignService {
             design.setStatus(Design.DesignStatus.PENDING_APPROVAL);
             design.setPublic(false);
             design.setCustom(true);
+            design.setDesignRequest(request);
 
             Design savedDesign = designRepository.save(design);
             return convertToDTO(savedDesign);
@@ -138,12 +155,29 @@ public class DesignService {
                 .collect(Collectors.toList());
     }
 
-    public DesignDTO updateDesign(String id, DesignDTO designDTO) {
+    public DesignDTO updateDesign(String id, DesignDTO designDTO, String designerUsername) {
         synchronized (id.intern()) {
             Design design = findDesignById(id);
             
+            // Kiểm tra quyền
+            if (!design.getCreatedBy().getUsername().equals(designerUsername)) {
+                throw new AccessDeniedException("You can only update your own designs");
+            }
+            
+            // Kiểm tra trạng thái
             if (design.getStatus() == Design.DesignStatus.APPROVED) {
                 throw new IllegalStateException("Cannot update approved design");
+            }
+
+            // Nếu là design theo yêu cầu, kiểm tra thêm
+            if (design.isCustom() && design.getDesignRequest() != null) {
+                DesignRequest request = design.getDesignRequest();
+                if (!request.getDesigner().getUsername().equals(designerUsername)) {
+                    throw new AccessDeniedException("Not assigned to this design request");
+                }
+                if (request.getStatus() == DesignRequest.DesignRequestStatus.APPROVED) {
+                    throw new IllegalStateException("Cannot update design of approved request");
+                }
             }
             
             updateDesignFromDTO(design, designDTO);

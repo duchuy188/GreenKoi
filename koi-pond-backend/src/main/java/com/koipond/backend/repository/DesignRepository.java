@@ -1,6 +1,7 @@
 package com.koipond.backend.repository;
 
 import com.koipond.backend.model.Design;
+import com.koipond.backend.model.DesignRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
@@ -48,4 +49,10 @@ public interface DesignRepository extends JpaRepository<Design, String> {
     Optional<Design> findFirstByCreatedBy_UsernameAndIsCustomTrueOrderByCreatedAtDesc(
         String username
     );
+
+    // Thêm method để kiểm tra design đã tồn tại cho request
+    boolean existsByDesignRequest(DesignRequest designRequest);
+    
+    // Thêm method để tìm design theo request
+    Optional<Design> findByDesignRequest(DesignRequest designRequest);
 }

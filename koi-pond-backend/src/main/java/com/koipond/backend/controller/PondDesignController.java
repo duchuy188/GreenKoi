@@ -71,8 +71,13 @@ public class PondDesignController {
     @PreAuthorize("hasAuthority('ROLE_3')")
     @Operation(summary = "Update a pond design", 
                description = "Updates the details of an existing pond design. Only designers (ROLE_3) can perform this action.")
-    public ResponseEntity<DesignDTO> updateDesign(@PathVariable String id, @RequestBody DesignDTO designDTO) {
-        DesignDTO updatedDesign = designService.updateDesign(id, designDTO);
+    public ResponseEntity<DesignDTO> updateDesign(
+        @PathVariable String id, 
+        @RequestBody DesignDTO designDTO,
+        Authentication authentication) {
+        
+        String designerUsername = authentication.getName();
+        DesignDTO updatedDesign = designService.updateDesign(id, designDTO, designerUsername);
         return ResponseEntity.ok(updatedDesign);
     }
 

@@ -211,6 +211,11 @@ public class DesignRequestService {
         Design design = designRepository.findById(designId)
                 .orElseThrow(() -> new RuntimeException("Design not found"));
 
+        // Thêm kiểm tra này để đảm bảo mỗi request chỉ có một design
+        if (request.getDesign() != null) {
+            throw new RuntimeException("This request already has a linked design");
+        }
+
         // Kiểm tra quyền
         if (request.getDesigner() == null || 
             !request.getDesigner().getId().equals(design.getCreatedBy().getId())) {

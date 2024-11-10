@@ -97,6 +97,10 @@ public class Design {
     @JoinColumn(name = "reference_design_id")
     private Design referenceDesign;
 
+    @OneToOne
+    @JoinColumn(name = "design_request_id")
+    private DesignRequest designRequest;
+
     public boolean isPublic() {
         return isPublic;
     }
@@ -135,5 +139,13 @@ public class Design {
 
     public void setReferenceDesign(Design referenceDesign) {
         this.referenceDesign = referenceDesign;
+    }
+
+    public DesignRequest getDesignRequest() {
+        return designRequest;
+    }
+
+    public void setDesignRequest(DesignRequest designRequest) {
+        this.designRequest = designRequest;
     }
 }
