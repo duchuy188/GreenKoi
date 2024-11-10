@@ -4,6 +4,8 @@ import api from "../../../config/axios";
 import moment from 'moment';
 import { toast } from 'react-toastify';
 import { PlusOutlined, EyeOutlined } from '@ant-design/icons';
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { storage } from "../../../config/firebase";
 
 const { Title } = Typography;
 
@@ -107,7 +109,6 @@ const ConstrucMain = () => {
 
   const handleCompleteMaintenance = async () => {
     try {
-      // Validate
       if (!maintenanceNotes.trim()) {
         toast.error("Vui lòng nhập ghi chú bảo trì");
         return;
@@ -118,18 +119,15 @@ const ConstrucMain = () => {
         return;
       }
 
-      // Convert maintenanceImages to array of strings (URLs or base64)
+      // Upload images to Firebase Storage
       const imageUrls = await Promise.all(
         maintenanceImages.map(async (file) => {
           if (file.originFileObj) {
-            return new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.readAsDataURL(file.originFileObj);
-              reader.onload = () => resolve(reader.result);
-              reader.onerror = error => reject(error);
-            });
+            const storageRef = ref(storage, `maintenance-images/${Date.now()}-${file.originFileObj.name}`);
+            const uploadTask = await uploadBytesResumable(storageRef, file.originFileObj);
+            return await getDownloadURL(uploadTask.ref);
           }
-          return file.url; 
+          return file.url;
         })
       );
 
