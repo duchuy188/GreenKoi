@@ -16,7 +16,7 @@ import java.io.IOException;
 public class FirebaseConfig {
 
     private static final Logger log = LoggerFactory.getLogger(FirebaseConfig.class);
-    private static final String FIREBASE_CONFIG_PATH = "koi-pond-737e8-firebase-adminsdk-fdhs2-a910406ccd.json";
+    private static final String FIREBASE_CONFIG_PATH = "login-c8d8e-firebase-adminsdk-7jzoo-68aa47bcec (1).json";
 
     @Bean
     public FirebaseApp firebaseApp() {
@@ -32,6 +32,7 @@ public class FirebaseConfig {
 
                 FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount.getInputStream()))
+                    .setProjectId("login-c8d8e")
                     .build();
 
                 FirebaseApp app = FirebaseApp.initializeApp(options);

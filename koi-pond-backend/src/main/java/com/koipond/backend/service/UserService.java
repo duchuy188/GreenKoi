@@ -260,7 +260,14 @@ public class UserService {
     private UserDTO convertToDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
-        dto.setUsername(user.getUsername());
+        
+        // Xử lý username trước khi set vào DTO
+        String displayUsername = user.getUsername();
+        if (displayUsername != null && displayUsername.contains("_")) {
+            displayUsername = displayUsername.split("_")[0];
+        }
+        dto.setUsername(displayUsername);
+        
         dto.setEmail(user.getEmail());
         dto.setPhone(user.getPhone());
         dto.setFullName(user.getFullName());
@@ -321,6 +328,7 @@ public class UserService {
                     newUser.setFullName(decodedToken.getName());
                     newUser.setRoleId(UserRole.CUSTOMER.getId());
                     newUser.setActive(true);
+                    newUser.setPassword(null);
                     
                     try {
                         User savedUser = userRepository.save(newUser);
