@@ -1,13 +1,10 @@
-// Import the functions you need from the SDKs you need
+// Import các functions cần thiết
 import { initializeApp } from "firebase/app";
-import { getStorage } from "firebase/storage";
+import { getAnalytics } from "firebase/analytics";
 import { GoogleAuthProvider } from "firebase/auth";
+import { getStorage } from "firebase/storage"; // Thêm dòng này
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyB9NLf1WKSmAzx4gdJ8MBTqiA5ZFWMkr2M",
   authDomain: "login-c8d8e.firebaseapp.com",
@@ -20,7 +17,18 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const storage = getStorage(app);
-const googleProvider = new GoogleAuthProvider();
+const analytics = getAnalytics(app);
+const storage = getStorage(app); // Thêm dòng này
 
-export { storage, googleProvider };
+// Tạo và cấu hình Google Provider
+export const googleProvider = new GoogleAuthProvider();
+// Thêm các scopes cần thiết
+googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');
+googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
+// Cấu hình thêm (optional)
+googleProvider.setCustomParameters({
+  prompt: 'select_account' // Luôn hiện dialog chọn account
+});
+
+export { app, analytics, storage }; // Thêm storage vào exports
+export default app;

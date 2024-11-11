@@ -1,5 +1,4 @@
 import { Component } from "react";
-import newsItems from "../../Share/newsItems";
 import "./Content.css";
 import api from "../../config/axios";
 import { Link } from "react-router-dom";

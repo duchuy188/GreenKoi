@@ -1,14 +1,13 @@
 import React, { useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button, Form, Input, Row, Col, Card } from "antd";
+import { Button, Form, Input } from "antd";
 import { GoogleOutlined, UserOutlined, LockOutlined, HomeOutlined, UserAddOutlined } from "@ant-design/icons";
 import { toast } from "react-toastify";
 import api from "../../config/axios";
 import { useDispatch } from "react-redux";
 import { login } from "../../redux/features/useSlice";
-import { getAuth, signInWithPopup } from "firebase/auth";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth"; // Chỉ import một lần
 import { googleProvider } from "../../config/firebase";
-import { GoogleAuthProvider } from "firebase/auth/web-extension";
 import ReCAPTCHA from "react-google-recaptcha";
 import './login.css';
 
@@ -17,34 +16,111 @@ function LoginPage() {
   const dispatch = useDispatch();
   const recaptchaRef = useRef(null);
 
-  const handleLoginGoogle = () => {
+// Sửa lại hàm handleLoginGoogle
+const handleLoginGoogle = async () => {
+  try {
     const auth = getAuth();
-    signInWithPopup(auth, googleProvider)
-      .then((result) => {
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const token = credential.accessToken;
-        const user = result.user;
+    console.log("Starting Google login flow...");
+    
+    // Thêm options cho Google Sign In
+    googleProvider.setCustomParameters({
+      prompt: 'select_account' // Luôn hiện dialog chọn account
+    });
+    
+    const result = await signInWithPopup(auth, googleProvider);
+    console.log("Google popup login successful");
+    
+    // Lấy token từ Google result
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    const firebaseToken = await result.user.getIdToken();
+    
+    console.log("Google User Info:", {
+      email: result.user.email,
+      displayName: result.user.displayName,
+      uid: result.user.uid
+    });
+    
+    // Gọi API backend
+    const response = await api.post("/api/auth/google", null, {
+      headers: {
+        Authorization: `Bearer ${firebaseToken}`
+      }
+    });
+    
+    // Xử lý response từ backend
+    const { token, roleId, email, fullName, isNewUser, ...userData } = response.data;
+    
+    // Lưu thông tin vào localStorage
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify({ 
+      ...userData, 
+      roleId,
+      email: email || result.user.email, // Fallback to Google email
+      fullName: fullName || result.user.displayName // Fallback to Google name
+    }));
+    
+    // Dispatch action để cập nhật Redux store
+    dispatch(login({ 
+      ...userData, 
+      roleId,
+      email: email || result.user.email,
+      fullName: fullName || result.user.displayName
+    }));
 
-        const userInfo = {
-          uid: user.uid,
-          username: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
-        };
+    // Thông báo thành công
+    if (isNewUser) {
+      toast.success("Tài khoản mới đã được tạo thành công!");
+    } else {
+      toast.success("Đăng nhập Google thành công!");
+    }
 
-        console.log("Đăng nhập Google thành công", userInfo);
-        toast.success("Đăng nhập Google thành công!");
+    // Điều hướng dựa vào role
+    const role = parseInt(roleId);
+    if (role >= 1 && role <= 4) {
+      navigate("/dashboard");
+    } else if (role === 5) {
+      navigate("/");
+    } else {
+      toast.error("Vai trò không hợp lệ. Vui lòng liên hệ với người quản trị.");
+    }
 
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(userInfo));
-        dispatch(login(userInfo));
-        navigate("/dashboard");
-      })
-      .catch((error) => {
-        console.error("Lỗi đăng nhập Google", error);
-        toast.error(`Đăng nhập Google không thành công: ${error.message}`);
-      });
-  };
+  } catch (error) {
+    console.error("Full error object:", error);
+    
+    if (error.code) {
+      switch (error.code) {
+        case 'auth/popup-closed-by-user':
+          toast.info("Đăng nhập đã bị hủy"); // Đổi thành info thay vì error
+          break;
+        case 'auth/cancelled-popup-request':
+          // Không cần thông báo
+          break;
+        case 'auth/popup-blocked':
+          toast.error("Popup bị chặn. Vui lòng cho phép popup và thử lại.");
+          break;
+        case 'auth/account-exists-with-different-credential':
+          toast.error("Email này đã được sử dụng với phương thức đăng nhập khác.");
+          break;
+        default:
+          toast.error("Lỗi xác thực: " + error.message);
+      }
+      return;
+    }
+
+    if (error.response) {
+      const errorMessage = error.response.data.message;
+      if (errorMessage.includes("blocked")) {
+        toast.error("Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
+      } else {
+        toast.error(errorMessage || "Đăng nhập thất bại");
+      }
+    } else if (error.request) {
+      toast.error("Không thể kết nối đến máy chủ");
+    } else {
+      toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+    }
+  }
+};
 
   const handleLogin = async (values) => {
     try {
@@ -178,11 +254,11 @@ function LoginPage() {
                 </Link>
               </div>
 
-              {/* <div className="divider">
+              { <div className="divider">
                 <span className="divider-text">Hoặc</span>
-              </div> */}
+              </div> }
 
-              {/* <Form.Item>
+              { <Form.Item>
                 <Button
                   block
                   size="large"
@@ -192,7 +268,7 @@ function LoginPage() {
                 >
                   Đăng nhập bằng Google
                 </Button>
-              </Form.Item> */}
+              </Form.Item> }
             </Form>
           </div>
         </div>

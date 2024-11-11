@@ -179,7 +179,7 @@ function Header() {
                   className="ant-dropdown-link"
                   style={{ color: "#000" }}
                 >
-                  <UserOutlined /> {user.username || user.email}{" "}
+                  <UserOutlined /> {(user.username && user.username.split('_')[0]) || user.email}
                   <DownOutlined />
                 </a>
               </Dropdown>
