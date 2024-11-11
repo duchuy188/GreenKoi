@@ -52,7 +52,7 @@ CREATE TABLE roles (
 CREATE TABLE users (
     id NVARCHAR(36) PRIMARY KEY,
     username NVARCHAR(50) NOT NULL UNIQUE,
-    password NVARCHAR(255) NOT NULL,
+    password NVARCHAR(255) NULL,
     email NVARCHAR(100) NOT NULL UNIQUE,
     phone NVARCHAR(20),
     full_name NVARCHAR(100),
