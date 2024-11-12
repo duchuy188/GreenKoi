@@ -1,14 +1,10 @@
 import { useState, useEffect } from "react";
 import {
   Table,
-  message,
   Modal,
   Button,
   Select,
   Input,
-  Form,
-  DatePicker,
-  InputNumber,
   Typography,
   Empty,
   Tag,
@@ -16,6 +12,7 @@ import {
 import { EyeOutlined, StarFilled } from "@ant-design/icons";
 import api from "../../../config/axios";
 import moment from "moment";
+import { toast } from "react-toastify";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -82,7 +79,7 @@ const ManageMaintenance = () => {
       
       setMaintenanceRequests(formattedData);
     } catch (error) {
-      message.error(`Không thể tải ${requestStatus.toLowerCase()} yêu cầu.`);
+      toast.error(`Không thể tải ${requestStatus.toLowerCase()} yêu cầu.`);
     } finally {
       setLoading(false);
     }
@@ -101,7 +98,7 @@ const ManageMaintenance = () => {
         }))
       );
     } catch (error) {
-      message.error("Không thể tải danh sách nhân viên.");
+      toast.error("Không thể tải danh sách nhân viên.");
     }
   };
 
@@ -122,12 +119,12 @@ const ManageMaintenance = () => {
       await api.patch(`/api/maintenance-requests/${selectedRequest.id}/cancel`, {
         cancellationReason: cancelReason,
       });
-      message.success("Yêu cầu bảo trì đã hủy thành công.");
+      toast.success("Yêu cầu bảo trì đã hủy thành công.");
       setCancelModalVisible(false);
       setCancelReason("");
       fetchMaintenanceRequests();
     } catch (error) {
-      message.error("Không thể hủy yêu cầu.");
+      toast.error("Không thể hủy yêu cầu.");
     }
   };
 
@@ -141,11 +138,11 @@ const ManageMaintenance = () => {
       await api.patch(`/api/maintenance-requests/${editingRequest.id}/assign`, {
         staffId: selectedStaffId,
       });
-      message.success("Phân công nhân viên thành công.");
+      toast.success("Phân công nhân viên thành công.");
       setIsAssignModalVisible(false);
       fetchMaintenanceRequests();
     } catch (error) {
-      message.error("Nhân viên này đã được phân công cho yêu cầu khác.");
+      toast.error("Nhân viên này đã được phân công cho yêu cầu khác.");
     }
   };
 
@@ -176,7 +173,7 @@ const ManageMaintenance = () => {
       setCurrentReview(response.data);
       setReviewModalVisible(true);
     } catch (error) {
-      message.error("Chưa có đánh giá nào cho yêu cầu này.");
+      toast.error("Chưa có đánh giá nào cho yêu cầu này.");
     }
   };
 
@@ -203,19 +200,22 @@ const ManageMaintenance = () => {
       key: "requestStatus",
       render: (status) => {
         const statusConfig = {
-          PENDING: { color: '#faad14', text: 'Chờ xác nhận' },
-          CONFIRMED: { color: '#1890ff', text: 'Đã xác nhận' },
-          CANCELLED: { color: '#ff4d4f', text: 'Đã hủy' },
-          COMPLETED: { color: '#52c41a', text: 'Hoàn thành' }
+          PENDING: { color: '#f6ffed', text: 'Chờ xác nhận', textColor: '#52c41a' },
+          CONFIRMED: { color: '#e6f7ff', text: 'Đã xác nhận', textColor: '#1890ff' },
+          CANCELLED: { color: '#fff2f0', text: 'Đã hủy', textColor: '#ff4d4f' },
+          COMPLETED: { color: '#f6ffed', text: 'Hoàn thành', textColor: '#52c41a' }
         };
 
         return (
-          <span style={{ 
-            color: statusConfig[status]?.color || '#000000',
-            fontWeight: 'bold'
-          }}>
+          <Tag
+            color={statusConfig[status]?.color}
+            style={{ 
+              color: statusConfig[status]?.textColor,
+              borderColor: statusConfig[status]?.textColor,
+            }}
+          >
             {statusConfig[status]?.text || status}
-          </span>
+          </Tag>
         );
       }
     },
@@ -225,18 +225,21 @@ const ManageMaintenance = () => {
       key: "paymentStatus",
       render: (status) => {
         const statusConfig = {
-          UNPAID: { color: '#ff4d4f', text: 'Chưa thanh toán' },
-          DEPOSIT_PAID: { color: '#faad14', text: 'Đã cọc' },
-          FULLY_PAID: { color: '#52c41a', text: 'Đã thanh toán' }
+          UNPAID: { color: '#fff2f0', text: 'Chưa thanh toán', textColor: '#ff4d4f' },
+          DEPOSIT_PAID: { color: '#fff7e6', text: 'Đã cọc', textColor: '#faad14' },
+          FULLY_PAID: { color: '#f6ffed', text: 'Đã thanh toán', textColor: '#52c41a' }
         };
 
         return (
-          <span style={{ 
-            color: statusConfig[status]?.color || '#000000',
-            fontWeight: 'bold'
-          }}>
+          <Tag
+            color={statusConfig[status]?.color}
+            style={{ 
+              color: statusConfig[status]?.textColor,
+              borderColor: statusConfig[status]?.textColor,
+            }}
+          >
             {statusConfig[status]?.text || status}
-          </span>
+          </Tag>
         );
       }
     },
@@ -365,6 +368,11 @@ const ManageMaintenance = () => {
         open={viewCancelReasonModalVisible}
         onOk={() => setViewCancelReasonModalVisible(false)}
         onCancel={() => setViewCancelReasonModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setViewCancelReasonModalVisible(false)} type="primary">
+            Đóng
+          </Button> 
+        ]}
       >
         <p>{currentCancelReason}</p>
       </Modal>
@@ -375,6 +383,8 @@ const ManageMaintenance = () => {
         open={cancelModalVisible}
         onOk={submitCancel}
         onCancel={() => setCancelModalVisible(false)}
+        okText="Hủy yêu cầu"
+        cancelText="Hủy"
       >
         <TextArea
           rows={4}
@@ -465,7 +475,7 @@ const ManageMaintenance = () => {
         onOk={() => setReviewModalVisible(false)}
         onCancel={() => setReviewModalVisible(false)}
         footer={[
-          <Button key="close" onClick={() => setReviewModalVisible(false)}>
+          <Button key="close" onClick={() => setReviewModalVisible(false)} type="primary">
             Đóng
           </Button>
         ]}
@@ -478,9 +488,17 @@ const ManageMaintenance = () => {
                 <StarFilled key={index} style={{ color: '#fadb14' }} />
               ))}
             </div>
-            <div>
+            <div style={{ marginBottom: 16 }}>
               <span style={{ marginRight: 8 }}>Nhận xét:</span>
               <p>{currentReview.comment || "Không có nhận xét"}</p>
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <span style={{ marginRight: 8 }}>Ngày đánh giá:</span>
+              <p>{moment(currentReview.reviewDate).format("DD-MM-YYYY HH:mm:ss")}</p>
+            </div>
+            <div>
+              <span style={{ marginRight: 8 }}>Trạng thái:</span>
+              <p>{currentReview.status === 'SUBMITTED' ? 'Đã gửi' : currentReview.status || "Không có trạng thái"}</p>
             </div>
           </div>
         ) : (
@@ -494,7 +512,7 @@ const ManageMaintenance = () => {
         open={detailsModalVisible}
         onCancel={() => setDetailsModalVisible(false)}
         footer={[
-          <Button key="close" onClick={() => setDetailsModalVisible(false)}>
+          <Button key="close" onClick={() => setDetailsModalVisible(false)} type="primary">
             Đóng
           </Button>
         ]}
