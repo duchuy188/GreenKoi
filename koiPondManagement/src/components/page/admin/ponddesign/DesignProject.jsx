@@ -138,7 +138,6 @@ function DesignProject() {
       key: "description",
       render: (text) => (
         <span>
-          {text ? text.slice(0, 5) : "No description available"}...
           <Button type="link" onClick={() => showDescriptionModal(text)}>
             Xem thêm
           </Button>
@@ -181,7 +180,6 @@ function DesignProject() {
       key: "features",
       render: (text) => (
         <span>
-          {text ? text.slice(0, 5) : "No features available"}...
           <Button type="link" onClick={() => showDescriptionModal(text)}>
             Xem thêm
           </Button>
@@ -282,8 +280,10 @@ function DesignProject() {
     },
     { title: "Lý do", dataIndex: "rejectionReason", key: "rejectionReason" },
     {
+      title: "Hành Động",
       key: "action",
       width: 120,
+      fixed: "right",
       render: (_, record) => (
         <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
           <Tooltip title="Chỉnh sửa">
@@ -332,6 +332,7 @@ function DesignProject() {
           dataSource={filteredPonds}
           rowKey="id"
           loading={loading}
+          scroll={{ x: 1500 }}
           locale={{
             cancelSort: "Bỏ sắp xếp",
             triggerAsc: "Sắp xếp tăng dần",

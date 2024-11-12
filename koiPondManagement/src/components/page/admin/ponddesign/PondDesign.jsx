@@ -92,7 +92,7 @@ function PondDesign() {
       };
 
       if (pondData) {
-await api.put(`/api/pond-designs/${pondData.id}`, pondValues);
+        await api.put(`/api/pond-designs/${pondData.id}`, pondValues);
         toast.success("Cập nhật thiết kế hồ thành công");
         navigate("/dashboard/designproject");
       } else {
@@ -152,7 +152,7 @@ await api.put(`/api/pond-designs/${pondData.id}`, pondValues);
                 rules={[{ required: true, message: "Vui lòng nhập giá cả!" }]}
               >
                 <InputNumber
-                  min={0}
+                  min={5000}
                   formatter={(value) =>
                     `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
                   }
@@ -181,7 +181,7 @@ await api.put(`/api/pond-designs/${pondData.id}`, pondValues);
           <Form.Item
             name="description"
             label="Mô tả"
-rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}
+            rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}
           >
             <CKEditor
               editor={ClassicEditor}

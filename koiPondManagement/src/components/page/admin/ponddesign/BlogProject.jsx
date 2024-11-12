@@ -179,7 +179,6 @@ function BlogProject() {
       key: "title",
       render: (text) => (
         <span>
-          {text.slice(0, 5)}...
           <Button
             type="link"
             onClick={() => showContentModal(text)}
@@ -196,7 +195,6 @@ function BlogProject() {
       key: "content",
       render: (text) => (
         <span>
-          {text.slice(0, 5)}...
           <Button
             type="link"
             onClick={() => showContentModal(text)}
@@ -322,6 +320,7 @@ function BlogProject() {
       },
     },
     {
+      title: "Hành Động",
       key: "action",
       render: (text, record) => (
         <Space size="middle">
@@ -372,7 +371,6 @@ function BlogProject() {
       key: "title",
       render: (text) => (
         <span>
-          {text.slice(0, 5)}...
           <Button
             type="link"
             onClick={() => showContentModal(text)}
@@ -389,7 +387,6 @@ function BlogProject() {
       key: "content",
       render: (text) => (
         <span>
-          {text.slice(0, 5)}...
           <Button
             type="link"
             onClick={() => showContentModal(text)}
