@@ -226,4 +226,13 @@ public class DesignRequestController {
         @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(designService.getCurrentDesign(requestId, userDetails.getUsername()));
     }
+
+    @Operation(
+        summary = "Get customer approved designs",
+        description = "Retrieves list of design requests that have been approved by the customer"
+    )
+    @GetMapping("/customer-approved")
+    public ResponseEntity<List<DesignRequestDTO>> getCustomerApprovedDesigns() {
+        return ResponseEntity.ok(designRequestService.getCustomerApprovedDesigns());
+    }
 }

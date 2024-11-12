@@ -131,6 +131,7 @@ public class SecurityConfig {
                         // Consultant endpoints (ROLE_2)
                         .requestMatchers(HttpMethod.GET, "/api/projects/consultant").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.POST, "/api/projects").hasAuthority("ROLE_2")
+                        .requestMatchers(HttpMethod.POST, "/api/projects/from-design/{designId}").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.PUT, "/api/projects/**").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.PATCH, "/api/projects/*/payment-status").hasAuthority("ROLE_2")
                         .requestMatchers(HttpMethod.PATCH, "/api/projects/*/status").hasAnyAuthority("ROLE_1", "ROLE_2")
@@ -217,9 +218,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/maintenance-requests/*/final/vnpay").hasAuthority("ROLE_5")
 
                         // Design Request endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/design-requests/customer-approved")
+                            .hasAuthority("ROLE_2")  // Chỉ Consultant được xem danh sách design đã approve
+
                         .requestMatchers(HttpMethod.POST, "/api/design-requests/*/design")
                             .hasAuthority("ROLE_3")  // Chỉ Designer được tạo design mới
-                        
+
                         .requestMatchers(HttpMethod.GET, "/api/design-requests/*/current-design")
                             .hasAuthority("ROLE_3")  // Chỉ Designer được xem current design
 
@@ -230,14 +234,14 @@ public class SecurityConfig {
                             .hasAuthority("ROLE_5")  // Chỉ Customer xem danh sách của mình
                         
                         .requestMatchers(HttpMethod.PUT, "/api/design-requests/*/link-design/**")
-                            .hasAuthority("ROLE_3")  // Chỉ Designer đư���c liên kết design
+                            .hasAuthority("ROLE_3")  // Chỉ Designer đưc liên kết design
                         
                         .requestMatchers(HttpMethod.PUT, "/api/design-requests/**")
                             .hasAnyAuthority("ROLE_3", "ROLE_2", "ROLE_1")  // Designer, Staff và Admin có thể cập nhật
 
                         // Thêm vào phần Design Request endpoints
                         .requestMatchers(HttpMethod.POST, "/api/design-requests/*/submit-review")
-                            .hasAuthority("ROLE_3")  // Chỉ Designer được submit review
+                            .hasAuthority("ROLE_3")  // Chỉ Designer ��ược submit review
 
                         .requestMatchers(HttpMethod.POST, "/api/design-requests/*/consultant-review")
                             .hasAuthority("ROLE_2")  // Chỉ Consultant được review

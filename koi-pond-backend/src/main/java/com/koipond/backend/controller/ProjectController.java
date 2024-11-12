@@ -361,6 +361,44 @@ public class ProjectController {
         }
     }
 
+    @PostMapping("/from-design/{designId}")
+    @PreAuthorize("hasRole('ROLE_2')")  // Chỉ consultant mới được tạo
+    @Operation(summary = "Create project from approved design", 
+              description = "Creates a new project from an approved design. Only accessible by the assigned consultant.")
+    public ResponseEntity<?> createProjectFromDesign(
+        @PathVariable String designId,
+        Authentication authentication
+    ) {
+        String consultantUsername = getUsernameFromAuthentication(authentication);
+        logger.info("Consultant {} attempting to create project from design {}", 
+                    consultantUsername, designId);
+        
+        try {
+            ProjectDTO createdProject = projectService.createProjectFromDesign(designId, consultantUsername);
+            logger.info("Project created successfully from design {} by consultant {}", 
+                        designId, consultantUsername);
+            return ResponseEntity.status(201).body(createdProject);
+        } catch (IllegalStateException e) {
+            logger.warn("Invalid state for creating project from design: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse(e.getMessage()));
+        } catch (AccessDeniedException e) {
+            logger.warn("Access denied for consultant {} to create project from design {}", 
+                        consultantUsername, designId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErrorResponse("Access denied: " + e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            logger.error("Design not found: {}", designId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Unexpected error creating project from design {} by consultant {}", 
+                        designId, consultantUsername, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("An unexpected error occurred"));
+        }
+    }
+
     private String getUsernameFromAuthentication(Authentication authentication) {
         return authentication.getName();
     }

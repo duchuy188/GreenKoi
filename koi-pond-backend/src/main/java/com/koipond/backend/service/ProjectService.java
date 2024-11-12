@@ -17,6 +17,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
+import java.math.BigDecimal;
 
 @Service
 public class ProjectService {
@@ -32,6 +33,7 @@ public class ProjectService {
     private final TaskService taskService;
     private final ReviewRepository reviewRepository;
     private final VNPayService vnPayService;
+    private final DesignRequestRepository designRequestRepository;
 
     @Autowired
     public ProjectService(ProjectRepository projectRepository,
@@ -43,7 +45,8 @@ public class ProjectService {
                          TaskTemplateRepository taskTemplateRepository,
                          TaskService taskService,
                          ReviewRepository reviewRepository,
-                         VNPayService vnPayService) {
+                         VNPayService vnPayService,
+                         DesignRequestRepository designRequestRepository) {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.designRepository = designRepository;
@@ -54,6 +57,7 @@ public class ProjectService {
         this.taskService = taskService;
         this.reviewRepository = reviewRepository;
         this.vnPayService = vnPayService;
+        this.designRequestRepository = designRequestRepository;
     }
 
     public List<ProjectDTO> getAllProjects() {
@@ -875,5 +879,59 @@ public class ProjectService {
             constructor.setHasActiveProject(hasActiveProject);
             userRepository.save(constructor);
         }
+    }
+
+    @Transactional
+    public ProjectDTO createProjectFromDesign(String designId, String consultantUsername) {
+        // Lấy thông tin design
+        Design design = designRepository.findById(designId)
+            .orElseThrow(() -> new ResourceNotFoundException("Design not found"));
+
+        // Kiểm tra trạng thái design
+        if (design.getStatus() != Design.DesignStatus.APPROVED) {
+            throw new IllegalStateException("Can only create project from approved design");
+        }
+
+        // Lấy thông tin design request và consultation
+        DesignRequest designRequest = designRequestRepository.findByDesignId(designId)
+            .orElseThrow(() -> new ResourceNotFoundException("Design request not found"));
+        
+        ConsultationRequest consultation = designRequest.getConsultation();
+        
+        // Validate consultant
+        if (!consultation.getConsultant().getUsername().equals(consultantUsername)) {
+            throw new AccessDeniedException("Only assigned consultant can create project");
+        }
+
+        // Tạo project mới
+        Project project = new Project();
+        project.setName("Project for " + consultation.getCustomer().getFullName());
+        project.setDescription("Created from approved design: " + design.getName());
+        project.setCustomer(consultation.getCustomer());
+        project.setConsultant(consultation.getConsultant());
+        project.setDesign(design);
+        project.setTotalPrice(design.getBasePrice());
+        project.setDepositAmount(calculateDepositAmount(design.getBasePrice()));
+        project.setAddress(consultation.getRequirements());
+        
+        // Set các trạng thái mặc định
+        ProjectStatus pendingStatus = getProjectStatusByName("PENDING");
+        project.setStatus(pendingStatus);
+        project.setPaymentStatus(Project.PaymentStatus.UNPAID);
+        project.setProgressPercentage(0);
+        project.setActive(true);
+
+        // Lưu project
+        Project savedProject = projectRepository.save(project);
+        
+        // Tạo các task mặc định
+        createTasksForProject(savedProject.getId());
+
+        log.info("Created new project {} from design {}", savedProject.getId(), designId);
+        return convertToDTO(savedProject);
+    }
+
+    private BigDecimal calculateDepositAmount(BigDecimal totalPrice) {
+        return totalPrice.multiply(new BigDecimal("0.5")); // 50% đặt cọc
     }
 }

@@ -435,4 +435,16 @@ public class DesignRequestService {
 
         return convertToDTO(designRequestRepository.save(request), "ROLE_5");
     }
+
+    // Lấy danh sách thiết kế đã được khách hàng approve
+    public List<DesignRequestDTO> getCustomerApprovedDesigns() {
+        logger.info("Getting customer approved designs");
+        return designRequestRepository
+            .findByStatus(DesignRequest.DesignRequestStatus.APPROVED)
+            .stream()
+            .filter(request -> request.getDesign() != null)  // Chỉ lấy request có design
+            .filter(request -> request.getDesign().isCustom())  // Chỉ lấy custom design
+            .map(request -> convertToDTO(request, "ROLE_1"))  // Map full thông tin
+            .collect(Collectors.toList());
+    }
 }
