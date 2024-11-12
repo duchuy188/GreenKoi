@@ -199,6 +199,7 @@ const CustomDesignRequest = () => {
       title: "Ngân Sách",
       dataIndex: "budget",
       key: "budget",
+      render: (value) => value ? `${value.toLocaleString('vi-VN')} VNĐ` : '-'
     },
     {
       title: "Ghi Chú",

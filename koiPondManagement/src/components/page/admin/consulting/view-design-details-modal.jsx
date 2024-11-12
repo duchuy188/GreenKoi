@@ -36,7 +36,32 @@ const ViewDesignDetailsModal = ({ visible, onCancel, designDetails, onSuccess })
       onSuccess?.();
       onCancel();
     } catch (error) {
-      message.error('Có lỗi xảy ra: ' + error.message);
+      let errorMessage = 'Đã có lỗi xảy ra khi xử lý yêu cầu';
+      
+      if (error.response) {
+        if (error.response.data?.includes('Design request already exists for this consultation')) {
+          errorMessage = 'Yêu cầu thiết kế đã tồn tại cho buổi tư vấn này';
+        } else {
+          switch (error.response.status) {
+            case 400:
+              errorMessage = 'Dữ liệu không hợp lệ';
+              break;
+            case 401:
+              errorMessage = 'Bạn không có quyền thực hiện thao tác này';
+              break;
+            case 404:
+              errorMessage = 'Không tìm thấy thiết kế';
+              break;
+            case 500:
+              errorMessage = 'Lỗi hệ thống, vui lòng thử lại sau';
+              break;
+            default:
+              errorMessage = 'Đã có lỗi xảy ra, vui lòng thử lại';
+          }
+        }
+      }
+      
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }

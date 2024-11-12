@@ -155,6 +155,8 @@ function DesignList() {
       <Modal
         title="Từ chối thiết kế"
         open={modalVisible}
+        okText="Xác nhận"
+        cancelText="Hủy bỏ"
         onOk={() => handleReject(selectedDesign)}
         onCancel={() => {
           setModalVisible(false);

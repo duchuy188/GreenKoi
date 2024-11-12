@@ -38,12 +38,6 @@ const ManageCustomerRequest = () => {
       render: (_, __, index) => index + 1,
     },
     {
-      title: 'Mã yêu cầu',
-      dataIndex: 'id',
-      key: 'id',
-      width: 280,
-    },
-    {
       title: 'Khách hàng',
       dataIndex: 'customerName',
       key: 'customerName',
