@@ -18,7 +18,7 @@ import {
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
 import moment from 'moment';
-import { SearchOutlined } from '@ant-design/icons';
+import { SearchOutlined, EyeOutlined } from '@ant-design/icons';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('vi-VN', {
@@ -40,6 +40,8 @@ const MaintenanceRequest = () => {
   const [searchText, setSearchText] = useState('');
   const [isImagePreviewVisible, setIsImagePreviewVisible] = useState(false);
   const [previewImages, setPreviewImages] = useState([]);
+  const [isDescriptionModalVisible, setIsDescriptionModalVisible] = useState(false);
+  const [selectedDescription, setSelectedDescription] = useState('');
 
   useEffect(() => {
     fetchMaintenanceRequests();
@@ -118,7 +120,7 @@ const MaintenanceRequest = () => {
       }
     } catch (error) {
       console.error("Error starting review:", error);
-      toast.error("Không thể bt đầu xem xét yêu cầu bảo trì");
+      toast.error("Không thể bt đu xem xét yêu cầu bảo trì");
     }
   };
 
@@ -189,7 +191,7 @@ const MaintenanceRequest = () => {
         onOk: async () => {
           const response = await api.post(`/api/maintenance-requests/${record.id}/final/cash`);
           if (response.status === 200) {
-            message.success("Xác nhận thanh toán cuối cùng thành công");
+            toast.success("Xác nhận thanh toán cuối cùng thành công");
             fetchMaintenanceRequests();
           }
         },
@@ -205,8 +207,8 @@ const MaintenanceRequest = () => {
   const handleConfirmDeposit = async (record) => {
     try {
       await api.post(`/api/maintenance-requests/${record.id}/deposit/cash`);
-      message.success("Xác nhận đặt cọc thành công");
-      fetchMaintenanceRequests(); // Refresh lại danh sách
+      toast.success("Xác nhận đặt cọc thành công");
+      fetchMaintenanceRequests(); 
     } catch (error) {
       console.error("Error confirming deposit:", error);
       toast.error("Không thể xác nhận đặt cọc");
@@ -222,6 +224,11 @@ const MaintenanceRequest = () => {
     const imageList = attachments.split(',').filter(url => url.trim());
     setPreviewImages(imageList);
     setIsImagePreviewVisible(true);
+  };
+
+  const handleViewDescription = (description) => {
+    setSelectedDescription(description);
+    setIsDescriptionModalVisible(true);
   };
 
   const columns = [
@@ -248,7 +255,17 @@ const MaintenanceRequest = () => {
     { title: "Mã yêu cầu", dataIndex: "id", key: "id", hidden: true },
     { title: "Mã khách hàng", dataIndex: "customerId", key: "customerId", hidden: true },
     { title: "Mã dự án", dataIndex: "projectId", key: "projectId", hidden: true },
-    { title: "Mô tả", dataIndex: "description", key: "description" },
+    { 
+      title: "Mô tả", 
+      dataIndex: "description", 
+      key: "description",
+      render: (text) => (
+        <EyeOutlined 
+          style={{ cursor: 'pointer', color: 'black' }}
+          onClick={() => handleViewDescription(text)}
+        />
+      )
+    },
     {
       title: "Trạng thái yêu cầu",
       dataIndex: "requestStatus",
@@ -293,16 +310,28 @@ const MaintenanceRequest = () => {
       dataIndex: "paymentStatus", 
       key: "paymentStatus",
       render: (status) => {
+        let color = '';
+        let text = '';
+        
         switch (status) {
           case "UNPAID":
-            return "Chưa thanh toán";
+            color = 'red';
+            text = "Chưa thanh toán";
+            break;
           case "DEPOSIT_PAID":
-            return "Đã cọc";
+            color = 'orange';
+            text = "Đã cọc";
+            break;
           case "FULLY_PAID":
-            return "Đã thanh toán";
+            color = 'green';
+            text = "Đã thanh toán";
+            break;
           default:
-            return status;
+            color = 'default';
+            text = status;
         }
+        
+        return <Tag color={color}>{text}</Tag>;
       }
     },
     { 
@@ -724,7 +753,7 @@ const MaintenanceRequest = () => {
       </Modal>
       <Modal
         title="Hình Ảnh Đính Kèm"
-        visible={isImagePreviewVisible}
+        open={isImagePreviewVisible}
         onCancel={() => setIsImagePreviewVisible(false)}
         footer={null}
         width={800}
@@ -744,6 +773,15 @@ const MaintenanceRequest = () => {
             />
           ))}
         </div>
+      </Modal>
+      <Modal
+        title="Chi tiết mô tả"
+        open={isDescriptionModalVisible}
+        onCancel={() => setIsDescriptionModalVisible(false)}
+        footer={null}
+        width={800}
+      >
+        <p>{selectedDescription}</p>
       </Modal>
     </div>
   );
