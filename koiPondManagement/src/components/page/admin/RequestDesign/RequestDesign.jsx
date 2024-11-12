@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import axios from '../../../config/axios';
-import { Table, Button } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import EditDesignModal from './EditDesignModal';
-import { toast } from 'react-toastify';
+import React, { useState, useEffect } from "react";
+import axios from "../../../config/axios";
+import { Table, Button, Tag } from "antd";
+import { useNavigate } from "react-router-dom";
+import EditDesignModal from "./EditDesignModal";
+import { toast } from "react-toastify";
 
 function RequestDesign() {
   const [designRequests, setDesignRequests] = useState([]);
@@ -14,98 +14,101 @@ function RequestDesign() {
 
   const columns = [
     {
-      title: 'STT',
-      key: 'index',
+      title: "STT",
+      key: "index",
       render: (_, __, index) => index + 1,
     },
     {
-      title: 'KHÁCH HÀNG',
-      dataIndex: 'customerName',
-      key: 'customerName',
+      title: "KHÁCH HÀNG",
+      dataIndex: "customerName",
+      key: "customerName",
     },
     {
-      title: 'YÊU CẦU',
-      dataIndex: 'requirements',
-      key: 'requirements',
+      title: "YÊU CẦU",
+      dataIndex: "requirements",
+      key: "requirements",
     },
     {
-      title: 'PHONG CÁCH',
-      dataIndex: 'preferredStyle',
-      key: 'preferredStyle',
+      title: "PHONG CÁCH",
+      dataIndex: "preferredStyle",
+      key: "preferredStyle",
     },
     {
-      title: 'NGÂN SÁCH',
-      dataIndex: 'budget',
-      key: 'budget',
-      render: (text) => `${text} VND`,
+      title: "NGÂN SÁCH",
+      dataIndex: "budget",
+      key: "budget",
+      render: (text) => {
+        const formattedBudget = new Intl.NumberFormat("vi-VN").format(text);
+        return `${formattedBudget} VNĐ`;
+      },
     },
     {
-      title: 'TRẠNG THÁI',
-      dataIndex: 'status',
-      key: 'status',
+      title: "TRẠNG THÁI",
+      dataIndex: "status",
+      key: "status",
       render: (status) => {
-        let statusText = 'Chờ xử lý';
-        let statusClass = 'bg-yellow-100 text-yellow-800';
+        let statusText = "Chờ xử lý";
+        let color = "gold";
 
         switch (status) {
-          case 'PENDING':
-            statusText = 'Chờ xử lý';
-            statusClass = 'bg-yellow-100 text-yellow-800';
+          case "PENDING":
+            statusText = "Chờ xử lý";
+            color = "gold";
             break;
-          case 'IN_PROGRESS':
-            statusText = 'Đang thực hiện';
-            statusClass = 'bg-blue-100 text-blue-800';
+          case "IN_PROGRESS":
+            statusText = "Đang thực hiện";
+            color = "blue";
             break;
-          case 'COMPLETED':
-            statusText = 'Hoàn thành';
-            statusClass = 'bg-green-100 text-green-800';
+          case "COMPLETED":
+            statusText = "Hoàn thành";
+            color = "green";
             break;
-          case 'CANCELLED':
-            statusText = 'Đã hủy';
-            statusClass = 'bg-red-100 text-red-800';
+          case "CANCELLED":
+            statusText = "Đã hủy";
+            color = "red";
             break;
           default:
             break;
         }
 
-        return (
-          <span className={`px-3 py-1 rounded-full ${statusClass}`}>
-            {statusText}
-          </span>
-        );
+        return <Tag color={color}>{statusText}</Tag>;
       },
     },
     {
-      title: 'LÝ DO TỪ CHỐI',
-      dataIndex: 'rejectionReason',
-      key: 'rejectionReason',
-      render: (text, record) => (
-        record.status === 'IN_PROGRESS' && text ? text : '-'
-      ),
+      title: "LÝ DO TỪ CHỐI",
+      dataIndex: "rejectionReason",
+      key: "rejectionReason",
+      render: (text, record) =>
+        record.status === "IN_PROGRESS" && text ? text : "-",
     },
     {
-      title: 'NGÀY TẠO',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (text) => new Date(text).toLocaleDateString('vi-VN'),
+      title: "NGÀY TẠO",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (text) => new Date(text).toLocaleDateString("vi-VN"),
     },
     {
-      title: 'HÀNH ĐỘNG',
-      key: 'action',
+      title: "HÀNH ĐỘNG",
+      key: "action",
       render: (_, record) => {
-        console.log('Record data:', record);
+        console.log("Record data:", record);
         return (
-          record.status === 'IN_PROGRESS' && (
-            <Button 
+          record.status === "IN_PROGRESS" && (
+            <Button
               type="primary"
               onClick={() => {
-                console.log('Clicking with designId:', record.designId, 'requestId:', record.id);
-                record.rejectionReason ? 
-                  handleEditClick(record.designId, record.id) : 
-                  navigate(`/dashboard/requestdesign/${record.id}`);
+                console.log(
+                  "Clicking with designId:",
+                  record.designId,
+                  "requestId:",
+                  record.id
+                );
+                record.rejectionReason
+                  ? handleEditClick(record.designId, record.id)
+                  : navigate(`/dashboard/requestdesign/${record.id}`);
               }}
             >
-              {record.rejectionReason ? 'Chỉnh sửa thiết kế' : 'Tạo thiết kế'}
+              {record.rejectionReason ? "Chỉnh sửa thiết kế" : "Tạo thiết kế"}
             </Button>
           )
         );
@@ -116,19 +119,19 @@ function RequestDesign() {
   const fetchDesignRequests = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const config = {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       };
-      const response = await axios.get('/api/design-requests/designer', config);
-      const sortedRequests = response.data.sort((a, b) => 
-        new Date(b.createdAt) - new Date(a.createdAt)
+      const response = await axios.get("/api/design-requests/designer", config);
+      const sortedRequests = response.data.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
       setDesignRequests(sortedRequests);
     } catch (error) {
-      console.error('Error fetching design requests:', error);
+      console.error("Error fetching design requests:", error);
     }
     setLoading(false);
   };
@@ -139,23 +142,23 @@ function RequestDesign() {
 
   const handleEditClick = async (designId, requestId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const response = await axios.get(`/api/pond-designs/${designId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
-      
-      console.log('Design data:', response.data);
-      
+
+      console.log("Design data:", response.data);
+
       setCurrentDesign({
         ...response.data,
-        requestId: requestId
+        requestId: requestId,
       });
       setIsEditModalVisible(true);
     } catch (error) {
-      console.error('Error fetching design:', error);
-      toast.error('Không thể tải dữ liệu thiết kế');
+      console.error("Error fetching design:", error);
+      toast.error("Không thể tải dữ liệu thiết kế");
     }
   };
 
