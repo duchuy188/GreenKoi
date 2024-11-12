@@ -14,7 +14,7 @@ import { EditOutlined, LockOutlined, UnlockOutlined } from "@ant-design/icons";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import api from "../../../config/axios";
-import moment from "moment"; // Import moment for date formatting
+import moment from "moment";
 
 function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -251,6 +251,7 @@ function UserManagement() {
 
   return (
     <div>
+      <h2 style={{ marginBottom: '20px' }}>Quản lý người dùng</h2>
       <div
         style={{
           display: "flex",

@@ -325,7 +325,7 @@ const ManageMaintenance = () => {
 
   return (
     <div>
-      <h1>Yêu cầu bảo trì</h1>
+      <h1>Quản lí bảo trì</h1>
       <div style={{ marginBottom: 16, display: 'flex', gap: 16 }}>
         <Select
           style={{ width: 200 }}

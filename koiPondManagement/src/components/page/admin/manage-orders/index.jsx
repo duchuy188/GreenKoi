@@ -780,10 +780,10 @@ const OrdersList = () => {
         style={{
           marginBottom: 16,
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "center",
         }}
       >
-        <h1>Danh sách đơn hàng</h1>
+        <h1>Quản lí đơn hàng</h1>
       </div>
 
       {renderFilters()}
