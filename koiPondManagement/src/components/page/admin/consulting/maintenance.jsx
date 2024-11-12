@@ -38,6 +38,8 @@ const MaintenanceRequest = () => {
   const [cancellationReason, setCancellationReason] = useState('');
   const [cancellingRequestId, setCancellingRequestId] = useState(null);
   const [searchText, setSearchText] = useState('');
+  const [isImagePreviewVisible, setIsImagePreviewVisible] = useState(false);
+  const [previewImages, setPreviewImages] = useState([]);
 
   useEffect(() => {
     fetchMaintenanceRequests();
@@ -215,18 +217,26 @@ const MaintenanceRequest = () => {
     setSearchText(value);
   };
 
+  const handleViewAttachments = (attachments) => {
+    if (!attachments) return;
+    const imageList = attachments.split(',').filter(url => url.trim());
+    setPreviewImages(imageList);
+    setIsImagePreviewVisible(true);
+  };
+
   const columns = [
     {
-      title: "Hình Ảnh",
+      title: "Hình Ảnh Đính Kèm",
       dataIndex: "attachments",
       key: "attachments",
       render: (attachments) => (
-        attachments && typeof attachments === 'string' ? (
-          <Image
-            width={50}
-            src={attachments}
-            alt="Attachment"
-          />
+        attachments ? (
+          <Button 
+            type="link" 
+            onClick={() => handleViewAttachments(attachments)}
+          >
+            Xem {attachments.split(',').filter(url => url.trim()).length} hình ảnh
+          </Button>
         ) : null
       ),
     },
@@ -711,6 +721,29 @@ const MaintenanceRequest = () => {
           onChange={(e) => setCancellationReason(e.target.value)}
           rows={4}
         />
+      </Modal>
+      <Modal
+        title="Hình Ảnh Đính Kèm"
+        visible={isImagePreviewVisible}
+        onCancel={() => setIsImagePreviewVisible(false)}
+        footer={null}
+        width={800}
+      >
+        <div style={{ 
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+          gap: '16px',
+          padding: '16px'
+        }}>
+          {previewImages.map((imageUrl, index) => (
+            <Image
+              key={index}
+              src={imageUrl}
+              alt={`Image ${index + 1}`}
+              style={{ width: '100%', height: 'auto' }}
+            />
+          ))}
+        </div>
       </Modal>
     </div>
   );

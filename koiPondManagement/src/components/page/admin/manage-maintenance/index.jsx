@@ -291,22 +291,35 @@ const ManageMaintenance = () => {
           <Button 
             onClick={() => handleViewDetails(record)} 
             icon={<EyeOutlined />} 
-            style={{ marginRight: 8 }}
+            style={{ marginRight: 8, color: '#1890ff', borderColor: '#1890ff' }}
           >
             Xem chi tiết
           </Button>
           {requestStatus === "CONFIRMED" && (
             <>
               {record.paymentStatus === "DEPOSIT_PAID" && (
-                <Button onClick={() => handleAssign(record)} style={{ marginRight: 8 }}>
+                <Button 
+                  onClick={() => handleAssign(record)} 
+                  style={{ marginRight: 8 }}
+                  type="primary"
+                >
                   Phân công nhân viên
                 </Button>
               )}
-              <Button onClick={() => handleCancel(record)}>Hủy yêu cầu</Button>
+              <Button 
+                onClick={() => handleCancel(record)}
+                danger
+              >
+                Hủy yêu cầu
+              </Button>
             </>
           )}
           {requestStatus === "CANCELLED" && (
-            <Button icon={<EyeOutlined />} onClick={() => handleViewCancelReason(record)}>
+            <Button 
+              icon={<EyeOutlined />} 
+              onClick={() => handleViewCancelReason(record)}
+              style={{ color: '#ff4d4f', borderColor: '#ff4d4f' }}
+            >
               Xem lý do hủy
             </Button>
           )}
@@ -314,6 +327,7 @@ const ManageMaintenance = () => {
             <Button 
               icon={<EyeOutlined />} 
               onClick={() => handleViewReview(record)}
+              style={{ color: '#52c41a', borderColor: '#52c41a' }}
             >
               Xem đánh giá
             </Button>
