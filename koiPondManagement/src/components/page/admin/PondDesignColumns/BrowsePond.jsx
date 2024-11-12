@@ -108,12 +108,19 @@ function BrowsePond() {
   const handleDeletePost = async (postId) => {
     try {
       await api.delete(`/api/blog/posts/${postId}`);
-      toast.success("Ẩn bài viết thành công");
+      toast.success("Ẩn bài viết thành công", {
+        toastId: "deletePost",
+        position: "top-right",
+        autoClose: 2000,
+      });
       refreshData();
     } catch (err) {
       toast.error(
         "Không thể xóa bài viết blog: " +
-          (err.response?.data?.message || err.message)
+          (err.response?.data?.message || err.message),
+        {
+          toastId: "deletePostError",
+        }
       );
     }
   };
@@ -121,12 +128,19 @@ function BrowsePond() {
   const handleRestorePost = async (postId) => {
     try {
       await api.post(`/api/blog/posts/${postId}/restore`);
-      toast.success("Khôi phục blog thành công");
+      toast.success("Khôi phục blog thành công", {
+        toastId: "restorePost",
+        position: "top-right",
+        autoClose: 2000,
+      });
       refreshData();
     } catch (err) {
       toast.error(
         "Không thể khôi phục bài viết blog: " +
-          (err.response?.data?.message || err.message)
+          (err.response?.data?.message || err.message),
+        {
+          toastId: "restorePostError",
+        }
       );
     }
   };
@@ -148,18 +162,10 @@ function BrowsePond() {
       dataIndex: "content",
       key: "content",
       render: (text) => (
-        <>
-          {text.slice(0, 10)}...
-          <Button type="link" onClick={() => openContentModal(text)}>
-            Xem thêm
-          </Button>
-        </>
+        <Button type="link" onClick={() => openContentModal(text)}>
+          Xem thêm
+        </Button>
       ),
-    },
-    {
-      title: "Người tạo",
-      dataIndex: "authorId",
-      key: "authorId",
     },
     {
       title: "Hình ảnh",
@@ -245,7 +251,10 @@ function BrowsePond() {
       },
     },
     {
+      title: "Hành động",
       key: "actions",
+      fixed: "right",
+      width: 200,
       render: (text, record) => (
         <>
           <Popconfirm
@@ -274,7 +283,10 @@ function BrowsePond() {
   const approvedColumns = [
     ...columns.slice(0, -1),
     {
+      title: "Hành động",
       key: "actions",
+      fixed: "right",
+      width: 150,
       render: (text, record) => (
         <div>
           {record.active ? (
@@ -322,6 +334,7 @@ function BrowsePond() {
             rowKey="id"
             loading={postsLoading}
             pagination={{ pageSize: 5 }}
+            scroll={{ x: 1500 }}
           />
         </div>
       </Card>
@@ -347,6 +360,7 @@ function BrowsePond() {
             rowKey="id"
             loading={postsLoading}
             pagination={{ pageSize: 5 }}
+            scroll={{ x: 1500 }}
           />
         </div>
       </Card>
@@ -374,7 +388,7 @@ function BrowsePond() {
 
       {/* Content modal */}
       <Modal
-        title="Blog Content"
+        title="Nội dung blog"
         open={isContentModalVisible}
         onCancel={() => setIsContentModalVisible(false)}
         footer={[

@@ -249,7 +249,7 @@ const OrdersList = () => {
       );
 
       if (response.status === 200) {
-        toast.success("Đã phân công nhân viên xây dựng thành công");
+        toast.success("Đ�� phân công nhân viên xây dựng thành công");
         setIsAssignModalVisible(false);
 
         setOrders((prevOrders) =>
@@ -363,27 +363,11 @@ const OrdersList = () => {
       title: "Mô tả",
       dataIndex: "description",
       key: "description",
-      render: (text, record) => {
-        const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = text;
-        const plainText = tempDiv.textContent || tempDiv.innerText;
-        const shortDescription =
-          plainText.length > 50 ? plainText.slice(0, 50) + "..." : plainText;
-
-        return (
-          <>
-            <span>{shortDescription}</span>
-            {plainText.length > 50 && (
-              <Button
-                type="link"
-                onClick={() => toggleDescription(record.id, text)}
-              >
-                Xem thêm
-              </Button>
-            )}
-          </>
-        );
-      },
+      render: (text, record) => (
+        <Button type="link" onClick={() => toggleDescription(record.id, text)}>
+          Xem chi tiết
+        </Button>
+      ),
     },
     {
       title: "Tổng giá",
@@ -470,11 +454,7 @@ const OrdersList = () => {
               okText="Có"
               cancelText="Không"
             >
-              <Button
-                onClick={() => completeProject(record.id)}
-                loading={actionLoading}
-                type="primary"
-              >
+              <Button loading={actionLoading} type="primary">
                 Hoàn thành
               </Button>
             </Popconfirm>

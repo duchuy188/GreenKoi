@@ -92,12 +92,11 @@ function PondDesignColumns() {
       dataIndex: "description",
       key: "description",
       render: (text) => (
-        <span>
-          {text.slice(0, 5)}...
+        <div>
           <Button type="link" onClick={() => showDescriptionModal(text)}>
-            Xem thêm
+            Xem chi tiết
           </Button>
-        </span>
+        </div>
       ),
     },
     {
@@ -135,12 +134,11 @@ function PondDesignColumns() {
       dataIndex: "features",
       key: "features",
       render: (text) => (
-        <span>
-          {text ? text.slice(0, 5) : "No features available"}...
+        <div style={{ textAlign: "center" }}>
           <Button type="link" onClick={() => showDescriptionModal(text)}>
-            Xem thêm
+            Xem chi tiết
           </Button>
-        </span>
+        </div>
       ),
     },
     {
@@ -155,7 +153,18 @@ function PondDesignColumns() {
           })
           .replace("₫", "VNĐ") || "0 VNĐ",
     },
-    { title: "Tạo bởi", dataIndex: "createdById", key: "createdById" },
+    {
+      title: "Ngày tạo",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (date) => new Date(date).toLocaleString("vi-VN"),
+    },
+    {
+      title: "Ngày cập nhật",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
+      render: (date) => new Date(date).toLocaleString("vi-VN"),
+    },
     {
       title: "Trạng thái",
       dataIndex: "status",
@@ -175,8 +184,11 @@ function PondDesignColumns() {
       },
     },
     {
+      title: "Hành động",
       dataIndex: "id",
       key: "id",
+      fixed: "right",
+      width: 200,
       render: (id) => (
         <>
           <Popconfirm
@@ -213,6 +225,7 @@ function PondDesignColumns() {
         columns={PondDesignColumns}
         rowKey="id"
         loading={loading}
+        scroll={{ x: 1500 }}
         locale={{ emptyText: "No pond designs pending approval." }}
       />
       <Modal
