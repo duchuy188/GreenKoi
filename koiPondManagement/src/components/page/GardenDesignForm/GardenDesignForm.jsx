@@ -138,8 +138,11 @@ const GardenDesignForm = () => {
             value={formData.customerName}
             onChange={handleChange}
             required
-            oninvalid="this.setCustomValidity('Vui lòng nhập họ và tên')"
-            oninput="this.setCustomValidity('')"
+            disabled={true}
+            onInvalid={(e) =>
+              e.target.setCustomValidity("Vui lòng nhập họ và tên")
+            }
+            onInput={(e) => e.target.setCustomValidity("")}
           />
         </div>
 
@@ -157,6 +160,7 @@ const GardenDesignForm = () => {
             pattern="[0-9]{10}"
             title="Vui lòng nhập đúng 10 chữ số"
             maxLength="10"
+            disabled={true}
             onKeyPress={(e) => {
               if (!/[0-9]/.test(e.key)) {
                 e.preventDefault();
@@ -173,6 +177,7 @@ const GardenDesignForm = () => {
             type="text"
             id="customerAddress"
             name="customerAddress"
+            disabled={true}
             value={formData.customerAddress}
             onChange={handleChange}
             required
@@ -189,6 +194,7 @@ const GardenDesignForm = () => {
             name="preferredStyle"
             value={formData.preferredStyle}
             onChange={handleChange}
+            title="Vui lòng nhập loại hồ"
             required
           />
         </div>
@@ -203,6 +209,7 @@ const GardenDesignForm = () => {
             name="dimensions"
             value={formData.dimensions}
             onChange={handleChange}
+            title="Vui lòng nhập kích thước"
             required
           />
         </div>
@@ -216,6 +223,7 @@ const GardenDesignForm = () => {
             name="requirements"
             value={formData.requirements}
             onChange={handleChange}
+            title="Vui lòng nhập yêu cầu thiết kế"
             required
           />
         </div>
@@ -230,6 +238,7 @@ const GardenDesignForm = () => {
             name="budget"
             value={formData.budget}
             onChange={handleChange}
+            title="Vui lòng nhập ngân sách dự kiến"
             required
           />
         </div>
