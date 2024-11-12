@@ -304,6 +304,27 @@ function MaintenanceRequests() {
       width: 130,
     },
     {
+      title: "NGÀY YÊU CẦU",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (date) => moment(date).format("DD/MM/YYYY HH:mm"),
+    },
+    {
+      title: "GHI CHÚ",
+      dataIndex: "description",
+      key: "description",
+      render: (text) => (
+        <Button
+          type="text"
+          onClick={() => handleViewNote(text)}
+          icon={<FileTextOutlined />}
+          style={{ color: '#1890ff' }}
+        >
+          Xem ghi chú
+        </Button>
+      ),
+    },
+    {
       title: "TRẠNG THÁI",
       dataIndex: "requestStatus",
       key: "requestStatus",
@@ -363,73 +384,11 @@ function MaintenanceRequests() {
       ),
     },
     {
-      title: "THANH TOÁN",
-      dataIndex: "paymentStatus",
-      key: "paymentStatus",
-      render: (status) => (
-        <span
-          style={{
-            padding: "4px 12px",
-            borderRadius: "4px",
-            backgroundColor:
-              status === "UNPAID"
-                ? "#fff1f0"
-                : status === "DEPOSIT_PAID"
-                ? "#fff7e6"
-                : status === "FULLY_PAID"
-                ? "#f6ffed"
-                : "#f0f0f0",
-            color:
-              status === "UNPAID"
-                ? "#f5222d"
-                : status === "DEPOSIT_PAID"
-                ? "#faad14"
-                : status === "FULLY_PAID"
-                ? "#52c41a"
-                : "#000000",
-            border: `1px solid ${
-              status === "UNPAID"
-                ? "#ffa39e"
-                : status === "DEPOSIT_PAID"
-                ? "#ffd591"
-                : status === "FULLY_PAID"
-                ? "#b7eb8f"
-                : "#d9d9d9"
-            }`,
-          }}
-        >
-          {status === "UNPAID"
-            ? "Chưa Thanh Toán"
-            : status === "DEPOSIT_PAID"
-            ? "Đã Cọc"
-            : status === "FULLY_PAID"
-            ? "Đã Thanh Toán"
-            : status}
-        </span>
-      ),
-    },
-    {
-      title: "GHI CHÚ",
-      dataIndex: "description",
-      key: "description",
-      render: (text) => (
-        <Button
-          type="text"
-          onClick={() => handleViewNote(text)}
-          icon={<FileTextOutlined />}
-          style={{ color: '#1890ff' }}
-        >
-          Xem ghi chú
-        </Button>
-      ),
-    },
-    {
       title: "HÀNH ĐỘNG",
       key: "action",
       width: 130,
       render: (_, record) => (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-
           {record.requestStatus === "PENDING" && (
             <Button
               style={{
@@ -500,59 +459,6 @@ function MaintenanceRequests() {
         </span>
       );
     };
-
-    const renderPaymentStatus = (status) => {
-      const style = {
-        padding: "4px 12px",
-        borderRadius: "4px",
-        backgroundColor:
-          status === "UNPAID"
-            ? "#fff1f0"
-            : status === "DEPOSIT_PAID"
-            ? "#fff7e6"
-            : status === "FULLY_PAID"
-            ? "#f6ffed"
-            : "#f0f0f0",
-        color:
-          status === "UNPAID"
-            ? "#f5222d"
-            : status === "DEPOSIT_PAID"
-            ? "#faad14"
-            : status === "FULLY_PAID"
-            ? "#52c41a"
-            : "#000000",
-        border: `1px solid ${
-          status === "UNPAID"
-            ? "#ffa39e"
-            : status === "DEPOSIT_PAID"
-            ? "#ffd591"
-            : status === "FULLY_PAID"
-            ? "#b7eb8f"
-            : "#d9d9d9"
-        }`,
-      };
-
-      return (
-        <span style={style}>
-          {status === "UNPAID"
-            ? "Chưa Thanh Toán"
-            : status === "DEPOSIT_PAID"
-            ? "Đã Cọc"
-            : status === "FULLY_PAID"
-            ? "Đã Thanh Toán"
-            : status}
-        </span>
-      );
-    };
-
-    const formatCurrency = (amount) => {
-      return new Intl.NumberFormat("vi-VN", {
-        style: "currency",
-        currency: "VND",
-      }).format(amount);
-    };
-
-    
   };
 
   const renderCancelModal = () => (

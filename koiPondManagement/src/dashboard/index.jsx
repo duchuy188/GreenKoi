@@ -88,7 +88,7 @@ const items = [
       "consulting-maintenance"
     ),
   ]),
-  getItem("NHân viên xây dựng", "construction", <CommentOutlined />, [
+  getItem("Nhân viên xây dựng", "construction", <CommentOutlined />, [
     getItem(
       <Link to="/dashboard/construction/tasks">Công việc</Link>,
       "construction-tasks"

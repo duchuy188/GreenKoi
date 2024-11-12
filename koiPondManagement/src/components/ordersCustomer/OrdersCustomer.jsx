@@ -9,6 +9,7 @@ import {
   Input,
   Form,
   DatePicker,
+  Upload,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import api from "/src/components/config/axios";
@@ -16,6 +17,8 @@ import moment from "moment";
 import "./OrdersCustomer.css";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { storage } from "/src/components/config/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const OrdersCustomer = () => {
   const [orders, setOrders] = useState([]);
@@ -33,6 +36,7 @@ const OrdersCustomer = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [isPolling, setIsPolling] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   // Add payment status options
   const paymentStatusOptions = [
@@ -222,31 +226,49 @@ const OrdersCustomer = () => {
     setIsMaintenanceModalVisible(true);
   };
 
+  const handleFileUpload = async (file) => {
+    try {
+      setUploading(true);
+      const storageRef = ref(storage, `maintenance-attachments/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast.error("Không thể tải lên tệp đính kèm");
+      throw error;
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const submitMaintenanceRequest = async (values) => {
     try {
       setMaintenanceLoading(true);
+      let attachmentUrls = [];
+
+      // Handle file uploads if files are selected
+      if (values.attachments?.fileList) {
+        const uploadPromises = values.attachments.fileList.map(file => 
+          handleFileUpload(file.originFileObj)
+        );
+        attachmentUrls = await Promise.all(uploadPromises);
+      }
+
       const maintenanceData = {
         projectId: values.projectId,
         description: values.description,
-        attachments: values.attachments,
+        attachments: attachmentUrls.join(','), // Join URLs with comma
       };
 
-      const response = await api.post(
-        `/api/maintenance-requests`,
-        maintenanceData
-      );
-      console.log("Maintenance request submission response:", response);
-      toast.success("Yêu cầu bảo trì đã được gửi thành công", {
-        toastId: "maintenance-success",
-      });
+      const response = await api.post(`/api/maintenance-requests`, maintenanceData);
+      toast.success("Yêu cầu bảo trì đã được gửi thành công");
       setIsMaintenanceModalVisible(false);
       maintenanceForm.resetFields();
       fetchOrders();
     } catch (error) {
       console.error("Error submitting maintenance request:", error);
-      toast.error(`Không thể gửi yêu cầu bảo trì: Đơn hàng chưa hoàn thành`, {
-        toastId: "maintenance-error",
-      });
+      toast.error("Không thể gửi yêu cầu bảo trì: Đơn hàng chưa hoàn thành");
     } finally {
       setMaintenanceLoading(false);
     }
@@ -672,16 +694,29 @@ const OrdersCustomer = () => {
           >
             <Input.TextArea rows={4} />
           </Form.Item>
-          <Form.Item name="attachments" label="Link ảnh Đính Kèm">
-            <Input />
+          <Form.Item 
+            name="attachments" 
+            label="Ảnh Đính Kèm"
+          >
+            <Upload.Dragger
+              multiple={true}
+              beforeUpload={() => false}
+              accept="image/*"
+            >
+              <p className="ant-upload-drag-icon">
+                <i className="fas fa-cloud-upload-alt fa-2x text-primary"></i>
+              </p>
+              <p className="ant-upload-text">Nhấp hoặc kéo thả ảnh vào đây</p>
+            </Upload.Dragger>
           </Form.Item>
           <Form.Item>
             <Button
               type="primary"
               htmlType="submit"
-              loading={maintenanceLoading}
+              loading={maintenanceLoading || uploading}
+              disabled={uploading}
             >
-              Gửi Yêu Cầu
+              {uploading ? "Đang tải lên..." : "Gửi Yêu Cầu"}
             </Button>
           </Form.Item>
         </Form>

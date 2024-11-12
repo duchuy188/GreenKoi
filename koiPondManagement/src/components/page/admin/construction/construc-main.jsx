@@ -414,7 +414,7 @@ const ConstrucMain = () => {
 
   return (
     <Card>
-      <Title level={2}>Yêu cầu bảo trì</Title>
+      <Title level={2}>Nhiệm vụ bảo trì</Title>
       {loading ? (
         <div style={{ textAlign: 'center', padding: '20px' }}>
           <Spin size="large" />

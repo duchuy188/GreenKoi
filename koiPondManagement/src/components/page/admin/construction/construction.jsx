@@ -76,7 +76,9 @@ const ProjectTasks = () => {
       ) {
         const activeProject = response.data.find(
           (project) =>
-            project.statusName !== "COMPLETED" && project.status !== "PS6"
+            project.statusName !== "COMPLETED" &&
+            project.status !== "PS6" &&
+            project.statusName !== "CANCELLED"
         );
 
         if (activeProject) {

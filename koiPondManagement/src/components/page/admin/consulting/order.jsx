@@ -130,13 +130,7 @@ const Orders = () => {
     { value: "ON_HOLD", label: "Tạm dừng", color: "warning" },
     { value: "CANCELLED", label: "Đã hủy", color: "red" },
     { value: "MAINTENANCE", label: "Bảo trì", color: "cyan" },
-    {
-      value: "TECHNICALLY_COMPLETED",
-      label: "Đã hoàn thành kỹ thuật",
-      color: "lime",
-    },
-
-    // Add more statuses as needed
+    { value: "TECHNICALLY_COMPLETED", label: "Đã hoàn thành kỹ thuật", color: "lime" },
   ];
   const statusOptionsWithAll = [
     { value: "ALL", label: "Tất cả", color: "default" },
@@ -239,9 +233,7 @@ const Orders = () => {
       }
 
       if (currentStatus === "UNPAID" && newStatus === "FULLY_PAID") {
-        toast.error(
-          "Không thể chuyển trực tiếp từ chưa thanh toán sang đã thanh toán đầy đủ"
-        );
+        toast.error("Không thể chuyển trực tiếp từ chưa thanh toán sang đã thanh toán đầy đủ");
         return;
       }
 
@@ -252,9 +244,11 @@ const Orders = () => {
       fetchOrders();
     } catch (err) {
       console.error("Error updating payment status:", err);
-      toast.error(
-        err.response?.data?.message || "Lỗi khi cập nhật trạng thái thanh toán"
-      );
+      if (err.response?.data?.message === "Project must be technically completed before marking as fully paid") {
+        toast.error("Dự án phải được hoàn thành kỹ thuật trước khi đánh dấu là đã thanh toán đầy đủ");
+      } else {
+        toast.error(err.response?.data?.message || "Lỗi khi cập nhật trạng thái thanh toán");
+      }
     }
   };
 
@@ -473,7 +467,7 @@ const Orders = () => {
         style={{
           marginBottom: 16,
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "center",
           alignItems: "center",
         }}
       >
@@ -605,7 +599,7 @@ const Orders = () => {
                   if (!value) return Promise.resolve();
                   if (value < 5000) {
                     return Promise.reject(
-                      "Số tiền gửi phải từ 5,000 VNĐ trở lên"
+                      "Số tiền gửi phải từ 5,000 VNĐ tr lên"
                     );
                   }
                   const totalPrice = getFieldValue("totalPrice");
@@ -613,7 +607,7 @@ const Orders = () => {
                     return Promise.resolve();
                   }
                   return Promise.reject(
-                    "Số tiền gửi không được vượt quá t���ng giá tiền"
+                    "Số tiền gửi không được vượt quá tng giá tiền"
                   );
                 },
               }),

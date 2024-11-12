@@ -38,6 +38,8 @@ function Cusmaintenance() {
   const [hasReviewed, setHasReviewed] = useState(false);
   const [cancellationModalVisible, setCancellationModalVisible] = useState(false);
   const [selectedCancellation, setSelectedCancellation] = useState(null);
+  const [imagePreviewVisible, setImagePreviewVisible] = useState(false);
+  const [previewImages, setPreviewImages] = useState([]);
 
   const statusOptions = [
     { value: "ALL", label: "Tất Cả Trạng Thái" },
@@ -339,6 +341,13 @@ function Cusmaintenance() {
     }
   };
 
+  const handleViewAttachments = (attachments) => {
+    if (!attachments) return;
+    const imageList = attachments.split(',').filter(url => url.trim());
+    setPreviewImages(imageList);
+    setImagePreviewVisible(true);
+  };
+
   const columns = [
     {
       title: "TÊN DỰ ÁN",
@@ -459,8 +468,13 @@ function Cusmaintenance() {
       width: 150,
       render: (attachments) => (
         <div>
-          {attachments && attachments.length > 0 ? (
-            <span>{attachments.length} tệp đính kèm</span>
+          {attachments ? (
+            <Button 
+              type="link" 
+              onClick={() => handleViewAttachments(attachments)}
+            >
+              Xem {attachments.split(',').filter(url => url.trim()).length} tệp đính kèm
+            </Button>
           ) : (
             "Không có"
           )}
@@ -573,16 +587,19 @@ function Cusmaintenance() {
         backgroundColor: 
           status === 'NOT_STARTED' ? '#f0f0f0' :
           status === 'ASSIGNED' ? '#fff7e6' :
+          status === 'SCHEDULED' ? '#e6f7ff' :
           status === 'IN_PROGRESS' ? '#e6f7ff' :
-          status === 'COMPLETED' ? '#f6ffed' : '#f0f0f0',
+          status === 'COMPLETED' ? '#f6ffed' : '#f0f0f0', 
         color: 
           status === 'NOT_STARTED' ? '#000000' :
           status === 'ASSIGNED' ? '#faad14' :
+          status === 'SCHEDULED' ? '#1890ff' :
           status === 'IN_PROGRESS' ? '#1890ff' :
           status === 'COMPLETED' ? '#52c41a' : '#000000',
         border: `1px solid ${
           status === 'NOT_STARTED' ? '#d9d9d9' :
           status === 'ASSIGNED' ? '#ffd591' :
+          status === 'SCHEDULED' ? '#91d5ff' :
           status === 'IN_PROGRESS' ? '#91d5ff' :
           status === 'COMPLETED' ? '#b7eb8f' : '#d9d9d9'
         }`
@@ -592,6 +609,7 @@ function Cusmaintenance() {
         <span style={style}>
           {status === 'NOT_STARTED' ? 'Chưa Bắt Đầu' :
            status === 'ASSIGNED' ? 'Đã Phân Công' :
+           status === 'SCHEDULED' ? 'Đã Đặt Lịch' :
            status === 'IN_PROGRESS' ? 'Đang Thực Hiện' :
            status === 'COMPLETED' ? 'Hoàn Thành' : status}
         </span>
@@ -760,6 +778,32 @@ function Cusmaintenance() {
     </Modal>
   );
 
+  const renderImagePreviewModal = () => (
+    <Modal
+      title="Hình Ảnh Đính Kèm"
+      visible={imagePreviewVisible}
+      onCancel={() => setImagePreviewVisible(false)}
+      footer={null}
+      width={800}
+    >
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+        gap: '16px',
+        padding: '16px'
+      }}>
+        {previewImages.map((imageUrl, index) => (
+          <Image
+            key={index}
+            width={200}
+            src={imageUrl}
+            alt={`Image ${index + 1}`}
+          />
+        ))}
+      </div>
+    </Modal>
+  );
+
   return (
     <div style={{ padding: '20px' }}>
       <div style={{ 
@@ -801,6 +845,7 @@ function Cusmaintenance() {
       {renderFilterModal()}
       {renderReviewModal()}
       {renderCancellationModal()}
+      {renderImagePreviewModal()}
     </div>
   );
 }

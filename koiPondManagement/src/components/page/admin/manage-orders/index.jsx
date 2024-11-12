@@ -142,7 +142,7 @@ const OrdersList = () => {
           fetchProjectTasks(projectId, constructorId, retryCount - 1);
         }, 1000);
       } else {
-        toast.error(`Không thể tải công việc cho dự án ${projectId}`);
+        // toast.error(`Không thể tải công việc cho dự án ${projectId}`);
       }
     }
   };
@@ -163,7 +163,7 @@ const OrdersList = () => {
           [projectId]: null,
         }));
       } else {
-        console.error(`Error fetching review for project ${projectId}:`, error);
+        // console.error(`Error fetching review for project ${projectId}:`, error);
       }
     }
   };
@@ -249,7 +249,7 @@ const OrdersList = () => {
       );
 
       if (response.status === 200) {
-        toast.success("Đ�� phân công nhân viên xây dựng thành công");
+        toast.success("Đã phân công nhân viên xây dựng thành công");
         setIsAssignModalVisible(false);
 
         setOrders((prevOrders) =>
@@ -571,7 +571,9 @@ const OrdersList = () => {
   const filteredConstructors = constructors.filter((constructor) => {
     const activeProject = orders.find(
       (order) =>
-        order.constructorId === constructor.id && order.statusId !== "PS6"
+        order.constructorId === constructor.id && 
+        order.statusId !== "PS6" && // Completed
+        order.statusId !== "PS7"    // Cancelled
     );
 
     const matchesSearch = constructor.name
@@ -632,7 +634,8 @@ const OrdersList = () => {
                   <Typography.Text strong>{constructor.name}</Typography.Text>
                   <br />
                   <Typography.Text type="secondary">
-                    Chưa có dự án nào
+                    {orders.some(order => order.constructorId === constructor.id && order.statusId === "PS7") 
+                      }
                   </Typography.Text>
                 </div>
                 {selectedConstructor?.id === constructor.id && (
@@ -780,10 +783,10 @@ const OrdersList = () => {
         style={{
           marginBottom: 16,
           display: "flex",
-          justifyContent: "center",
+          justifyContent: "space-between",
         }}
       >
-        <h1>Quản lí đơn hàng</h1>
+        <h1>Danh sách đơn hàng</h1>
       </div>
 
       {renderFilters()}
