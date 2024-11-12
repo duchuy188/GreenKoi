@@ -265,6 +265,8 @@ function CustomDesignForm() {
       <Modal
         title="Liên kết thiết kế"
         open={isModalVisible}
+        okText="Xác nhận"
+        cancelText="Hủy"
         onOk={handleLinkDesign}
         onCancel={() => setIsModalVisible(false)}
       >

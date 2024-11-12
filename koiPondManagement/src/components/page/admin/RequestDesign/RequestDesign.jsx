@@ -14,37 +14,69 @@ function RequestDesign() {
 
   const columns = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
+      title: 'STT',
+      key: 'index',
+      render: (_, __, index) => index + 1,
     },
     {
-      title: 'Khách hàng',
+      title: 'KHÁCH HÀNG',
       dataIndex: 'customerName',
       key: 'customerName',
     },
     {
-      title: 'Tên thiết kế',
-      dataIndex: 'designName',
-      key: 'designName',
+      title: 'YÊU CẦU',
+      dataIndex: 'requirements',
+      key: 'requirements',
     },
     {
-      title: 'Kích thước',
-      dataIndex: 'dimensions',
-      key: 'dimensions',
+      title: 'PHONG CÁCH',
+      dataIndex: 'preferredStyle',
+      key: 'preferredStyle',
     },
     {
-      title: 'Ngân sách',
+      title: 'NGÂN SÁCH',
       dataIndex: 'budget',
       key: 'budget',
+      render: (text) => `${text} VND`,
     },
     {
-      title: 'Trạng thái',
+      title: 'TRẠNG THÁI',
       dataIndex: 'status',
       key: 'status',
+      render: (status) => {
+        let statusText = 'Chờ xử lý';
+        let statusClass = 'bg-yellow-100 text-yellow-800';
+
+        switch (status) {
+          case 'PENDING':
+            statusText = 'Chờ xử lý';
+            statusClass = 'bg-yellow-100 text-yellow-800';
+            break;
+          case 'IN_PROGRESS':
+            statusText = 'Đang thực hiện';
+            statusClass = 'bg-blue-100 text-blue-800';
+            break;
+          case 'COMPLETED':
+            statusText = 'Hoàn thành';
+            statusClass = 'bg-green-100 text-green-800';
+            break;
+          case 'CANCELLED':
+            statusText = 'Đã hủy';
+            statusClass = 'bg-red-100 text-red-800';
+            break;
+          default:
+            break;
+        }
+
+        return (
+          <span className={`px-3 py-1 rounded-full ${statusClass}`}>
+            {statusText}
+          </span>
+        );
+      },
     },
     {
-      title: 'Lý do từ chối',
+      title: 'LÝ DO TỪ CHỐI',
       dataIndex: 'rejectionReason',
       key: 'rejectionReason',
       render: (text, record) => (
@@ -52,18 +84,13 @@ function RequestDesign() {
       ),
     },
     {
-      title: 'Ghi chú',
-      dataIndex: 'designNotes',
-      key: 'designNotes',
-    },
-    {
-      title: 'Ngày tạo',
-      dataIndex: 'createdat',
-      key: 'createdat',
+      title: 'NGÀY TẠO',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       render: (text) => new Date(text).toLocaleDateString('vi-VN'),
     },
     {
-      title: 'Action',
+      title: 'HÀNH ĐỘNG',
       key: 'action',
       render: (_, record) => {
         console.log('Record data:', record);
@@ -96,7 +123,10 @@ function RequestDesign() {
         }
       };
       const response = await axios.get('/api/design-requests/designer', config);
-      setDesignRequests(response.data);
+      const sortedRequests = response.data.sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setDesignRequests(sortedRequests);
     } catch (error) {
       console.error('Error fetching design requests:', error);
     }

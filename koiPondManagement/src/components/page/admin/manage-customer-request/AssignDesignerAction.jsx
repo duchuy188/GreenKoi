@@ -66,15 +66,17 @@ const AssignDesignerAction = ({ requestId, onAssignSuccess }) => {
       </Button>
 
       <Modal
-        title="Phân công Designer"
+        title="Phân công nhân viên thiết kế"
         open={isModalVisible}
         onOk={handleAssign}
         onCancel={() => setIsModalVisible(false)}
         confirmLoading={loading}
+        okText="Xác nhận"
+        cancelText="Hủy"
       >
         <Select
           style={{ width: '100%' }}
-          placeholder="Chọn designer"
+          placeholder="Chọn nhân viên thiết kế"
           onChange={value => setSelectedDesigner(value)}
           options={designers.map(designer => ({
             value: designer.id,
