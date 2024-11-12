@@ -13,7 +13,7 @@ import {
   Tooltip,
   Form,
 } from "antd";
-import { FaEdit, FaPaperPlane, FaImages } from "react-icons/fa";
+import { FaEdit, FaPaperPlane, FaImages, FaShoppingCart } from "react-icons/fa";
 import { SearchOutlined, EllipsisOutlined } from "@ant-design/icons";
 import api from "../../../config/axios";
 import { toast } from "react-toastify";
@@ -21,6 +21,7 @@ import moment from "moment";
 import UpdateStatusModal from './update-status-modal';
 import CreateDesignRequestModal from './create-design-request-modal';
 import ViewDesignDetailsModal from './view-design-details-modal';
+import CreateProjectModal from './create-project-modal';
 
 const { Text } = Typography;
 
@@ -37,10 +38,14 @@ const CustomDesignRequest = () => {
   const [completedDesigns, setCompletedDesigns] = useState({});
   const [isDesignDetailsModalVisible, setIsDesignDetailsModalVisible] = useState(false);
   const [selectedDesignDetails, setSelectedDesignDetails] = useState(null);
+  const [approvedDesigns, setApprovedDesigns] = useState({});
+  const [isCreateProjectModalVisible, setIsCreateProjectModalVisible] = useState(false);
+  const [projectInitialData, setProjectInitialData] = useState(null);
 
   useEffect(() => {
     initialFetch();
     fetchCompletedDesigns();
+    fetchApprovedDesigns();
   }, []);
 
   const initialFetch = async () => {
@@ -87,6 +92,21 @@ const CustomDesignRequest = () => {
       }
     } catch (error) {
       console.error("Error fetching completed designs:", error);
+    }
+  };
+
+  const fetchApprovedDesigns = async () => {
+    try {
+      const response = await api.get('/api/design-requests/customer-approved');
+      if (Array.isArray(response.data)) {
+        const designMap = {};
+        response.data.forEach(design => {
+          designMap[design.consultationId] = design;
+        });
+        setApprovedDesigns(designMap);
+      }
+    } catch (error) {
+      console.error("Error fetching approved designs:", error);
     }
   };
 
@@ -138,6 +158,75 @@ const CustomDesignRequest = () => {
     } catch (error) {
       console.error("Error fetching design details:", error);
       toast.error("Không thể tải thông tin thiết kế");
+    }
+  };
+
+  const updateConsultationStatus = async (id, newStatus) => {
+    try {
+      await api.put(`/api/ConsultationRequests/${id}/status?newStatus=${newStatus}`);
+      toast.success("Cập nhật trạng thái yêu cầu thành công");
+    } catch (error) {
+      console.error("Error updating consultation status:", error);
+      toast.error("Không thể cập nhật trạng thái yêu cầu");
+    }
+  };
+
+  const handleCreateProject = (record) => {
+    const approvedDesign = approvedDesigns[record.id];
+    if (!approvedDesign) {
+      toast.error("Không tìm thấy thông tin thiết kế đã được duyệt");
+      return;
+    }
+
+    const initialData = {
+      name: `Dự án ${record.customerName}`,
+      description: record.requirements || "Thiết kế hồ cá Koi theo yêu cầu",
+      totalPrice: 0,
+      depositAmount: 0,
+      designId: approvedDesign.designId,
+      customerId: record.customerId,
+      consultantId: record.consultantId,
+      address: record.customerAddress,
+      startDate: moment(),
+      endDate: moment().add(30, 'days'),
+    };
+
+    setProjectInitialData({ ...initialData, record });
+    setIsCreateProjectModalVisible(true);
+  };
+
+  const handleProjectSubmit = async (values) => {
+    try {
+      if (values.totalPrice <= 0) {
+        toast.error("Tổng giá phải lớn hơn 0");
+        return;
+      }
+      if (values.depositAmount <= 0) {
+        toast.error("Số tiền đặt cọc phải lớn hơn 0");
+        return;
+      }
+      if (values.depositAmount >= values.totalPrice) {
+        toast.error("Số tiền đặt cọc phải nhỏ hơn tổng giá");
+        return;
+      }
+
+      const projectData = {
+        ...values,
+        designId: projectInitialData.designId,
+        customerId: projectInitialData.customerId,
+        consultantId: projectInitialData.consultantId,
+        address: projectInitialData.address,
+      };
+
+      const response = await api.post('/api/projects', projectData);
+      await updateConsultationStatus(projectInitialData.record.id, "COMPLETED");
+      
+      toast.success("Đã tạo dự án thành công");
+      setIsCreateProjectModalVisible(false);
+      fetchRequests();
+    } catch (error) {
+      console.error("Error details:", error);
+      toast.error("Không thể tạo dự án: " + (error.response?.data?.message || error.message));
     }
   };
 
@@ -199,7 +288,6 @@ const CustomDesignRequest = () => {
       title: "Ngân Sách",
       dataIndex: "budget",
       key: "budget",
-      render: (value) => value ? `${value.toLocaleString('vi-VN')} VNĐ` : '-'
     },
     {
       title: "Ghi Chú",
@@ -271,6 +359,14 @@ const CustomDesignRequest = () => {
             <Tooltip title="Xem thiết kế hoàn thành">
               <FaImages
                 onClick={() => handleViewDesignDetails(record.id)}
+                style={{ color: '#52c41a', fontSize: '16px', cursor: 'pointer' }}
+              />
+            </Tooltip>
+          )}
+          {approvedDesigns[record.id] && (
+            <Tooltip title="Tạo dự án">
+              <FaShoppingCart
+                onClick={() => handleCreateProject(record)}
                 style={{ color: '#52c41a', fontSize: '16px', cursor: 'pointer' }}
               />
             </Tooltip>
@@ -349,6 +445,13 @@ const CustomDesignRequest = () => {
         visible={isDesignDetailsModalVisible}
         onCancel={() => setIsDesignDetailsModalVisible(false)}
         designDetails={selectedDesignDetails}
+      />
+
+      <CreateProjectModal
+        visible={isCreateProjectModalVisible}
+        onCancel={() => setIsCreateProjectModalVisible(false)}
+        onSubmit={handleProjectSubmit}
+        initialData={projectInitialData}
       />
     </div>
   );

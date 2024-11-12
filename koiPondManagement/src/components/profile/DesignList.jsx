@@ -48,8 +48,7 @@ function DesignList() {
 
     try {
       await api.post(
-        `/api/design-requests/${record.id}/customer-approval?approved=false`, 
-        { rejectionReason: rejectReason }
+        `/api/design-requests/${record.id}/customer-approval?approved=false&rejectionReason=${encodeURIComponent(rejectReason)}`
       );
       setModalVisible(false);
       setRejectReason('');

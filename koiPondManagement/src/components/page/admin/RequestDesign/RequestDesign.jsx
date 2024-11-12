@@ -63,9 +63,13 @@ function RequestDesign() {
             statusText = "Hoàn thành";
             color = "green";
             break;
-          case "CANCELLED":
-            statusText = "Đã hủy";
-            color = "red";
+          case "PENDING_CUSTOMER_APPROVAL":
+            statusText = "Chờ duyệt";
+            color = "orange";
+            break;
+          case "APPROVED":
+            statusText = "Đã duyệt";
+            color = "green";
             break;
           default:
             break;
@@ -91,7 +95,7 @@ function RequestDesign() {
       title: "HÀNH ĐỘNG",
       key: "action",
       render: (_, record) => {
-        console.log("Record data:", record);
+         console.log("Record data:", record);
         return (
           record.status === "IN_PROGRESS" && (
             <Button
