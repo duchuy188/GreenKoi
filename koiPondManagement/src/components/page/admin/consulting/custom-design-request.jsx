@@ -363,7 +363,7 @@ const CustomDesignRequest = () => {
               />
             </Tooltip>
           )}
-          {approvedDesigns[record.id] && (
+         {approvedDesigns[record.id] && record.status !== "COMPLETED" && (
             <Tooltip title="Tạo dự án">
               <FaShoppingCart
                 onClick={() => handleCreateProject(record)}
@@ -419,14 +419,6 @@ const CustomDesignRequest = () => {
         size="small"
         locale={{ emptyText: 'Không có yêu cầu thiết kế tùy chỉnh nào' }}
       />
-      
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ marginTop: 16, color: '#999' }}>
-          <p>Số lượng requests: {requests.length}</p>
-          <p>Số lượng filtered requests: {filteredRequests.length}</p>
-        </div>
-      )}
-
       <UpdateStatusModal
         visible={isStatusModalVisible}
         onCancel={() => setIsStatusModalVisible(false)}

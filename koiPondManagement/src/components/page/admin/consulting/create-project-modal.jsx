@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Form, Input, DatePicker, InputNumber } from 'antd';
 import moment from 'moment';
+import locale from 'antd/es/date-picker/locale/vi_VN';
 
 const CreateProjectModal = ({ visible, onCancel, onSubmit, initialData }) => {
   const [form] = Form.useForm();
@@ -31,9 +32,11 @@ const CreateProjectModal = ({ visible, onCancel, onSubmit, initialData }) => {
   return (
     <Modal
       title="Tạo Dự Án Mới"
-      visible={visible}
+      open={visible}
       onCancel={onCancel}
       onOk={handleSubmit}
+      cancelText="Hủy"
+      okText="Xác Nhận"
       width={600}
     >
       <Form
@@ -85,7 +88,11 @@ const CreateProjectModal = ({ visible, onCancel, onSubmit, initialData }) => {
           label="Ngày Bắt Đầu"
           rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
         >
-          <DatePicker style={{ width: '100%' }} />
+          <DatePicker 
+            style={{ width: '100%' }} 
+            format="DD/MM/YYYY"
+            locale={locale}
+          />
         </Form.Item>
 
         <Form.Item
@@ -93,7 +100,11 @@ const CreateProjectModal = ({ visible, onCancel, onSubmit, initialData }) => {
           label="Ngày Kết Thúc"
           rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc' }]}
         >
-          <DatePicker style={{ width: '100%' }} />
+          <DatePicker 
+            style={{ width: '100%' }} 
+            format="DD/MM/YYYY"
+            locale={locale}
+          />
         </Form.Item>
       </Form>
     </Modal>
