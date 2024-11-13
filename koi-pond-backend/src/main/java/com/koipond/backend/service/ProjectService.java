@@ -905,10 +905,16 @@ public class ProjectService {
 
         // Tạo project mới
         Project project = new Project();
-        project.setName("Project for " + consultation.getCustomer().getFullName());
+
+        // Lấy thông tin từ consultation entity
+        ConsultationRequest consultationEntity = designRequest.getConsultation();
+        User customer = consultationEntity.getCustomer();
+        User consultant = consultationEntity.getConsultant();
+
+        project.setName("Project for " + customer.getFullName());
         project.setDescription("Created from approved design: " + design.getName());
-        project.setCustomer(consultation.getCustomer());
-        project.setConsultant(consultation.getConsultant());
+        project.setCustomer(customer);
+        project.setConsultant(consultant);
         project.setDesign(design);
         project.setTotalPrice(design.getBasePrice());
         project.setDepositAmount(calculateDepositAmount(design.getBasePrice()));
