@@ -1,7 +1,22 @@
 package com.koipond.backend.service;
 
-import com.koipond.backend.dto.*;
-import com.koipond.backend.model.*;
+import com.koipond.backend.model.ConsultationRequest;
+import com.koipond.backend.model.Project;
+import com.koipond.backend.model.Design;
+import com.koipond.backend.model.User;
+import com.koipond.backend.model.ProjectStatus;
+import com.koipond.backend.model.Task;
+import com.koipond.backend.model.TaskTemplate;
+import com.koipond.backend.model.Review;
+import com.koipond.backend.model.DesignRequest;
+import com.koipond.backend.model.Promotion;
+
+import com.koipond.backend.dto.ProjectDTO;
+import com.koipond.backend.dto.TaskDTO;
+import com.koipond.backend.dto.ReviewDTO;
+import com.koipond.backend.dto.CreateProjectRequest;
+import com.koipond.backend.dto.UpdateProjectRequest;
+import com.koipond.backend.dto.CancelProjectRequest;
 import com.koipond.backend.repository.*;
 import com.koipond.backend.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
