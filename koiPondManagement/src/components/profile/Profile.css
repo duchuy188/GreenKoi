@@ -1,0 +1,257 @@
+.profile-background {
+    background-image: url('https://images.rawpixel.com/image_social_landscape/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAxL3Jhd3BpeGVsX29mZmljZV80OF9ncmFpbnlfc2ltcGxlX3N0eWxlX2lsbHVzdHJhdGlvbl9hZXJpYWxfdmlld19iNDZlZjUzYi00N2E1LTQ2OTQtOGM3MS1hMDlkYzRhODUyYzdfMS5qcGc.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding-top: 20px;
+    min-height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.emp-profile {
+    padding: 3%;
+    margin-top: 3%;
+    margin-bottom: 3%;
+    border-radius: 0.5rem;
+    background: #fff;
+    max-width: 100%;
+}
+
+.col-lg-8 {
+    overflow-x: auto;
+}
+
+.ant-tabs-content-holder {
+    overflow-x: auto;
+}
+
+.ant-tabs-tabpane {
+    padding: 0;
+}
+
+.author-card {
+    position: relative;
+    padding-bottom: 48px;
+    background-color: #fff;
+    box-shadow: 0 12px 20px 1px rgba(64, 64, 64, .09);
+}
+
+.author-card-cover {
+    position: relative;
+    width: 100%;
+    height: 100px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-image: url('https://bootdey.com/img/Content/flores-amarillas-wallpaper.jpeg');
+}
+
+.author-card-profile {
+    display: table;
+    position: relative;
+    margin-top: -22px;
+    padding-right: 15px;
+    padding-bottom: 16px;
+    padding-left: 20px;
+    z-index: 5;
+}
+
+.author-card-avatar, .author-card-details {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.author-card-avatar {
+    width: 85px;
+    padding-right: 15px;
+}
+
+.author-card-avatar img {
+    display: block;
+    width: 100%;
+    border-radius: 50%;
+    box-shadow: 0 8px 20px 0 rgba(0, 0, 0, .15);
+}
+
+.author-card-details {
+    padding-top: 20px;
+}
+
+.author-card-name {
+    margin-bottom: 2px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.author-card-position {
+    display: block;
+    color: #8c8c8c;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.list-group-item {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    -webkit-transition: all .3s;
+    transition: all .3s;
+    border: 1px solid #e7e7e7 !important;
+    border-radius: 0 !important;
+    color: #404040;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.list-group-item.active {
+    border-color: #e7e7e7;
+    background: #fff;
+    color: #ac32e4;
+    cursor: default;
+    pointer-events: none;
+}
+
+.list-group-item.active::before {
+    background-color: #ac32e4;
+}
+
+.list-group-item::before {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background-color: transparent;
+    content: '';
+}
+
+.list-group-item i {
+    display: inline-block;
+    margin-top: -1px;
+    margin-right: 8px;
+    font-size: 1.2em;
+    vertical-align: middle;
+}
+
+/* Responsive styles */
+@media (max-width: 991px) {
+    .profile-background {
+        min-height: calc(100vh - 60px);
+    }
+    
+    .emp-profile {
+        margin-top: 10px;
+        padding: 2%;
+    }
+}
+
+/* Existing styles */
+.profile-edit-btn {
+    border: none;
+    border-radius: 1.5rem;
+    width: 70%;
+    padding: 2%;
+    font-weight: 600;
+    color: #6c757d;
+    cursor: pointer;
+}
+
+.proile-rating {
+    font-size: 12px;
+    color: #818182;
+    margin-top: 5%;
+}
+
+.proile-rating span {
+    color: #495057;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* Add any additional styles you need here */
+
+/* Thêm vào cuối file CSS của bạn */
+
+.emp-profile .ant-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.emp-profile .ant-form-item {
+    margin-bottom: 0;
+}
+
+.emp-profile .ant-form-item-label {
+    text-align: left;
+    padding-bottom: 8px;
+}
+
+.emp-profile .ant-form-item-control-input {
+    width: 100%;
+}
+
+.emp-profile .ant-input {
+    width: 100%;
+}
+
+.emp-profile .ant-btn {
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* Nếu bạn muốn giới hạn chiều rộng của form */
+@media (min-width: 768px) {
+    .emp-profile .ant-form {
+        max-width: 600px; /* Tăng từ 400px lên 600px hoặc giá trị phù hợp */
+        margin: 0 auto;
+    }
+}
+
+/* Đảm bảo các input và button chiếm toàn bộ chiều rộng có sẵn */
+.emp-profile .ant-form-item-control-input {
+    width: 100%;
+}
+
+.emp-profile .ant-input {
+    width: 100%;
+    height: 40px; /* Tăng chiều cao nếu cần */
+    font-size: 16px; /* Tăng kích thước font chữ */
+}
+
+.emp-profile .ant-btn {
+    width: 100%;
+    height: 40px; /* Tăng chiều cao của nút */
+    font-size: 16px; /* Tăng kích thước font chữ */
+}
+
+/* Tăng khoảng cách giữa các trường form */
+.emp-profile .ant-form-item {
+    margin-bottom: 20px;
+}
+
+/* Tùy chỉnh label */
+.emp-profile .ant-form-item-label > label {
+    font-size: 16px; /* Tăng kích thước font chữ của label */
+    font-weight: 500; /* Làm đậm label nếu muốn */
+}
+
+/* Tùy chỉnh nút submit */
+.emp-profile .ant-btn-primary {
+    background-color: #1890ff; /* Màu nền của nút */
+    border-color: #1890ff; /* Màu viền của nút */
+}
+
+.emp-profile .ant-btn-primary:hover,
+.emp-profile .ant-btn-primary:focus {
+    background-color: #40a9ff; /* Màu nền khi hover */
+    border-color: #40a9ff; /* Màu viền khi hover */
+}
+
+/* Thêm vào cuối file CSS của bạn */

@@ -1,0 +1,148 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Ngăn chặn cuộn ngang cho toàn bộ trang */
+}
+
+.carousel-container {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .carousel-slide {
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .carousel-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    transition: transform 6s ease-in-out;
+    animation: zoomIn 10s ease-in-out infinite alternate;
+  }
+  
+  @keyframes zoomIn {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.1); }
+  }
+  
+  .carousel-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+    z-index: 1;
+    width: 80%;
+    max-width: 800px;
+  }
+  
+  .carousel-title {
+    font-size: 3em;
+    margin-bottom: 0.5em;
+    opacity: 0;
+    transform: translateY(-50px);
+    animation: fadeInDown 1s ease-out forwards;
+    color: white;
+  }
+  
+  .carousel-subtitle {
+    font-size: 1.5em;
+    opacity: 0;
+    transform: translateY(50px);
+    animation: fadeInUp 1s ease-out 0.5s forwards;
+    color: white;
+  }
+  
+  .carousel-button {
+    margin-top: 2em;
+    padding: 10px 20px;
+    font-size: 1.2em;
+    background-color: transparent;
+    border: 2px solid white;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0;
+    animation: fadeIn 1s ease-out 1s forwards;
+    border-color: white;
+  }
+  
+  .carousel-button:hover {
+    background-color: white;
+    color: black; /* Màu chữ khi hover, có thể thay đổi nếu muốn */
+  }
+  
+  @keyframes fadeInDown {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .carousel-button-prev,
+  .carousel-button-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 2;
+    transition: all 0.3s ease;
+  }
+  
+  .carousel-button-prev:hover,
+  .carousel-button-next:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+  
+  .carousel-button-prev {
+    left: 20px;
+  }
+  
+  .carousel-button-next {
+    right: 20px;
+  }
+  
+  .custom-dots {
+    bottom: 20px;
+  }
+  
+  .custom-dots li button {
+    background: rgba(255, 255, 255, 0.5);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+  }
+  
+  .custom-dots li.slick-active button {
+    background: white;
+    transform: scale(1.2);
+  }

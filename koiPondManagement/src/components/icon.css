@@ -1,57 +1,178 @@
+/* Hiệu ứng sóng nước màu xanh dương */
+@keyframes ripple {
+  0% {
+      box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4), 0 0 0 5px rgba(0, 123, 255, 0.3);
+  }
+  100% {
+      box-shadow: 0 0 0 20px rgba(0, 123, 255, 0), 0 0 0 25px rgba(0, 123, 255, 0);
+  }
+}
+
+/* Áp dụng hiệu ứng cho các icon */
+.zalo-icon:hover,
+.phone-icon:hover,
+.email-icon:hover,
+.button:hover {
+  animation: ripple 1s infinite;
+}
+
+/* Các định dạng icon sẵn có */
 .zalo-icon {
-    position: fixed;
-    bottom: 190px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    z-index: 1000;
-  }
-  .phone-icon {
-    position: fixed;
-    bottom: 75px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    z-index: 1000;
-    border-radius: 50%;
-  }
-  .email-icon {
-    position: fixed;
-    bottom: 130px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    z-index: 1000;
-    border-radius: 50%;
-  }
+  position: fixed;
+  bottom: 190px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  z-index: 1000;
+  border-radius: 50%;
+  background-color: #009688; /* Thêm màu nền cho icon Zalo */
+}
+.phone-icon {
+  position: fixed;
+  bottom: 75px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  z-index: 1000;
+  border-radius: 50%;
+  background-color: #4CAF50; /* Màu nền cho icon Phone */
+}
+.email-icon {
+  position: fixed;
+  bottom: 130px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  z-index: 1000;
+  border-radius: 50%;
+  background-color: #F44336; /* Màu nền cho icon Email */
+}
+
+/* Định dạng nút quay lại đầu trang */
+#back-to-top {
+  display: block;
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 1000;
+  background-color: black;
+}
+
+/* Nút quay lại đầu trang */
+.button {
+  position: fixed;
+  bottom: 20px;
+  background-color: black;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  z-index: 1000;
+  border-radius: 50%;
+}
+
+/* Thêm một số nội dung trang để có thể cuộn */
+.content {
+  height: 2000px;
+  padding: 20px;
+}
+
+.phone-icon-container {
+  position: relative;
+  cursor: pointer;
+}
+
+.phone-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  text-align: center;
+  z-index: 1001;
+  width: 400px;
+  animation: fadeIn 0.3s ease-out;
   
-  /* Định dạng nút quay lại đầu trang */
-  #back-to-top {
-      display: block;
-      position: fixed;
-      bottom: 20px;
-      right: 30px;
-      color: #fff;
-      padding: 10px;
-      border-radius: 5px;
-      cursor: pointer;
-      z-index: 1000;
-  }
-  .button{
-    position: fixed;
-    bottom: 20px;
-    background-color: black;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    z-index: 1000;
-    border-radius: 50%;
-  }
-  
-  
-  
-  /* Thêm một số nội dung trang để có thể cuộn */
-  .content {
-      height: 2000px;
-      padding: 20px;
-  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%, -55%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.close-popup {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  font-size: 24px;
+  color: #888;
+  transition: color 0.2s ease;
+}
+
+.close-popup:hover {
+  color: #555;
+}
+
+.phone-icon-large {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.phone-icon-large img {
+  width: 100%;
+  height: 100%;
+}
+
+.phone-popup h2 {
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.phone-popup p {
+  margin-bottom: 8px;
+  color: #666;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.request-button {
+  background-color: #ffc107;
+  color: #333;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+  font-weight: bold;
+  font-size: 16px;
+  transition: background-color 0.2s ease;
+  width: 100%;
+}
+
+.request-button:hover {
+  background-color: #ffca2c;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}

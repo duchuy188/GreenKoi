@@ -1,0 +1,83 @@
+/* OrdersCustomer.css */
+
+.orders-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.container-width {
+  width: 100%;
+  max-width: 1000px;
+}
+
+.card {
+  margin-bottom: 20px;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card-header {
+  background-color: #ffc107 !important;
+  border: none !important;
+  padding: 15px !important;
+}
+
+.card-header h6 {
+  font-size: 1.1rem !important;
+  font-weight: bold !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.badge-project {
+  background: none !important;
+  padding: 0 !important;
+  font-size: 1.1rem !important;
+  color: #000 !important;
+  display: block !important;
+  text-align: left !important;
+  font-weight: 600 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.card-body {
+  padding: 20px !important;
+}
+
+.card-footer {
+  background: none !important;
+  border-top: 1px solid rgba(0,0,0,0.1) !important;
+  padding: 15px !important;
+}
+
+.btn {
+  margin-bottom: 8px !important;
+  padding: 8px 16px !important;
+}
+
+.btn:last-child {
+  margin-bottom: 0 !important;
+}
+
+.badge.bg-orange {
+  background-color: #dc3545 !important; /* Màu đỏ của Bootstrap */
+  /* hoặc #ff0000 cho màu đỏ thuần */
+  color: white !important;
+  padding: 8px 16px !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  border-radius: 4px !important;
+}
+
+/* Thêm hiệu ứng hover nếu muốn */
+.badge.bg-orange:hover {
+  background-color: #c82333 !important;
+}
+.bg-danger{
+  background-color: rgb(53 220 74) !important;
+}

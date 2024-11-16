@@ -1,0 +1,120 @@
+/* Table Styling */
+.maintenance-table {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.maintenance-table .ant-table-thead > tr > th {
+  background: #f8f9fa;
+  color: #1a1a1a;
+  font-weight: 600;
+  padding: 16px;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.maintenance-table .ant-table-tbody > tr > td {
+  padding: 16px;
+  vertical-align: middle;
+}
+
+.maintenance-table .ant-table-tbody > tr:hover {
+  background-color: #f5f7ff !important;
+}
+
+/* Status Tags */
+.status-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  min-width: 100px;
+}
+
+/* Action Buttons */
+.action-button {
+  width: 100%;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  height: 36px;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.action-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.action-button.detail {
+  background-color: #ffc107;
+}
+
+.action-button.payment {
+  background-color: #1890ff;
+}
+
+.action-button.final-payment {
+  background-color: #52c41a;
+}
+
+.action-button.review {
+  background-color: #722ed1;
+}
+
+.action-button.view-review {
+  background-color: #13c2c2;
+}
+
+/* Modal Styling */
+.ant-modal-header {
+  border-bottom: 2px solid #f0f0f0;
+  padding: 16px 24px;
+}
+
+.ant-modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.ant-modal-body {
+  padding: 24px;
+}
+
+.ant-descriptions-item-label {
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+/* Filter Section */
+.filter-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .maintenance-table .ant-table-thead > tr > th,
+  .maintenance-table .ant-table-tbody > tr > td {
+    padding: 12px 8px;
+  }
+  
+  .action-button {
+    font-size: 13px;
+    height: 32px;
+  }
+}
+   

@@ -1,0 +1,153 @@
+.stat-card {
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card h3 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.stat-card p {
+  margin: 0.5rem 0;
+  color: #666;
+}
+
+.user-statistics {
+  padding: 20px;
+}
+
+.stat-charts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.chart {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Biểu đồ cột */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  height: 150px;
+  gap: 20px;
+  padding: 15px 0;
+}
+
+.bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.bar {
+  width: 40px;
+  background: #6c5ce7;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+}
+
+.bar-label {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+/* Biểu đồ giới tính */
+.gender-stats {
+  margin-top: 20px;
+}
+
+.gender-item {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.gender-item i {
+  margin-right: 10px;
+  width: 20px;
+}
+
+.gender-item span {
+  width: 60px;
+}
+
+.gender-bar {
+  height: 20px;
+  background: #a8e6cf;
+  border-radius: 10px;
+  margin-left: 10px;
+  transition: width 0.3s ease;
+}
+
+.gender-item:first-child .gender-bar {
+  background: #ff8b94;
+}
+
+.user-statistics-card {
+  height: 150px;
+  width: 400 px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 5px 0px; 
+  margin: 0px;
+  max-width: 100%; /* Thu hẹp chiều rộng tổng thể */
+  margin: 0px; /* Căn giữa */
+}
+
+.chart-wrapper {
+  height: 150px;
+  position: relative;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding-left: 0px;
+  gap: 10px;
+  max-width: 50%;
+  margin: 0 auto;
+}
+
+.total-count {
+  position: absolute;
+  top: 50%;
+  left:28%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 1;
+}
+
+.count-value {
+  font-size: 10px;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.count-label {
+  font-size: 10px;
+  display: block;
+}
+
+/* Style cho phần chú thích */
+.chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.8rem;
+  padding-left: 10px;
+}
+
+.chart-legend > div {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+} 

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
-import "./Icon.css"; // Import CSS từ tệp riêng
+import { Link, useNavigate } from "react-router-dom";
+import "./Icon.css";
 
 const Icon = () => {
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [showPhonePopup, setShowPhonePopup] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Xử lý khi cuộn trang để hiển thị hoặc ẩn nút quay lại đầu trang
@@ -31,6 +34,16 @@ const Icon = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const togglePhonePopup = () => {
+    setShowPhonePopup(!showPhonePopup);
+  };
+
+  const handleRequestClick = (e) => {
+    e.preventDefault();
+    setShowPhonePopup(false); // Hide the modal
+    navigate("/lapthietketheoyeucau"); // Navigate to the new page
+  };
+
   return (
     <div>
       {/* Icon Zalo */}
@@ -47,30 +60,45 @@ const Icon = () => {
       </a>
 
       {/* Icon phone */}
-      <a
-        href=""
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <div className="phone-icon-container" onClick={togglePhonePopup}>
         <img
           className="phone-icon"
           src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsQ1P0KORmNh8JaQYf7QOnzwtgp_QIk5J2mA&s"
           alt="Phone Icon"
         />
-      </a>
+      </div>
 
       {/* Icon email */}
-      <a
-        href=""
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a href="https://mail.google.com/mail" target="_blank" rel="noopener noreferrer">
         <img
           className="email-icon"
           src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2Dk1skpw0d95QQAHQveUicEZ7RAA6cPmKBQ&s"
           alt="Email Icon"
         />
       </a>
+
+      {/* Phone Popup */}
+      {showPhonePopup && (
+        <>
+          <div className="overlay" onClick={togglePhonePopup}></div>
+          <div className="phone-popup">
+            <span className="close-popup" onClick={togglePhonePopup}>×</span>
+            <div className="phone-icon-large">
+              <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsQ1P0KORmNh8JaQYf7QOnzwtgp_QIk5J2mA&s" alt="Phone" />
+            </div>
+            <h2>1234 5678 98</h2>
+            <p>Gọi ngay HOTLINE để được hỗ trợ tốt nhất</p>
+            <p>Hoặc click nút bên dưới để gửi yêu cầu</p>
+            <Link 
+              to="/lapthietketheoyeucau" 
+              className="request-button"
+              onClick={handleRequestClick}
+            >
+              Gửi Yêu Cầu Báo Giá
+            </Link>
+          </div>
+        </>
+      )}
 
       {/* Nút quay lại đầu trang */}
       {showBackToTop && (

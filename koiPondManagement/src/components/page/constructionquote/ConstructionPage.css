@@ -1,0 +1,67 @@
+.construction-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+h1, h2, h3 {
+  color: #333;
+}
+
+.koi-pond-image {
+  max-width: 100%;
+  height: auto;
+  margin: 20px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #130505;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+.detailed-quote-container {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+}
+
+.detailed-quote-button {
+  display: inline-block;
+  padding: 12px 24px;
+  background-color: #000000;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.detailed-quote-button:hover {
+  background-color: #f5dfdf;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.detailed-quote-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

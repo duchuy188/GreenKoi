@@ -1,0 +1,95 @@
+.service-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.service-content {
+  display: flex;
+  gap: 30px;
+}
+
+.service-sidebar {
+  flex: 0 0 250px;
+}
+
+.service-sidebar ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.service-sidebar li {
+  margin-bottom: 10px;
+}
+
+.service-sidebar a {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 4px;
+  text-decoration: none;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.4;
+  transition: background-color 0.2s ease;
+}
+
+.service-sidebar a:hover {
+  background-color: #e0e0e0;
+}
+
+.service-sidebar a::before {
+  content: "•";
+  margin-right: 8px;
+  color: #666;
+}
+
+.service-main {
+  flex: 1;
+}
+
+.featured-service img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 20px;
+}
+
+h1, h2, h3 {
+  color: #fffafa;
+}
+
+p {
+  line-height: 1.6;
+}
+
+.quote-button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 30px 0;
+}
+
+.quote-button {
+  display: inline-block;
+  padding: 12px 24px;
+  background-color: #000000;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.quote-button:hover {
+  background-color: #f1f1f1;
+  color: #000000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.quote-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

@@ -1,0 +1,114 @@
+.dashboard-statistics-container {
+  padding: 0px 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 200px));
+  gap: 12px;
+  flex-shrink: 0;
+  justify-content: center;
+}
+
+.dashboard-stat-card {
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-stat-card.primary {
+  background: linear-gradient(135deg, #1976d2, #2196f3);
+  color: white;
+}
+
+.dashboard-stat-card.warning {
+  background: linear-gradient(135deg, #f57c00, #ff9800);
+  color: white;
+}
+
+.dashboard-stat-card.success {
+  background: linear-gradient(135deg, #2e7d32, #4caf50);
+  color: white;
+}
+
+.dashboard-stat-card.danger {
+  background: linear-gradient(135deg, #c62828, #f44336);
+  color: white;
+}
+
+.dashboard-stat-card.info {
+  background: linear-gradient(135deg, #0288d1, #03a9f4);
+  color: white;
+}
+
+.dashboard-stat-card h3 {
+  margin-bottom: 5px;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 8px;
+}
+
+.dashboard-stat-card p {
+  margin: 5px 0;
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.54rem;
+}
+
+.dashboard-stat-card p:not(:last-child) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 4px;
+}
+
+.dashboard-detailed-statistics {
+  display: grid;
+  grid-template-columns: 400px auto;
+  gap: 16px;
+  justify-content: flex-start;
+}
+.dashboard-detailed-statistics1 {
+  display: grid;
+  grid-template-columns: 750px auto;
+  gap: 16px;
+  justify-content: flex-start;
+}
+
+.left-column, .right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.left-column1, .right-column1 {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.right-column {
+  display: grid;
+  grid-template-columns: repeat(2, 400px);
+  gap: 16px;
+  align-content: start;
+}
+
+.revenue-statistics .ant-card {
+  height: auto;
+}
+
+.revenue-statistics .ant-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}

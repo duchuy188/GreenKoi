@@ -1,0 +1,25 @@
+.revenue-statistics {
+  width: 750px;
+.stat-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  
+  :global(.g2-tooltip) {
+    display: none !important;
+  }
+  
+  .ant-card-head {
+    border-bottom: none;
+    
+    .ant-card-head-title {
+      font-size: 14px;
+      color: #8c8c8c;
+      font-weight: normal;
+    }
+  }
+
+  .ant-card-body {
+    padding: 24px;
+  }
+}
+} 

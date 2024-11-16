@@ -1,0 +1,258 @@
+/* Style chung cho form và inputs */
+.auth-background input::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+  
+.auth-background .ant-input-password {
+    background: transparent !important;
+}
+  
+.auth-background .ant-input-password input {
+    background: transparent !important;
+    color: white !important;
+}
+  
+.auth-background .ant-input {
+    background: transparent !important;
+    color: white !important;
+}
+  
+.auth-background .ant-form-item-label > label {
+    color: white !important;
+}
+  
+.auth-background .ant-form-item-explain-error {
+    color: #e40e12 !important;
+}
+  
+.auth-background .ant-input-password-icon {
+    color: white !important;
+}
+  
+.auth-background .ant-input:focus::placeholder {
+    opacity: 0.5;
+}
+  
+.auth-background .ant-input:focus,
+.auth-background .ant-input-password:focus {
+    box-shadow: none !important;
+}
+
+/* Style cho background và container */
+.auth-background {
+    min-height: 100vh;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('https://images.unsplash.com/photo-1596753055375-7314a20f6106?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.auth-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    
+}
+
+.auth-container {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.auth-form-container {
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    overflow: hidden;
+    animation: fadeIn 0.5s ease-out;
+    background-color: #627825;
+    
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Style cho phần ảnh bên trái */
+.auth-image-section {
+    flex: 1;
+    background-image: url('https://images-ext-1.discordapp.net/external/ePzogJg6v__OKNOxAcd6o4Cvjx-KlAmWBg9OISjPi3c/%3Fq%3D80%26w%3D1937%26auto%3Dformat%26fit%3Dcrop%26ixlib%3Drb-4.0.3%26ixid%3DM3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%253D%253D/https/images.unsplash.com/photo-1691062054226-b4b5aef84cc9?format=webp&width=504&height=671');
+    background-size: cover;
+    background-position: center;
+    min-height: 100%;
+    position: relative;
+    border-radius: 8px 0 0 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem;
+    margin: -2rem 0 -2rem -2rem;
+}
+
+.auth-image-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 8px 0 0 8px;
+}
+
+.auth-image-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Style cho form bên phải */
+.auth-form-section {
+    flex: 1;
+    padding: 2rem;
+}
+
+/* Style cho buttons */
+.ant-btn {
+    border: none !important;
+    height: 45px !important;
+}
+
+.ant-btn-primary {
+    background: #1890ff !important;
+}
+
+.google-btn {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    transition: all 0.3s ease !important;
+}
+
+.google-btn:hover {
+    background: rgba(128, 128, 128, 0.1) !important;
+    border-color: #808080 !important;
+}
+
+/* Style cho divider */
+.divider {
+    position: relative;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.divider-text {
+    color: rgba(255, 255, 255, 0.7);
+    /* background: rgba(0, 0, 0, 0.8); */
+    padding: 0 15px;
+    position: relative;
+    z-index: 2;
+}
+
+.divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.2);
+    z-index: 1;
+}
+
+/* Style cho links */
+.auth-links a {
+    color: rgba(255, 255, 255, 0.8) !important;
+    transition: all 0.3s ease !important;
+    text-decoration: none !important;
+}
+
+.auth-links a:hover {
+    color: #808080 !important;
+}
+
+/* Style cho ReCAPTCHA */
+.recaptcha-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+    background: white;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .auth-form-container {
+        flex-direction: column;
+       
+    }
+    
+    .auth-image-section {
+        margin: -2rem -2rem 0;
+        min-height: 200px;
+        border-radius: 8px 8px 0 0;
+    }
+}
+
+/* Thêm styles mới cho inputs và buttons */
+.auth-input {
+    background: transparent !important;
+    border-radius: 4px !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    transition: all 0.3s ease;
+}
+
+.auth-input:hover,
+.auth-input:focus {
+    border-color: #808080 !important;
+}
+
+.auth-input .ant-input {
+    background: transparent !important;
+    color: white !important;
+}
+
+.auth-input .anticon {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Style cho login button */
+.login-btn {
+    background: linear-gradient(45deg, #808080, #A9A9A9) !important;
+    border: none !important;
+    height: 45px !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    transition: all 0.3s ease !important;
+}
+
+.login-btn:hover {
+    background: linear-gradient(45deg, #A9A9A9, #808080) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(128, 128, 128, 0.3) !important;
+}
